@@ -27,8 +27,9 @@ Zany80::Zany80(){
 		std::cerr << "Failed to load font!\n";
 		exit(1);
 	}
-	shell = new Shell(this,canvas);
+	shell = new Shell(canvas);
 	tool = shell;
+	zany = this;
 }
 
 Zany80::~Zany80(){
@@ -90,3 +91,5 @@ sf::RenderTexture * Zany80::renderText(const char *string,sf::Color fontColor){
 	textImage->display();
 	return textImage;
 }
+
+Zany80 * zany;

@@ -27,3 +27,5 @@ private:
 	Tool * tool;
 	
 };
+
+extern Zany80 * zany;
