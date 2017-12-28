@@ -14,4 +14,6 @@ public:
 private:
 	Zenith80 *zenith;
 	tgui::Canvas::Ptr canvas;
+	char * history_buffer;
+	sf::RenderTexture * command;
 };

@@ -16,7 +16,7 @@ if(NOT DEFINED SFML_STATIC_LIBRARIES)
 	set(TGUI_ROOT ${SFML_ROOT})
 endif()
 
-project(ZENITH80 VERSION 0.1.0.0 LANGUAGES C CXX)
+project(ZANY80 VERSION 0.1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
@@ -26,7 +26,7 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
   )
-include_directories("${ZENITH80_BINARY_DIR}" "${ZENITH80_SOURCE_DIR}/include")
+include_directories("${ZANY80_BINARY_DIR}" "${ZANY80_SOURCE_DIR}/include")
 
 find_package(SFML 2 REQUIRED graphics window system )
 if(SFML_NOTFOUND)
@@ -35,20 +35,20 @@ endif()
 
 find_package(TGUI 0.8 REQUIRED)
 if(TGUI_NOTFOUND)
-	message(FATAL_ERROR "TFUI not found!")
+	message(FATAL_ERROR "TGUI not found!")
 endif()
 
 add_subdirectory(src)
-add_executable(zenith80 ${SOURCES})
+add_executable(zany80 ${SOURCES})
 
 include_directories(${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR})
-target_link_libraries(zenith80 ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+target_link_libraries(zany80 ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
-set(CPACK_PACKAGE_VERSION_MAJOR ${ZENITH80_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${ZENITH80_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${ZENITH80_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION_MAJOR ${ZANY80_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${ZANY80_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${ZANY80_VERSION_PATCH})
 #set(CPACK_PACKAGE_EXECUTABLES ${executable_name} "icon")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "pixelherodev")
 include(CPack)
