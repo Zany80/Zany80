@@ -72,16 +72,20 @@ sf::RenderTexture * Zany80::renderText(const char *string,sf::Color fontColor){
 	sf::RenderTexture * textImage = new sf::RenderTexture();
 	textImage->clear(sf::Color(0,0,0,0));
 	int size = strlen(string);
-	textImage->create(size * 6 >= LCD_WIDTH ? LCD_WIDTH : size * 6,((size * 6 / LCD_WIDTH) + 1) * 5);
+	textImage->create(size * 6 >= LCD_WIDTH ? LCD_WIDTH : size * 6,((size * 6 / LCD_WIDTH) + 1) * 6);
+	int x = 0, y = 0;
 	for(int i = 0;i < size; i++) {
 		char c = string[i];
 		sf::IntRect rect((c%16)* 5,(c/16) * 5,5,5);
 		sf::Sprite sprite(font,rect);
-		float x = i * 6 % LCD_WIDTH;
-		float y = (i * 6 / LCD_WIDTH) * 5;
 		sprite.setPosition(x,y);
 		sprite.setColor(fontColor);
 		textImage->draw(sprite);
+		x += 6;
+		if ( x > LCD_WIDTH - 6) {
+			x = 0;
+			y += 6;
+		}
 	}
 	textImage->display();
 	return textImage;
