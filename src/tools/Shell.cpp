@@ -1,13 +1,13 @@
 #include <tools/Shell.hpp>
 #include <SFML/Window.hpp>
-#include <Zenith80.hpp>
+#include <Zany80.hpp>
 #include <string.h>
 
-Shell::Shell(Zenith80 *zenith,tgui::Canvas::Ptr canvas){
+Shell::Shell(Zany80 *zenith,tgui::Canvas::Ptr canvas){
 	this->zenith = zenith;
 	this->canvas = canvas;
 	this->history_buffer = new char[4096*256];
-	command = zenith->renderText("+-/*:;,<>=?HELLO!abcd^Hello!");
+	command = zenith->renderText("Hello, World! I now cover the full @$CII set! Isn't that amazing?");
 }
 
 Shell::~Shell(){

@@ -8,11 +8,11 @@
 #define LCD_WIDTH 320
 #define LCD_HEIGHT 320
 
-class Zenith80 {
+class Zany80 {
 
 public:
-	Zenith80();
-	~Zenith80();
+	Zany80();
+	~Zany80();
 	int run();
 	void close();
 	sf::RenderTexture * renderText(const char *string,sf::Color fontColor);

@@ -1,16 +1,16 @@
 #include <SFML/Graphics.hpp>
 #include <TGUI/TGUI.hpp>
-#include <Zenith80.hpp>
+#include <Zany80.hpp>
 
 #include <string.h>
 #include <stdlib.h>
 
 int main(){
-	Zenith80 zenith;
+	Zany80 zenith;
 	return zenith.run();
 }
 
-Zenith80::Zenith80(){
+Zany80::Zany80(){
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
 	gui = new tgui::Gui(*window);
 	canvas = tgui::Canvas::create();
@@ -31,13 +31,13 @@ Zenith80::Zenith80(){
 	tool = shell;
 }
 
-Zenith80::~Zenith80(){
+Zany80::~Zany80(){
 	delete shell;
 	delete gui;
 	delete window;
 }
 
-int Zenith80::run(){
+int Zany80::run(){
 	
 	while (window->isOpen()) {
 		window->clear(sf::Color(255,255,255));
@@ -60,15 +60,15 @@ int Zenith80::run(){
 	}
 }
 
-void Zenith80::close(){
+void Zany80::close(){
 	window->close();
 }
 
-sf::RenderTexture * Zenith80::renderText(const char *string){
+sf::RenderTexture * Zany80::renderText(const char *string){
 	return renderText(string,sf::Color(255,255,255,255));
 }
 
-sf::RenderTexture * Zenith80::renderText(const char *string,sf::Color fontColor){
+sf::RenderTexture * Zany80::renderText(const char *string,sf::Color fontColor){
 	sf::RenderTexture * textImage = new sf::RenderTexture();
 	textImage->clear(sf::Color(0,0,0,0));
 	int size = strlen(string);
