@@ -3,11 +3,11 @@
 #include <Zany80.hpp>
 #include <string.h>
 
-Shell::Shell(Zany80 *zenith,tgui::Canvas::Ptr canvas){
-	this->zenith = zenith;
+Shell::Shell(Zany80 *zany,tgui::Canvas::Ptr canvas){
+	this->zany = zany;
 	this->canvas = canvas;
 	this->history_buffer = new char[4096*256];
-	command = zenith->renderText("Hello, World! I now cover the full @$CII set! Isn't that amazing?");
+	command = zany->renderText("Hello, World! I now cover the full @$CII set! Isn't that amazing?");
 }
 
 Shell::~Shell(){

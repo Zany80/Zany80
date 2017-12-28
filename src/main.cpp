@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 int main(){
-	Zany80 zenith;
-	return zenith.run();
+	Zany80 zany;
+	return zany.run();
 }
 
 Zany80::Zany80(){
