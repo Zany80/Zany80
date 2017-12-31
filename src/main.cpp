@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 int main(){
-	Zany80 zany;
-	return zany.run();
+	zany = new Zany80();
+	return zany->run();
 }
 
 Zany80::Zany80(){
@@ -29,7 +29,6 @@ Zany80::Zany80(){
 	}
 	shell = new Shell(canvas);
 	tool = shell;
-	zany = this;
 }
 
 Zany80::~Zany80(){
@@ -71,9 +70,17 @@ sf::RenderTexture * Zany80::renderText(const char *string){
 
 sf::RenderTexture * Zany80::renderText(const char *string,sf::Color fontColor){
 	sf::RenderTexture * textImage = new sf::RenderTexture();
-	textImage->clear(sf::Color(0,0,0,0));
 	int size = strlen(string);
-	textImage->create(size * 6 >= LCD_WIDTH ? LCD_WIDTH : size * 6,((size * 6 / LCD_WIDTH) + 1) * 6);
+	if (size == 0) {
+		textImage->create(1,1);
+		textImage->clear(sf::Color(0,0,0,0));
+		return textImage;
+	}
+	int newlines = -1;
+	char *previous_occurence = (char*)((void*)string) - 1;
+	for (; previous_occurence != NULL;previous_occurence = strchr(previous_occurence+1,'\n'),newlines++);
+	textImage->create(size * 6 >= LCD_WIDTH ? LCD_WIDTH : size * 6,((size * 6 / LCD_WIDTH) + 1 + newlines) * 6);
+	textImage->clear(sf::Color(0,0,0,0));
 	int x = 0, y = 0;
 	for(int i = 0;i < size; i++) {
 		char c = string[i];
@@ -83,7 +90,7 @@ sf::RenderTexture * Zany80::renderText(const char *string,sf::Color fontColor){
 		sprite.setColor(fontColor);
 		textImage->draw(sprite);
 		x += 6;
-		if ( x > LCD_WIDTH - 6) {
+		if ( x > LCD_WIDTH - 6 || c == 0x0A) {
 			x = 0;
 			y += 6;
 		}

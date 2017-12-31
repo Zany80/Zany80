@@ -9,12 +9,12 @@ public:
 	Text();
 	Text(const char *string);
 	~Text();
-	void setString(const char *string);
-	const char *getString();
-	void append(const char *string);
+	void setString(std::string string);
+	std::string *getString();
+	void append(std::string string);
 	void append(char c);
 	void updateTexture();
-	sf::Texture getTexture();
+	const sf::Texture * getTexture();
 private:
 	sf::Mutex textureMutex;
 	sf::RenderTexture * texture;
