@@ -5,5 +5,5 @@
 class Tool {
 public:
 	virtual void run() = 0;
-	virtual void event(sf::Event k) = 0;
+	virtual void event(sf::Event e) = 0;
 };

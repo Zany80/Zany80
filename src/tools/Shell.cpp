@@ -1,15 +1,16 @@
 #include <tools/Shell.hpp>
 #include <Zany80.hpp>
 #include <string.h>
+#include <Drawing.hpp>
 
-Shell::Shell(tgui::Canvas::Ptr canvas){
-	this->canvas = canvas;
+Shell::Shell(){
 	map_commands();
 }
 
 Shell::~Shell(){
 	
 }
+
 
 inline void Shell::map_commands(){
 	commands["echo"] = [](Shell *shell,std::vector<std::string> arguments){
@@ -20,33 +21,81 @@ inline void Shell::map_commands(){
 		sum_args.pop_back();
 		shell->addToHistory(sum_args+"\n");
 	};
+	help["echo"] = "Echoes all arguments passed to it.\n";
 	commands["exit"] = [](Shell *shell,std::vector<std::string> arguments){
 		zany->close();
 	};
+	help["exit"] = "Closes Zany80. This will *not* save any data.\n";
 	commands["help"] = [](Shell *shell,std::vector<std::string> arguments){
-		shell->addToHistory(
-			"Commands:\n\n"
-			"help\n"
-			"\tPrints out list of commands\n"
-			"echo [arg1] [arg2] [argn]\n"
-			"\tEchoes all arguments given\n"
-			"exit\n"
-			"\tCloses Zany80\n"
-			"\n"
-		);
+		if (arguments.size() == 1) {
+			if (shell->help.find(arguments[0]) != shell->help.end()) {
+				shell->addToHistory(shell->help[arguments[0]]);
+			}
+			else {
+				shell->addToHistory(arguments[0] + "is not a command.\n");
+			}
+		}
+		else {
+			shell->addToHistory(
+				"Commands:\n\n"
+				"help\n"
+				"\tPrints out list of commands\n"
+				"echo [arg1] [arg2] [argn]\n"
+				"\tEchoes all arguments given\n"
+				"exit\n"
+				"\tCloses Zany80\n"
+				"color r g b\n"
+				"\tSets color\n"
+				"clear\n"
+				"\tClears the history"
+				"\n"
+			);
+		}
 	};
+	help["help"] = "Prints out helpful information about commands. Use with no arguments for a command overview.\n";
+	commands["color"] = [](Shell *shell,std::vector<std::string> arguments){
+		if (arguments.size() == 3) {
+			shell->setColor(Color(std::stoi(arguments[0]),std::stoi(arguments[1]),std::stoi(arguments[2])));
+			shell->history.updateSprite();
+		}
+		else {
+			shell->addToHistory(
+				"\nUsage:\n"
+				"\tcolor r g b\n"
+				"Use `help color` for more information.\n\n"
+			);
+		}
+	};
+	help["color"] = "Sets the font color of the shell to the color provided. "
+	"Color is given in RGB format. For example, to set the color to red, use `color 255 0 0`. "
+	"If you don't know how RGB works, you can look up codes with Google.\n";
+	commands["clear"] = [](Shell *shell,std::vector<std::string> arguments){
+		shell->history.setString("");
+	};
+	help["clear"] = "Clears the screen.";
+}
+
+void Shell::setColor(Color color){
+	command.setColor(color);
+	history.setColor(color);
 }
 
 void Shell::run(){
-	canvas->clear(sf::Color(0,0,0));
 	
-	sf::Sprite command_sprite(*command.getTexture());
-	command_sprite.setPosition(0,LCD_HEIGHT-command_sprite.getGlobalBounds().height);
-	canvas->draw(command_sprite);
+	Zany::clear(sf::Color(3,220,100));
+	Zany::draw(*(command.getSprite()),0,LCD_HEIGHT - (*command.getSprite()).getHeight());
 	
-	sf::Sprite history_sprite(*history.getTexture(),sf::IntRect(0,0,LCD_WIDTH,LCD_HEIGHT-command_sprite.getGlobalBounds().height));
-	history_sprite.setPosition(0,0);
-	canvas->draw(history_sprite);
+	////sf::Sprite commandSprite(*command.getTexture());
+	////commandSprite.setPosition(0,LCD_HEIGHT - commandSprite.getGlobalBounds().height);
+	////window->draw(commandSprite);
+
+	////if (history.getTexture()->getSize().y > (LCD_HEIGHT - 12)) {
+		////history.setString(history.getString()->substr(history.getString()->find_first_of('\n') + 1));
+	////}
+	
+	////sf::Sprite historySprite(*history.getTexture());
+	////historySprite.setPosition(0,0);
+	////window->draw(historySprite);
 	
 }
 
@@ -65,7 +114,6 @@ void Shell::event(sf::Event e){
 					}
 					else {
 						// command is up to first space
-						// "echo a"
 						to_execute = command.getString()->substr(0,space);
 						std::string remaining = command.getString()->substr(space+1,command.getString()->size()-space);
 						while ((space = remaining.find_first_of(' ')) != std::string::npos) {
@@ -79,13 +127,16 @@ void Shell::event(sf::Event e){
 					if (commands.find(to_execute) != commands.end()) {
 						commands[to_execute](this,args);
 					}
+					else {
+						addToHistory("Error: `" + to_execute + "` command unrecognized!\n");
+					}
 				}
 				else if (e.text.unicode == 0x08) {
 					// Backspace, remove last character
 					if (command.getString()->size() > 0) {
 						command.getString()->pop_back();
 					}
-					command.updateTexture();
+					command.updateSprite();
 				}
 				else {
 					////std::cout<<"code: "<<(int)e.text.unicode<<"\n";
