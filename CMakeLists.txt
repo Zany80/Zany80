@@ -26,7 +26,8 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
   )
-include_directories("${ZANY80_BINARY_DIR}" "${ZANY80_SOURCE_DIR}/include")
+
+find_package(LIBLIB 0.1 REQUIRED)
 
 find_package(SFML 2 REQUIRED graphics window system )
 if(SFML_NOTFOUND)
@@ -39,10 +40,20 @@ if(TGUI_NOTFOUND)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(plugins)
 add_executable(zany80 ${SOURCES})
 
-include_directories(${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR})
-target_link_libraries(zany80 ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+target_include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
+target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+
+if(WIN32)
+  install(FILES font.png DESTINATION .)
+  install (TARGETS zany80 DESTINATION .)
+else()
+  install(FILES font.png DESTINATION share/zany80)
+  install (TARGETS zany80 DESTINATION bin)
+endif()
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
