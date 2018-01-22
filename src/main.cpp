@@ -1,11 +1,12 @@
 #include <Zany80.hpp>
+#include <Plugins.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
 void Zany80::close(std::string message) {
 	std::cerr << "[Crash handler] "<<message<<
-	"[Crash handler] Notifying user and shutting down...\n";
+		"[Crash handler] Notifying user and shutting down...\n";
 	sf::Clock c;
 	while (c.getElapsedTime().asSeconds() < 5 && window->isOpen()) {
 		window->clear(sf::Color(255,0,0));
@@ -80,10 +81,14 @@ Zany80::Zany80(){
 		close("No plugins found! This is probably a problem with the installation.\n");
 	}
 	else {
+		runners = new std::vector<liblib::Library*>;
 		for (std::string s : *plugin_paths) {
 			std::cout << "[Plugin Loader] "<<"Loading \""<<s<<"\"...\n";
 			if (!attemptLoad(s,&plugins["s"])) {
 				std::cerr << '\t'<<"[Plugin Loader] "<<"Error!\n";
+			}
+			else {
+				PluginType type = *(PluginType*)(*plugins["s"])["getType"]();
 			}
 		}
 	}
@@ -112,13 +117,13 @@ void Zany80::frame(){
 				close();
 				break;
 			default:
-				if (tool != nullptr)
-					tool->event(e);
+				//if (tool != nullptr)
+					//tool->event(e);
 				break;
 		}
 	}
-	if (tool != nullptr)
-		tool->run();
+	//if (tool != nullptr)
+		//tool->run();
 	window->display();
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Tool.hpp>
-
 #include <SFML/Graphics.hpp>
 #include <liblib/liblib.hpp>
 
@@ -25,8 +23,8 @@ public:
 	
 private:
 	bool attemptLoad(std::string name, liblib::Library ** library);
-	Tool * tool;
 	std::map <std::string, liblib::Library*> plugins;
+	std::vector <liblib::Library*> * runners = nullptr;
 	
 };
 
