@@ -7,6 +7,7 @@ std::vector<std::string> *enumerate_plugins() {
 	plugins = new std::vector<std::string>;
 	std::cout << "[Plugin Manager] Path: "<<folder<<"plugins/\n";
 	plugins->push_back("plugins/cpu/z80");
+	plugins->push_back("plugins/rom_runner");
 	return plugins;
 }
 

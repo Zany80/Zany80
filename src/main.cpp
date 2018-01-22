@@ -31,7 +31,7 @@ void Zany80::close() {
 
 std::string path,folder;
 
-bool Zany80::attemptLoad(std::string name, liblib::Library **library) {
+bool attemptLoad(std::string name, liblib::Library **library) {
 	try {
 		*library = new liblib::Library(folder + name);
 	}
@@ -82,25 +82,54 @@ Zany80::Zany80(){
 	}
 	else {
 		runners = new std::vector<liblib::Library*>;
+		bool runnerFound = false;
 		for (std::string s : *plugin_paths) {
 			std::cout << "[Plugin Loader] "<<"Loading \""<<s<<"\"...\n";
-			if (!attemptLoad(s,&plugins["s"])) {
-				std::cerr << '\t'<<"[Plugin Loader] "<<"Error!\n";
+			if (attemptLoad(s,&plugins[s])) {
+				try {
+					if (*(PluginType*)(*plugins[s])["getType"]() == Runner) {	
+						runnerFound = true;
+						runners->push_back(plugins[s]);
+						if (*(RunnerType*)(*plugins[s])["getRunnerType"]() == Shell && this->runner == nullptr) {
+							this->runner = plugins[s];
+						}
+					}
+				}
+				catch (std::exception e) {
+					delete plugins[s];
+					std::cerr << "[Plugin Loader] Invalid plugin: "<<s<<"\n";
+				}
 			}
 			else {
-				PluginType type = *(PluginType*)(*plugins["s"])["getType"]();
+				std::cerr << '\t'<<"[Plugin Loader] "<<"Error!\n";
 			}
+		}
+		if (runnerFound) {
+			if (this->runner == nullptr) {
+				this->runner = (*runners)[0];
+			}
+		}
+		else {
+			close("No runners found!\n");
 		}
 	}
 }
 
 Zany80::~Zany80(){
 	delete window;
-	try {
-		liblib::Library * pm = plugins.at("plugin_manager");
-		(*pm)["cleanup"]();
-		delete pm;
-	} catch (std::exception &e) {}
+	if (runners != nullptr) {
+		delete runners;
+	}
+	for (auto pair : plugins) {
+		liblib::Library *library = pair.second;
+		try {
+			(*library)["cleanup"]();
+		}
+		catch (std::exception e) {
+			
+		}
+		delete library;
+	}
 }
 
 int Zany80::run(){
@@ -122,8 +151,7 @@ void Zany80::frame(){
 				break;
 		}
 	}
-	//if (tool != nullptr)
-		//tool->run();
+	((*runner)["run"])();
 	window->display();
 }
 

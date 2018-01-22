@@ -56,3 +56,13 @@ uint8_t getAddressBusSize() {
 uint8_t getDataBusSize() {
 	return DATA_BUS_SIZE;
 }
+
+#ifndef OVERRIDE_EMULATE
+
+void emulate(uint64_t cycles) {
+	for (uint64_t i = 0; i < cycles; i++) {
+		cycle();
+	}
+}
+
+#endif
