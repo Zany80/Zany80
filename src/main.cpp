@@ -5,8 +5,8 @@
 #include <iostream>
 
 void Zany80::close(std::string message) {
-	std::cerr << "[Crash handler] "<<message<<
-		"[Crash handler] Notifying user and shutting down...\n";
+	std::cerr << "[Crash Handler] "<<message<<
+		"[Crash Handler] Notifying user and shutting down...\n";
 	sf::Clock c;
 	while (c.getElapsedTime().asSeconds() < 5 && window->isOpen()) {
 		window->clear(sf::Color(255,0,0));
@@ -22,6 +22,7 @@ void Zany80::close(std::string message) {
 		
 		window->display();
 	}
+	delete this;
 	exit(0);
 }
 
@@ -31,9 +32,12 @@ void Zany80::close() {
 
 std::string path,folder;
 
-bool attemptLoad(std::string name, liblib::Library **library) {
+typedef void (*init_t)(liblib::Library *);
+
+bool Zany80::attemptLoad(std::string name, liblib::Library **library) {
 	try {
 		*library = new liblib::Library(folder + name);
+		((init_t)(**library)["init"])(*library);
 	}
 	catch (std::exception &e) {
 		return false;
@@ -67,68 +71,36 @@ Zany80::Zany80(){
 			std::cout << folder << "\n";
 		}
 	}
-	if (!attemptLoad("plugins/plugin_manager", &plugins["plugin_manager"])) {
+	if (!attemptLoad("plugins/plugin_manager",&plugin_manager)) {
 		close("Error loading plugin manager!\n");
 	}
-	std::vector<std::string> * plugin_paths;
 	try {
-		plugin_paths = (std::vector<std::string>*)(*plugins["plugin_manager"])["enumerate_plugins"]();
+		if ((std::vector<std::string>*)(*plugin_manager)["enumerate_plugins"]() == nullptr) {
+			close("No plugins found! This is probably a problem with the installation.\n");
+		}
 	}
 	catch (liblib::SymbolLoadingException &e) {
-		close("Error enumerating plugins!\n");
+		close("Error detecting plugins!\n");
 	}
-	if (plugin_paths == nullptr) {
-		close("No plugins found! This is probably a problem with the installation.\n");
+	// At this point, all detected plugins have been validated. In addition, there is at minimum one plugin.
+	// Get default runner from the plugin manager. The plugin manager decides what runner to choose
+	try {
+		if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
+			close("Unable to find suitable runner.\n");
+		}
 	}
-	else {
-		runners = new std::vector<liblib::Library*>;
-		bool runnerFound = false;
-		for (std::string s : *plugin_paths) {
-			std::cout << "[Plugin Loader] "<<"Loading \""<<s<<"\"...\n";
-			if (attemptLoad(s,&plugins[s])) {
-				try {
-					if (*(PluginType*)(*plugins[s])["getType"]() == Runner) {	
-						runnerFound = true;
-						runners->push_back(plugins[s]);
-						if (*(RunnerType*)(*plugins[s])["getRunnerType"]() == Shell && this->runner == nullptr) {
-							this->runner = plugins[s];
-						}
-					}
-				}
-				catch (std::exception e) {
-					delete plugins[s];
-					std::cerr << "[Plugin Loader] Invalid plugin: "<<s<<"\n";
-				}
-			}
-			else {
-				std::cerr << '\t'<<"[Plugin Loader] "<<"Error!\n";
-			}
-		}
-		if (runnerFound) {
-			if (this->runner == nullptr) {
-				this->runner = (*runners)[0];
-			}
-		}
-		else {
-			close("No runners found!\n");
-		}
+	catch (std::exception &e) {
+		close("Invalid plugin manager.\n");
 	}
 }
 
 Zany80::~Zany80(){
 	delete window;
-	if (runners != nullptr) {
-		delete runners;
+	try {
+		(*plugin_manager)["cleanup"]();
 	}
-	for (auto pair : plugins) {
-		liblib::Library *library = pair.second;
-		try {
-			(*library)["cleanup"]();
-		}
-		catch (std::exception e) {
-			
-		}
-		delete library;
+	catch (std::exception &e) {
+		std::cerr << "[Crash handler] Error cleaning up plugins\n";
 	}
 }
 

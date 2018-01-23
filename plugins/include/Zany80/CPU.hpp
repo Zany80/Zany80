@@ -20,9 +20,6 @@
 typedef void(*write_t)(ADDRESS_BUS_SIZE_T,DATA_BUS_SIZE_T);
 typedef DATA_BUS_SIZE_T(*read_t)(ADDRESS_BUS_SIZE_T);
 
-write_t writeRAM;
-read_t readRAM;
-
 extern "C" {
 	PluginType *getType();
 	HardwareType *getHardwareType();
@@ -31,10 +28,18 @@ extern "C" {
 	void setRAM(liblib::Library *RAM);
 	uint8_t getAddressBusSize();
 	uint8_t getDataBusSize();
+	const char *getSignature();
+	void init(liblib::Library *plugin_manager);
+	void cleanup();
+	const char *neededPlugins();
 }
 
 PluginType type = Hardware;
 HardwareType hw_type = CPU;
+extern const char *signature;
+
+write_t writeRAM;
+read_t readRAM;
 
 PluginType *getType(){
 	return &type;
@@ -55,6 +60,10 @@ uint8_t getAddressBusSize() {
 }
 uint8_t getDataBusSize() {
 	return DATA_BUS_SIZE;
+}
+
+const char *getSignature() {
+	return signature;
 }
 
 #ifndef OVERRIDE_EMULATE

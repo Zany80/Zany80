@@ -4,7 +4,7 @@ set(z80_SOURCES
 
 add_library(z80 SHARED ${z80_SOURCES})
 set_target_properties(z80 PROPERTIES PREFIX "../")
-target_include_directories(z80 PRIVATE ../include ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(z80 PRIVATE ../../include ${CMAKE_SOURCE_DIR}/include)
 if (WIN32)
 	install(TARGETS z80 DESTINATION plugins/cpu)
 else()

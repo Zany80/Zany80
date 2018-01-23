@@ -22,12 +22,10 @@ public:
 	sf::Texture font;
 	
 private:
-	std::map <std::string, liblib::Library*> plugins;
-	std::vector <liblib::Library*> * runners = nullptr;
 	//TODO: see if instead of keeping the library pointer, caching the needed functions provides a significant speed boost
-	liblib::Library *runner = nullptr;
+	liblib::Library *runner = nullptr, *plugin_manager = nullptr;
+	bool attemptLoad(std::string name, liblib::Library ** library);
 	
 };
 
 extern Zany80 * zany;
-bool attemptLoad(std::string name, liblib::Library ** library);

@@ -1,7 +1,15 @@
 #define ADDRESS_BUS_SIZE 16
 #define DATA_BUS_SIZE 8
 
-#include <CPU.hpp>
+#include <Zany80/CPU.hpp>
+#include <iostream>
+
+const char *signature = "z80";
+
+const char *neededPlugins() {
+	return "";
+}
+
 
 typedef union{
 	uint16_t word;
@@ -16,18 +24,32 @@ typedef union{
 #endif
 } word;
 
-uint16_t PC = 0;
+uint16_t PC;
 uint8_t opcode;
 word AF,BC,DE,HL;
 word AF_,BC_,DE_,HL_;
 
-uint64_t tstates = 0;
-uint8_t subcycle = 0;
+uint64_t tstates;
+uint8_t subcycle;
 enum {
 	INSTRUCTION_FETCH,MEM_READ,MEM_WRITE
-} CPUState = INSTRUCTION_FETCH;
+} CPUState;
+
+void init(liblib::Library *plugin_manager) {
+	CPUState = INSTRUCTION_FETCH;
+	PC = 0;
+	AF.word = BC.word = DE.word = HL.word = 0;
+	AF_.word = BC_.word = DE_.word = HL_.word = 0;
+	tstates = 0;
+	subcycle = 0;
+}
+
+void cleanup() {
+	
+}
 
 void executeOpcode (uint8_t opcode) {
+	std::cout << "[Z80] Executing opcode " << opcode<<"\n";
 	switch (opcode) {
 		case 0x00:
 			//nop
