@@ -25,7 +25,6 @@ extern "C" {
 	HardwareType *getHardwareType();
 	void emulate(uint64_t cycles);
 	void cycle();
-	void setRAM(liblib::Library *RAM);
 	uint8_t getAddressBusSize();
 	uint8_t getDataBusSize();
 	const char *getSignature();

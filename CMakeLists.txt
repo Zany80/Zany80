@@ -43,7 +43,7 @@ add_subdirectory(src)
 add_subdirectory(plugins)
 add_executable(zany80 ${SOURCES})
 
-target_include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+include_directories(${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
 target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 

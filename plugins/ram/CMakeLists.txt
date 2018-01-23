@@ -1,0 +1,9 @@
+add_library(RAM16_8 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/RAM.cpp)
+set_target_properties(RAM16_8 PROPERTIES PREFIX "../")
+target_include_directories(RAM16_8 PRIVATE ../include ${CMAKE_SOURCE_DIR}/include)
+if (WIN32)
+	install(TARGETS RAM16_8 DESTINATION plugins/)
+else()
+	install(TARGETS RAM16_8 DESTINATION share/zany80/plugins/)
+endif()
+

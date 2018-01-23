@@ -13,15 +13,17 @@ void init(liblib::Library *pm) {
 	bool runnerFound = false;
 	for (std::string s : *enumerate_plugins()) {
 		std::cout << "[Plugin Manager] "<<"Loading \""<<s<<"\"...\n";
-		if (attemptLoad(s,&((*plugins)[s]))) {
+		liblib::Library * library;
+		if (attemptLoad(s,&library)) {
 				std::cout <<"[Plugin Manager] "<< s << " loaded successfully...\n";
+				(*plugins)[s]=library;
 		}
 		else {
-			if (offloaded->at(s)) {
-				plugins->erase(s);
+			try {
+				offloaded->at(s);
 				std::cerr << "[Plugin Manager] Missing prereqs for plugin: "<<s<<", offloading...\n";
 			}
-			else {
+			catch (std::out_of_range) {
 				std::cerr << "[Plugin Manager] Invalid plugin: "<<s<<"\n";
 			}
 		}
@@ -35,6 +37,7 @@ std::vector<std::string> *enumerate_plugins() {
 		plugin_paths = new std::vector <std::string>;
 		plugin_paths->push_back("plugins/rom_runner");
 		plugin_paths->push_back("plugins/cpu/z80");
+		plugin_paths->push_back("plugins/RAM16_8");
 	}
 	return plugin_paths;
 }
@@ -62,39 +65,65 @@ void cleanup() {
 }
 
 bool prereqsLoaded(liblib::Library **library) {
-	std::string needed = (const char *)(**library)["neededPlugins"]();
-	needed += ';';
-	bool all_found = true;
-	while (needed.find(';') != std::string::npos) {
-		std::string curr = needed.substr(0,needed.find(';'));
-		needed = needed.substr(needed.find(';')+1,needed.length());
-		if (curr.length() == 0 || curr.find('/') == std::string::npos)
-			continue;
-		std::string category = curr.substr(0,curr.find('/'));
-		std::string id = curr.substr(curr.find('/')+1,curr.length());
-		bool cur_found = false;
-		if (category == "CPU") {
-			if (getCPUs() != nullptr) {
-				// Check if any of the loaded CPUs match the signature specified
-				for (liblib::Library *cpu : *CPUs) {
-					try {
-						std::string signature = (const char *)(*cpu)["getSignature"]();
-						if (signature == id) {
-							cur_found = true;
-							break;
+	try {
+		std::string needed = (const char *)(**library)["neededPlugins"]();
+		if (needed == "") {
+			std::cout << "[Plugin Manager] No prereqs\n";
+			return true;
+		}
+		needed += ';';
+		std::cout << "[Plugin Manager] Prereqs: "<<needed<<"\n";
+		bool all_found = true;
+		while (needed.find(';') != std::string::npos) {
+			std::string curr = needed.substr(0,needed.find(';'));
+			needed = needed.substr(needed.find(';')+1,needed.length());
+			if (curr.length() == 0 || curr.find('/') == std::string::npos)
+				continue;
+			std::string category = curr.substr(0,curr.find('/'));
+			std::string id = curr.substr(curr.find('/')+1,curr.length());
+			bool cur_found = false;
+			if (category == "CPU") {
+				if (getCPUs() != nullptr) {
+					// Check if any of the loaded CPUs match the signature specified
+					for (liblib::Library *cpu : *CPUs) {
+						try {
+							std::string signature = (const char *)(*cpu)["getSignature"]();
+							if (signature == id) {
+								cur_found = true;
+								break;
+							}
 						}
+						// Invalid CPU plugin, will be destroyed later
+						catch (std::exception &e) {}
 					}
-					// Invalid CPU plugin, will be destroyed later
-					catch (std::exception &e) {}
 				}
 			}
+			else if (category == "RAM") {
+				if (getHardware() != nullptr) {
+					for (liblib::Library *ram : *hardware) {
+						try {
+							if (*((HardwareType*)((*ram)["getHardwareType"]())) == RAM) {
+								std::string signature = (const char *)(*ram)["getSignature"]();
+								if (signature == id) {
+									cur_found = true;
+									break;
+								}
+							}
+						}
+						catch (std::exception &e) {}
+					}
+				}
+			}
+			if (!cur_found) {
+				all_found = false;
+				break;
+			}
 		}
-		if (!cur_found) {
-			all_found = false;
-			break;
-		}
+		return all_found;
 	}
-	return all_found;
+	catch (std::exception e) {
+		return false;
+	}
 }
 
 bool attemptLoad(std::string name, liblib::Library **library) {
@@ -116,22 +145,20 @@ bool attemptLoad(std::string name, liblib::Library **library) {
 }
 
 void gatherPlugins(PluginType type, std::vector<liblib::Library*> *vector) {
-	if (vector->empty()) {
-		for (auto pair : *plugins) {
-			liblib::Library *library = pair.second;
-			if (*((PluginType*)(*library)["getType"]()) == type) {
-				vector->push_back(library);
-			}
+	vector->clear();
+	for (auto pair : *plugins) {
+		liblib::Library *library = pair.second;
+		if (*((PluginType*)(*library)["getType"]()) == type) {
+			vector->push_back(library);
 		}
 	}
 }
 
 void gatherPlugins(HardwareType type, std::vector<liblib::Library*> *vector) {
-	if (vector->empty()) {
-		for (liblib::Library *library : *hardware) {
-			if (*((HardwareType*)(*library)["getHardwareType"]()) == type) {
-				vector->push_back(library);
-			}
+	vector->clear();
+	for (liblib::Library *library : *hardware) {
+		if (*((HardwareType*)(*library)["getHardwareType"]()) == type) {
+			vector->push_back(library);
 		}
 	}
 }
@@ -196,6 +223,18 @@ liblib::Library *getCPU(const char *signature) {
 	return nullptr;
 }
 
+liblib::Library *getRAM(const char *signature) {
+	if(getHardware() != nullptr) {
+		for (liblib::Library *ram : *hardware) {
+			const char *sig = (const char *)((*ram)["getSignature"]());
+			if (strcmp(signature,sig) == 0) {
+				return ram;
+			}
+		}
+	}
+	return nullptr;
+}
+
 void finishLoading() {
 	if (offloaded == nullptr)
 		return;
@@ -204,24 +243,22 @@ void finishLoading() {
 		plength = offloaded->size();
 		std::cout << "[Plugin Manager] "<<plength<<" offloaded plugins remaining...\n";
 		for (auto pair : *offloaded) {
-			if (offloaded->empty()) {
-				break;
-			}
 			try {
 				liblib::Library *library = pair.second;
 				std::cout << "[Plugin Manager] Attempting late-load of " << pair.first << "\n";
 				if (prereqsLoaded(&library)) {
+					(*plugins)[pair.first] = library;
 					((init_t)(*library)["init"])(plugin_manager);
 					offloaded->erase(pair.first);
-					(*plugins)[pair.first] = library;
 					std::cout << "[Plugin Manager] Late-load of " << pair.first << " successful!\n";
+					break;
 				}
 				else {
 					std::cerr << "[Plugin Manager] Late-load of " << pair.first << " unsuccessful.\n";
 				}
 			}
 			catch (std::exception &e) {
-				
+				std::cerr << "[Plugin Manager] Late-load of " << pair.first << " unsuccessful.\n";
 			}
 		}
 	}

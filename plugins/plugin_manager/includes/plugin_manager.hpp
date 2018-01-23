@@ -14,6 +14,7 @@ extern "C" {
 	std::vector<liblib::Library*> *getHardware();
 	std::vector<liblib::Library*> *getCPUs();
 	liblib::Library *getCPU(const char *signature);
+	liblib::Library *getRAM(const char *signature);
 }
 
 bool attemptLoad(std::string name, liblib::Library ** library);

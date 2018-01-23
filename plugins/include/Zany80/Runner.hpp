@@ -13,6 +13,8 @@ extern "C" {
 	void run();
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
+	// Called every time the runner is activated - this can be used to e.g. reset timers
+	void activate();
 }
 
 PluginType *getType(){

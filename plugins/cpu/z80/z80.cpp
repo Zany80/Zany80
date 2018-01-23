@@ -7,9 +7,8 @@
 const char *signature = "z80";
 
 const char *neededPlugins() {
-	return "";
+	return "RAM/16_8";
 }
-
 
 typedef union{
 	uint16_t word;
@@ -42,6 +41,13 @@ void init(liblib::Library *plugin_manager) {
 	AF_.word = BC_.word = DE_.word = HL_.word = 0;
 	tstates = 0;
 	subcycle = 0;
+	liblib::Library *ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
+	if (ram != nullptr) {
+		setRAM(ram);
+	}
+	else {
+		throw std::exception();
+	}
 }
 
 void cleanup() {
@@ -49,7 +55,7 @@ void cleanup() {
 }
 
 void executeOpcode (uint8_t opcode) {
-	std::cout << "[Z80] Executing opcode " << opcode<<"\n";
+	std::cout << "[Z80] Executing opcode " << (int)opcode<<"\n";
 	switch (opcode) {
 		case 0x00:
 			//nop
