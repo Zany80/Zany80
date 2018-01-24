@@ -30,6 +30,26 @@ uint8_t opcode;
 word af,bc,de,hl;
 word af_,bc_,de_,hl_;
 
+#define S 0x80
+#define Z 0x40
+#define FIVE 0x20
+#define H 0x10
+#define THREE 0x08
+#define PV 0x04
+#define N 0x02
+#define C 0x01
+
+void setFlag(uint8_t flag,bool state) {
+	if (state)
+		af.l |= flag;
+	else
+		af.l ^= flag;
+}
+
+bool getFlag(uint8_t flag) {
+	return af.l & flag;
+}
+
 uint64_t tstates;
 uint8_t subcycle;
 
@@ -65,7 +85,7 @@ void cleanup() {
 }
 
 void executeOpcode (uint8_t opcode) {
-	//std::cout << "[Z80]  Executing opcode " << (int)opcode<<" at cycle "<<(int)tstates<<"\n";
+	std::cout << "[Z80]  Executing opcode " << (int)opcode<<" at cycle "<<(int)tstates<<"\n";
 	switch (opcode) {
 		case 0x01: // ld bc, **
 			switch (subcycle) {
@@ -83,21 +103,45 @@ void executeOpcode (uint8_t opcode) {
 					bc.h = buffer & 0xFF;
 					subcycle = 0;
 					std::cout << "[Z80] `ld bc, "<<(int)bc.word<<"` executed.\n";
-					break;
-				default:
-					std::cout << "Subcycle: "<<(int)subcycle<<"\n";
+					CPUState = INSTRUCTION_FETCH;
 					break;
 			}
 			break;
 		case 0x02: // ld (bc), a
-				buffer = (bc.word << 8) | af.h;
-				CPUState = MEM_WRITE;
-				subcycle++;
-				std::cout << "[Z80] `ld (bc), a` executed.\n";
+			buffer = (bc.word << 8) | af.h;
+			CPUState = MEM_WRITE;
+			subcycle++;
+			std::cout << "[Z80] `ld (bc), a` executed.\n";
+			break;
+		case 0x03: // inc bc
+			//takes 6 cycle. execute is first called on the fourth cycle with subcycle set to 1.
+			if (subcycle == 3) {
+				bc.word++;
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+				std::cout << "[Z80] `inc bc` executed.\n";
+			}
+			else {
+				std::cout << "[Z80] "<<(3-subcycle)<<" cycles remaining for `inc bc`...\n";
+			}
+			break;
+		case 0x04: // inc b
+			{
+				uint8_t old = bc.h++;
+				setFlag(S, bc.h & 0x80);
+				setFlag(Z, bc.h == 0);
+				setFlag(H, old & 0x0F == 0x0F);
+				setFlag(N, false);
+				setFlag(PV, old == 0x7F);
+			}
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
+			std::cout << "[Z80] `inc b` executed.\n";
 			break;
 		default:
 		case 0x00: //nop
 			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
 			break;
 	}
 }
@@ -115,7 +159,6 @@ void cycle() {
 		}
 	}
 	else if (CPUState == INSTRUCTION_EXECUTE) {
-		CPUState = INSTRUCTION_FETCH;
 		executeOpcode(opcode);
 	}
 	else if (CPUState == MEM_READ) {

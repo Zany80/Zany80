@@ -21,8 +21,10 @@ void init(liblib::Library *plugin_manager) {
 	// 10010110 01110111
 	ram[1] = 119;
 	ram[2] = 150;
+	// inc bc
+	ram[3] = 3;
 	// ld (bc), a
-	ram[3] = 2;
+	ram[4] = 2;
 }
 
 void cleanup() {

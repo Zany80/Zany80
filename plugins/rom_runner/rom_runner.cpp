@@ -5,7 +5,8 @@
 
 #include <SFML/System.hpp>
 
-#define SPEED 4000000
+//Run at 8Hz for now. This makes output smaller and easier to debug during emulator implementation.
+#define SPEED 8
 
 RunnerType runner_type = ROMRunner;
 liblib::Library *z80;
