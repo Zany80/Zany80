@@ -27,7 +27,8 @@ void Zany80::close(std::string message) {
 }
 
 void Zany80::close() {
-	exit(1);
+	delete this;
+	exit(0);
 }
 
 std::string path,folder;
@@ -87,6 +88,12 @@ Zany80::Zany80(){
 	try {
 		if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
 			close("Unable to find suitable runner.\n");
+		}
+		else {
+			try {
+				(*runner)["activate"]();
+			}
+			catch (std::exception &e) {}
 		}
 	}
 	catch (std::exception &e) {

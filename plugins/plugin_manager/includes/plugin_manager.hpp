@@ -19,6 +19,7 @@ extern "C" {
 
 bool attemptLoad(std::string name, liblib::Library ** library);
 bool prereqsLoaded(liblib::Library **library);
+bool unneeded(liblib::Library *library);
 extern std::map <std::string, liblib::Library*> *plugins;
 extern std::vector <liblib::Library*> *runners;
 extern std::vector <liblib::Library*> *hardware;

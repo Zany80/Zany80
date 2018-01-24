@@ -49,19 +49,86 @@ void cleanup() {
 		plugin_paths = nullptr;
 	}
 	if (plugins != nullptr) {
-		for (auto pair : *plugins) {
-			liblib::Library *library = pair.second;
-			try {
-				(*library)["cleanup"]();
+		int plength;
+		do {
+			plength = plugins->size();
+			std::cout << "[Plugin Manager] "<<plength<<" plugins remaining for cleanup...\n";
+			for (auto pair : *plugins) {
+				try {
+					if (unneeded(pair.second)) {
+						std::cout << "[Plugin Manager] Cleaning up "<<pair.first<<"\n";
+						try {
+							(*pair.second)["cleanup"]();
+						} catch(...){}
+						delete pair.second;
+						plugins->erase(pair.first);
+						break;
+					}
+					else {
+						std::cout << "[Plugin Manager] Plugin "<<pair.first<<" is still needed by other plugins; delaying cleanup...\n";
+					}
+				}
+				catch (std::exception) {
+					
+				}
 			}
-			catch (std::exception e) {
-				std::cerr << "[Plugin Manager] Error cleaning up plugin " << pair.first << '\n';
-			}
-			delete library;
-		}
+		} while (plugins->size() != plength && plugins->size() > 0);
 		delete plugins;
 		plugins = nullptr;
 	}
+}
+
+bool unneeded(liblib::Library *prereq) {
+	for (auto pair : *plugins) {
+		liblib::Library *library = pair.second;
+		try {
+			std::string needed = (const char *)(*library)["neededPlugins"]();
+			if (needed == "") {
+				continue;
+			}
+			needed += ';';
+			while (needed.find(';') != std::string::npos) {
+				std::string curr = needed.substr(0,needed.find(';'));
+				needed = needed.substr(needed.find(';')+1,needed.length());
+				if (curr.length() == 0 || curr.find('/') == std::string::npos)
+					continue;
+				std::string category = curr.substr(0,curr.find('/'));
+				std::string id = curr.substr(curr.find('/')+1,curr.length());
+				if (category == "CPU") {
+					try {
+						if (*(PluginType*)((*prereq)["getType"]()) == Hardware) {
+							if (*(HardwareType*)((*prereq)["getHardwareType"]()) == CPU) {
+								std::string signature = (const char *)(*prereq)["getSignature"]();
+								if (signature == id) {
+									// The prereq is needed by another plugin
+									return false;
+								}
+							}
+						}
+					}
+					catch (std::exception e){}
+				}
+				else if (category == "RAM") {
+					try {
+						if (*(PluginType*)((*prereq)["getType"]()) == Hardware) {
+							if (*(HardwareType*)((*prereq)["getHardwareType"]()) == RAM) {
+								std::string signature = (const char *)(*prereq)["getSignature"]();
+								if (signature == id) {
+									// The prereq is needed by another plugin
+									return false;
+								}
+							}
+						}
+					}
+					catch (std::exception e){}
+				}
+			}
+		}
+		catch (std::exception) {
+			return false;
+		}
+	}
+	return true;
 }
 
 bool prereqsLoaded(liblib::Library **library) {
@@ -94,7 +161,7 @@ bool prereqsLoaded(liblib::Library **library) {
 							}
 						}
 						// Invalid CPU plugin, will be destroyed later
-						catch (std::exception &e) {}
+						catch (std::exception) {}
 					}
 				}
 			}
@@ -110,7 +177,7 @@ bool prereqsLoaded(liblib::Library **library) {
 								}
 							}
 						}
-						catch (std::exception &e) {}
+						catch (std::exception) {}
 					}
 				}
 			}
@@ -121,7 +188,7 @@ bool prereqsLoaded(liblib::Library **library) {
 		}
 		return all_found;
 	}
-	catch (std::exception e) {
+	catch (std::exception) {
 		return false;
 	}
 }
