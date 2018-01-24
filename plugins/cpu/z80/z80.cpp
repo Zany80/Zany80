@@ -67,8 +67,6 @@ void cleanup() {
 void executeOpcode (uint8_t opcode) {
 	//std::cout << "[Z80]  Executing opcode " << (int)opcode<<" at cycle "<<(int)tstates<<"\n";
 	switch (opcode) {
-		case 0x00: //nop
-			break;
 		case 0x01: // ld bc, **
 			switch (subcycle) {
 				case 1:
@@ -98,6 +96,8 @@ void executeOpcode (uint8_t opcode) {
 				std::cout << "[Z80] `ld (bc), a` executed.\n";
 			break;
 		default:
+		case 0x00: //nop
+			subcycle = 0;
 			break;
 	}
 }
@@ -143,6 +143,7 @@ void cycle() {
 		}
 		else if (subcycle % 3 == 2) {
 			CPUState = INSTRUCTION_FETCH;
+			subcycle = 0;
 		}
 	}
 }
