@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
+
+set(CMAKE_CXX_STANDARD 11)
 
 # Enable use of VERSION in project() command
 cmake_policy(SET CMP0048 NEW)
@@ -12,8 +14,6 @@ endif()
 # Default to static libs
 if(NOT DEFINED SFML_STATIC_LIBRARIES)
 	set(SFML_STATIC_LIBRARIES FALSE CACHE BOOL "Use static SFML libs" FORCE)
-	set(SFML_ROOT ${CMAKE_SOURCE_DIR}/libs/)
-	set(TGUI_ROOT ${SFML_ROOT})
 endif()
 
 project(ZANY80 VERSION 0.1.0.0 LANGUAGES C CXX)
