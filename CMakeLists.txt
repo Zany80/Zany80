@@ -34,18 +34,13 @@ if(SFML_NOTFOUND)
 	message(FATAL_ERROR "SFML not found!")
 endif()
 
-find_package(TGUI 0.8 REQUIRED)
-if(TGUI_NOTFOUND)
-	message(FATAL_ERROR "TGUI not found!")
-endif()
-
 add_subdirectory(src)
 add_subdirectory(plugins)
 add_executable(zany80 ${SOURCES})
 
-include_directories(${SFML_INCLUDE_DIR} ${TGUI_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+include_directories(${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
-target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${TGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 if(WIN32)
   install(FILES font.png DESTINATION .)
