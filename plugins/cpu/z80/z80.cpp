@@ -124,6 +124,13 @@ inline void ldARP(uint16_t rp, const char *id) {
 	}
 }
 
+inline void ldRPA(uint16_t rp, const char *id) {
+	buffer = (rp << 8) | af.h;
+	CPUState = MEM_WRITE;
+	subcycle++;
+	std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
+}
+
 inline void ldRP(word *rp, const char *id) {
 	switch (subcycle) {
 		case 1:
@@ -194,10 +201,7 @@ void executeOpcode (uint8_t opcode) {
 			ldRP(&bc, "bc");
 			break;
 		case 0x02: // ld (bc), a
-			buffer = (bc.word << 8) | af.h;
-			CPUState = MEM_WRITE;
-			subcycle++;
-			std::cout << "[Z80] `ld (bc), a` executed.\n";
+			ldRPA(bc.word, "bc");
 			break;
 		case 0x03: // inc bc
 			//takes 6 cycle. execute is first called on the fourth cycle with subcycle set to 1.
@@ -262,6 +266,104 @@ void executeOpcode (uint8_t opcode) {
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			std::cout << "[Z80] `rrca` executed.\n";
+			break;
+		case 0x10: // djnz e
+			switch (subcycle) {
+				// start at 2 for djnz, as first M-state takes five cycles
+				case 2:
+					CPUState = MEM_READ;
+					buffer = PC++;
+					break;
+				case 5:
+					bc.h--;
+					if (bc.h == 0) {
+						subcycle = 0;
+						CPUState = INSTRUCTION_FETCH;
+						std::cout << "[Z80] `djnz "<<(int)((int8_t)(buffer & 0xFF))<<"` executed, not jumping\n";
+					}
+					break;
+				case 10:
+					int8_t e = buffer & 0xFF;
+					PC += e;
+					CPUState = INSTRUCTION_FETCH;
+					subcycle = 0;
+					std::cout << "[Z80] `djnz "<<(int)e<<"` executed.\n";
+					break;
+			}
+			break;
+		case 0x11: // ld de, **
+			ldRP(&de, "de");
+			break;
+		case 0x12: // ld (de), a
+			ldRPA(de.word, "de");
+			break;
+		case 0x13: // inc de
+			incRP(&de.word, "de");
+			break;
+		case 0x14: // inc d
+			incR(&de.h, 'd');
+			break;
+		case 0x15: // dec d
+			decR(&de.h, 'd');
+			break;
+		case 0x16: // ld d, *
+			ldR(&de.h, 'd');
+			break;
+		case 0x17: // rla
+			{
+				bool pC = getFlag(C);
+				setFlag(C, af.h & 0x80);
+				af.h <<= 1;
+				if (pC) {
+					af.h |= 0x01;
+				}
+			}
+			setFlag(N, false);
+			setFlag(H, false);
+			break;
+		case 0x18: // jr e
+			if (subcycle == 1) {
+				buffer = PC++;
+				CPUState = MEM_READ;
+				subcycle++;
+			}
+			else {
+				int8_t e = buffer & 0xFF;
+				PC += e;
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+				std::cout << "[Z80] `jr "<<(int)e<<"` executed.\n";
+			}
+			break;
+		case 0x19: // add hl, de
+			addHLSS(&de.word, "de");
+			break;
+		case 0x1A: // ld a, (de)
+			ldARP(de.word, "de");
+			break;
+		case 0x1B: // dec de
+			decRP(&de.word, "de");
+			break;
+		case 0x1C: // inc e
+			incR(&de.l, 'e');
+			break;
+		case 0x1D: // dec e
+			decR(&de.l, 'e');
+			break;
+		case 0x1E: // ld e, *
+			ldR(&de.l, 'e');
+			break;
+		case 0x1F: // rra
+			{
+				bool pC = getFlag(C);
+				setFlag(C, af.h & 0x01);
+				af.h >>= 1;
+				if (pC) {
+					af.h |= 0x80;
+				}
+			}
+			setFlag(H, false);
+			setFlag(N, false);
 			break;
 		default:
 		case 0x00: // nop

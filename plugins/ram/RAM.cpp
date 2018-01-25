@@ -25,6 +25,14 @@ void init(liblib::Library *plugin_manager) {
 	ram[3] = 3;
 	// ld (bc), a
 	ram[4] = 2;
+	// ld bc, 1
+	ram[5] = 6;
+	ram[6] = 1;
+	// inc b
+	ram[7] = 4;
+	// djnz -3
+	ram[8] = 0x10;
+	ram[9] = -2;
 }
 
 void cleanup() {
