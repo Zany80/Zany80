@@ -52,3 +52,6 @@ HardwareType *getHardwareType() {
 const char *getSignature() {
 	return s(sig(ADDRESS_BUS_SIZE,DATA_BUS_SIZE));
 }
+
+#undef t
+#undef _t

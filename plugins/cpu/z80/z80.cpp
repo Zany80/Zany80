@@ -39,6 +39,9 @@ word af_,bc_,de_,hl_;
 #define N 0x02
 #define C 0x01
 
+#define MEM_WRITE_FETCH 0x1000000
+#define MEM_WRITE_EXECUTE 0x0000000
+
 void setFlag(uint8_t flag,bool state) {
 	if (state)
 		af.l |= flag;
@@ -125,7 +128,7 @@ inline void ldARP(uint16_t rp, const char *id) {
 }
 
 inline void ldRPA(uint16_t rp, const char *id) {
-	buffer = (rp << 8) | af.h;
+	buffer = (rp << 8) | af.h | MEM_WRITE_FETCH;
 	CPUState = MEM_WRITE;
 	subcycle++;
 	std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
@@ -320,6 +323,7 @@ void executeOpcode (uint8_t opcode) {
 			}
 			setFlag(N, false);
 			setFlag(H, false);
+			std::cout << "[Z80] `rla` executed.\n";
 			break;
 		case 0x18: // jr e
 			if (subcycle == 1) {
@@ -364,7 +368,58 @@ void executeOpcode (uint8_t opcode) {
 			}
 			setFlag(H, false);
 			setFlag(N, false);
+			std::cout << "[Z80] `rra` executed.\n";
 			break;
+		case 0x20: // jr nz, *
+			switch (subcycle) {
+				case 1:
+					CPUState = MEM_READ;
+					buffer = PC++;
+					subcycle++;
+					break;
+				case 5:
+					if (getFlag(Z)) {
+						subcycle = 0;
+						CPUState = INSTRUCTION_FETCH;
+						std::cout << "[Z80] `jr nz, "<<(int)((int8_t)buffer&0xFF)<<"` executed, not jumping...\n";
+					}
+					break;
+				case 10:
+					int8_t e = buffer & 0xFF;
+					PC += e;
+					std::cout << "[Z80] `jr nz, "<<(int)e<<"` executed...\n";
+					CPUState = INSTRUCTION_FETCH;
+					subcycle = 0;
+					break;
+			}
+			break;
+		case 0x21: // ld hl, **
+			ldRP(&hl, "hl");
+			break;
+		case 0x22: // ld (**), hl
+			{
+				static uint16_t addr;
+				switch (subcycle) {
+					case 1:
+						CPUState = MEM_READ;
+						buffer = PC++;
+						subcycle-=2;
+						break;
+					case 2:
+						addr = buffer & 0xFF;
+						CPUState = MEM_READ;
+						buffer = PC++;
+						break;
+					case 5:
+						addr |= ((buffer & 0xFF) << 8);
+						buffer = (addr << 8) | hl.l | MEM_WRITE_EXECUTE;
+						CPUState = MEM_WRITE;
+						break;
+					case 8:
+
+						break;
+				}
+			}
 		default:
 		case 0x00: // nop
 			subcycle = 0;
@@ -411,7 +466,13 @@ void cycle() {
 				//CPUState = (buffer & 0x2000000) ? INSTRUCTION_EXECUTE : INSTRUCTION_FETCH;
 			//}
 		}
-		else if (subcycle % 3 == 2) {
+		else if (subcycle % 3 == 1) {
+			if((buffer & 0x1000000) == MEM_WRITE_EXECUTE) {
+				CPUState = INSTRUCTION_EXECUTE;
+				subcycle = 0;
+			}
+		}
+		else {
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
 		}

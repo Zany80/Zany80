@@ -75,3 +75,6 @@ void emulate(uint64_t cycles) {
 }
 
 #endif
+
+#undef t
+#undef _t
