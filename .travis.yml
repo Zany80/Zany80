@@ -8,10 +8,17 @@ sudo: required
 
 install:
   - sudo apt install libsfml-dev
-  - git clone https://github.com/zany80/zany80.git
+# TODO: Set up Travis for liblib and just download the release
+  - git clone https://github.com/pixelherodev/liblib.git
+  - cd liblib
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make -j4
+  - sudo make install
+  - cd ../..
 
 script:
-  - cd zany80
   - mkdir build
   - cd build
   - cmake ..
