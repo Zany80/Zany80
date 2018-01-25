@@ -60,6 +60,109 @@ enum {
 	INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
 } CPUState;
 
+inline void incR(uint8_t *r, char id) {
+	uint8_t old = (*r)++;
+	setFlag(S, *r & 0x80);
+	setFlag(Z, *r == 0);
+	setFlag(H, old & 0x0F == 0x0F);
+	setFlag(N, false);
+	setFlag(PV, old == 0x7F);
+	subcycle = 0;
+	CPUState = INSTRUCTION_FETCH;
+	std::cout << "[Z80] `inc "<<id<<"` executed.\n";
+}
+
+inline void decR(uint8_t *r, char id) {
+	uint8_t old = (*r)--;
+	setFlag(S, *r & 0x80);
+	setFlag(Z, *r == 0);
+	setFlag(H, old & 0x1F == 0x10);
+	setFlag(N, true);
+	setFlag(PV, (old & 0x7F) == 0);
+	subcycle = 0;
+	CPUState = INSTRUCTION_FETCH;
+	std::cout << "[Z80] `dec "<<id<<"` executed.\n";
+}
+
+inline void ldR(uint8_t *r, char id) {
+	if (subcycle == 1) {
+		subcycle++;
+		CPUState = MEM_READ;
+		buffer = PC++;
+	}
+	else {
+		*r = buffer & 0xFF;
+		std::cout << "[Z80] `ld "<<id<<", "<<(int)*r<<"` executed.\n";
+		subcycle = 0;
+		CPUState = INSTRUCTION_FETCH;
+	}
+}
+
+inline void addHLSS(uint16_t *rp, const char *id) {
+	if (subcycle == 8) {
+		uint32_t result = hl.word + *rp;
+		setFlag(H, ((hl.word & 0xFFF) + (*rp & 0xFFF)) & 0x1000);
+		setFlag(N, false);
+		setFlag(C, result & 0x10000);
+		subcycle = 0;
+		CPUState = INSTRUCTION_FETCH;
+		std::cout << "[Z80] `add hl, "<<id<<"` executed.\n";
+	}
+}
+
+inline void ldARP(uint16_t rp, const char *id) {
+	if (subcycle == 1) {
+		buffer = rp;
+		CPUState = MEM_READ;
+		subcycle++;
+	}
+	else {
+		af.h = buffer & 0xFF;
+		CPUState = INSTRUCTION_FETCH;
+		subcycle = 0;
+		std::cout << "[Z80] `ld a, ("<<id<<")` executed.\n";
+	}
+}
+
+inline void ldRP(word *rp, const char *id) {
+	switch (subcycle) {
+		case 1:
+			CPUState = MEM_READ;
+			subcycle-=2;
+			buffer = PC++;
+			break;
+		case 2:
+			rp->l = buffer & 0xFF;
+			CPUState = MEM_READ;
+			buffer = PC++;
+			break;
+		case 5:
+			rp->h = buffer & 0xFF;
+			subcycle = 0;
+			std::cout << "[Z80] `ld "<<id<<", "<<(int)rp->word<<"` executed.\n";
+			CPUState = INSTRUCTION_FETCH;
+			break;
+	}
+}
+
+inline void incRP(uint16_t *rp,const char *id) {
+	if (subcycle == 3) {
+		(*rp)++;
+		subcycle = 0;
+		CPUState = INSTRUCTION_FETCH;
+		std::cout << "[Z80] `inc "<<id<<"` executed.\n";
+	}
+}
+
+inline void decRP(uint16_t *rp, const char *id) {
+	if (subcycle == 3) {
+		(*rp)--;
+		CPUState = INSTRUCTION_FETCH;
+		subcycle = 0;
+		std::cout << "[Z80] `dec "<<id<<"` executed.\n";
+	}
+}
+
 void init(liblib::Library *plugin_manager) {
 	CPUState = INSTRUCTION_FETCH;
 	PC = 0;
@@ -88,24 +191,7 @@ void executeOpcode (uint8_t opcode) {
 	std::cout << "[Z80]  Executing opcode " << (int)opcode<<" at cycle "<<(int)tstates<<"\n";
 	switch (opcode) {
 		case 0x01: // ld bc, **
-			switch (subcycle) {
-				case 1:
-					CPUState = MEM_READ;
-					subcycle-=2;
-					buffer = PC++;
-					break;
-				case 2:
-					bc.l = buffer & 0xFF;
-					CPUState = MEM_READ;
-					buffer = PC++;
-					break;
-				case 5:
-					bc.h = buffer & 0xFF;
-					subcycle = 0;
-					std::cout << "[Z80] `ld bc, "<<(int)bc.word<<"` executed.\n";
-					CPUState = INSTRUCTION_FETCH;
-					break;
-			}
+			ldRP(&bc, "bc");
 			break;
 		case 0x02: // ld (bc), a
 			buffer = (bc.word << 8) | af.h;
@@ -115,31 +201,70 @@ void executeOpcode (uint8_t opcode) {
 			break;
 		case 0x03: // inc bc
 			//takes 6 cycle. execute is first called on the fourth cycle with subcycle set to 1.
-			if (subcycle == 3) {
-				bc.word++;
-				subcycle = 0;
-				CPUState = INSTRUCTION_FETCH;
-				std::cout << "[Z80] `inc bc` executed.\n";
-			}
-			else {
-				std::cout << "[Z80] "<<(3-subcycle)<<" cycles remaining for `inc bc`...\n";
-			}
+			incRP(&bc.word, "bc");
 			break;
 		case 0x04: // inc b
+			incR(&bc.h, 'b');
+			break;
+		case 0x05: // dec b
+			decR(&bc.h, 'b');
+			break;
+		case 0x06: // ld b, *
+			ldR(&bc.h,'b');
+			break;
+		case 0x07: // rlca
+			setFlag(C, af.h & 0x80);
+			af.h <<= 1;
+			if (getFlag(C))
+				af.h |= 0x01;
+			setFlag(N, false);
+			setFlag(H, false);
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
+			std::cout << "[Z80] `rlca` executed.\n";
+			break;
+		case 0x08: // ex af, af'
 			{
-				uint8_t old = bc.h++;
-				setFlag(S, bc.h & 0x80);
-				setFlag(Z, bc.h == 0);
-				setFlag(H, old & 0x0F == 0x0F);
-				setFlag(N, false);
-				setFlag(PV, old == 0x7F);
+				uint16_t t = af.word;
+				af.word = af_.word;
+				af_.word = t;
 			}
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
-			std::cout << "[Z80] `inc b` executed.\n";
+			std::cout << "[Z80] `ex af, af'` executed.\n";
+			break;
+		case 0x09: // add hl, bc
+			addHLSS(&bc.word,"bc");
+			break;
+		case 0x0A: // ld a, (bc)
+			ldARP(bc.word,"bc");
+			break;
+		case 0x0B: // dec bc
+			decRP(&bc.word, "bc");
+			break;
+		case 0x0C: // inc c
+			incR(&bc.l, 'c');
+			break;
+		case 0x0D: // dec c
+			decR(&bc.l, 'c');
+			break;
+		case 0x0E: // ld c, *
+			ldR(&bc.l, 'c');
+			break;
+		case 0x0F: // rrca
+			setFlag(C, af.h & 0x01);
+			af.h >>= 1;
+			if (getFlag(C)) {
+				af.h |= 0x80;
+			}
+			setFlag(N, false);
+			setFlag(H, false);
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
+			std::cout << "[Z80] `rrca` executed.\n";
 			break;
 		default:
-		case 0x00: //nop
+		case 0x00: // nop
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
@@ -165,9 +290,9 @@ void cycle() {
 		if (subcycle % 3 == 0) {
 			bool skip_delay = buffer & 0x10000;
 			buffer = readRAM(buffer & 0xFFFF);
-			//if (buffer & 0x10000) {
-				//CPUState = INSTRUCTION_EXECUTE;
-			//}
+			if (buffer & 0x10000) {
+				CPUState = INSTRUCTION_EXECUTE;
+			}
 		}
 		// The execute cycle is the first of the three cycles for reading memory, so only delay one cycle here
 		else if (subcycle % 3 == 1) {
