@@ -1,10 +1,18 @@
 language: cpp
-compiler:
-	- clang
-	- gcc
-script:
-	- mkdir build
-	- cd build
-	- cmake ..
-	- make -j4
 
+compiler:
+  - clang
+  - gcc
+
+sudo: required
+
+install:
+  - sudo apt install libsfml-dev
+  - git clone https://github.com/zany80/zany80.git
+
+script:
+  - cd zany80
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make -j4
