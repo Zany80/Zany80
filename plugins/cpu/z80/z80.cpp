@@ -67,7 +67,7 @@ inline void incR(uint8_t *r, char id) {
 	uint8_t old = (*r)++;
 	setFlag(S, *r & 0x80);
 	setFlag(Z, *r == 0);
-	setFlag(H, old & 0x0F == 0x0F);
+	setFlag(H, (old & 0x0F) == 0x0F);
 	setFlag(N, false);
 	setFlag(PV, old == 0x7F);
 	subcycle = 0;
@@ -79,7 +79,7 @@ inline void decR(uint8_t *r, char id) {
 	uint8_t old = (*r)--;
 	setFlag(S, *r & 0x80);
 	setFlag(Z, *r == 0);
-	setFlag(H, old & 0x1F == 0x10);
+	setFlag(H, (old & 0x1F) == 0x10);
 	setFlag(N, true);
 	setFlag(PV, (old & 0x7F) == 0);
 	subcycle = 0;

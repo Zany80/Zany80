@@ -14,7 +14,7 @@ class Zany80 {
 public:
 	Zany80();
 	~Zany80();
-	int run();
+	void run();
 	void frame();
 	void close();
 	void close(std::string message);

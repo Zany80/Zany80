@@ -17,6 +17,8 @@ void Zany80::close(std::string message) {
 				case sf::Event::Closed:
 					window->close();
 					break;
+				default:
+					break;
 			}
 		}
 		
@@ -53,7 +55,8 @@ int main(int argc, const char **argv){
 	folder += "../share/zany80/";
 	#endif
 	zany = new Zany80();
-	return zany->run();
+	zany->run();
+	return 0;
 }
 
 Zany80::Zany80(){
@@ -111,7 +114,7 @@ Zany80::~Zany80(){
 	}
 }
 
-int Zany80::run(){
+void Zany80::run(){
 	while (window->isOpen()) {
 		frame();
 	}
