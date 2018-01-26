@@ -30,6 +30,8 @@ uint8_t opcode;
 word af,bc,de,hl;
 word af_,bc_,de_,hl_;
 
+word SP;
+
 #define S 0x80
 #define Z 0x40
 #define FIVE 0x20
@@ -593,7 +595,6 @@ void cycle() {
 		else if (subcycle % 3 == 1) {
 			if((buffer & 0x1000000) == MEM_WRITE_EXECUTE) {
 				CPUState = INSTRUCTION_EXECUTE;
-				subcycle = 0;
 			}
 		}
 		else {
