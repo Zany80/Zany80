@@ -128,10 +128,16 @@ inline void ldARP(uint16_t rp, const char *id) {
 }
 
 inline void ldRPA(uint16_t rp, const char *id) {
-	buffer = (rp << 8) | af.h | MEM_WRITE_FETCH;
-	CPUState = MEM_WRITE;
-	subcycle++;
-	std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
+	if (subcycle == 1) {
+		buffer = (rp << 8) | af.h | MEM_WRITE_EXECUTE;
+		CPUState = MEM_WRITE;
+		subcycle++;			
+	}
+	else {
+		std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
+		CPUState = INSTRUCTION_FETCH;
+		subcycle = 0;
+	}
 }
 
 inline void ldRP(word *rp, const char *id) {
@@ -170,6 +176,37 @@ inline void decRP(uint16_t *rp, const char *id) {
 		CPUState = INSTRUCTION_FETCH;
 		subcycle = 0;
 		std::cout << "[Z80] `dec "<<id<<"` executed.\n";
+	}
+}
+
+bool parity(uint8_t x){
+	x ^= x >> 4;
+	x ^= x >> 2;
+	x ^= x >> 1;
+	return x & 1;
+}
+
+inline void jrC(bool c, const char *id) {
+	switch (subcycle) {
+		case 1:
+			CPUState = MEM_READ;
+			buffer = PC++;
+			subcycle++;
+			break;
+		case 5:
+			if (!c) {
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+				std::cout << "[Z80] `jr "<<id<<", "<<(int)((int8_t)buffer&0xFF)<<"` executed, not jumping...\n";
+			}
+			break;
+		case 10:
+			int8_t e = buffer & 0xFF;
+			PC += e;
+			std::cout << "[Z80] `jr "<<id<<", "<<(int)e<<"` executed...\n";
+			CPUState = INSTRUCTION_FETCH;
+			subcycle = 0;
+			break;
 	}
 }
 
@@ -324,6 +361,8 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(N, false);
 			setFlag(H, false);
 			std::cout << "[Z80] `rla` executed.\n";
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
 			break;
 		case 0x18: // jr e
 			if (subcycle == 1) {
@@ -369,29 +408,11 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(H, false);
 			setFlag(N, false);
 			std::cout << "[Z80] `rra` executed.\n";
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
 			break;
 		case 0x20: // jr nz, *
-			switch (subcycle) {
-				case 1:
-					CPUState = MEM_READ;
-					buffer = PC++;
-					subcycle++;
-					break;
-				case 5:
-					if (getFlag(Z)) {
-						subcycle = 0;
-						CPUState = INSTRUCTION_FETCH;
-						std::cout << "[Z80] `jr nz, "<<(int)((int8_t)buffer&0xFF)<<"` executed, not jumping...\n";
-					}
-					break;
-				case 10:
-					int8_t e = buffer & 0xFF;
-					PC += e;
-					std::cout << "[Z80] `jr nz, "<<(int)e<<"` executed...\n";
-					CPUState = INSTRUCTION_FETCH;
-					subcycle = 0;
-					break;
-			}
+			jrC(!getFlag(Z), "nz");
 			break;
 		case 0x21: // ld hl, **
 			ldRP(&hl, "hl");
@@ -416,10 +437,113 @@ void executeOpcode (uint8_t opcode) {
 						CPUState = MEM_WRITE;
 						break;
 					case 8:
-
+						buffer = ((addr + 1) << 8) | hl.h | MEM_WRITE_EXECUTE;
+						CPUState = MEM_WRITE;
+						break;
+					case 11:
+						CPUState = INSTRUCTION_FETCH;
+						subcycle = 0;
+						std::cout << "[Z80] `ld ("<<addr<<"), hl` executed.\n";
 						break;
 				}
 			}
+			break;
+		case 0x23: // inc hl
+			incRP(&hl.word, "hl");
+			break;
+		case 0x24: // inc h
+			incR(&hl.h, 'h');
+			break;
+		case 0x25: // dec h
+			decR(&hl.h, 'h');
+			break;
+		case 0x26: // ld h, *
+			ldR(&hl.h, 'h');
+			break;
+		case 0x27: // daa
+			{
+				uint8_t old = af.h;
+				uint8_t v = 0;
+				if ((af.h & 0xF) > 9 || getFlag(H))
+					v += 0x06;
+				if (((af.h+v) >> 4) > 9 || getFlag(C) || ( (uint16_t)(af.h + v) & 0x100) == 0x100)
+					v += 0x60;
+				if(getFlag(N)){
+					af.h -= v;
+					setFlag(H,((((old & 0xF) - (v & 0xF)) & 0x10) == 0x10));
+				}
+				else{
+					af.h += v;
+					setFlag(H, ((((old & 0xF) + (v & 0xF)) & 0x10) == 0x10));
+				}
+				setFlag(C, v >= 0x60);
+			}
+			setFlag(S, af.h & 0x80);
+			setFlag(Z, !(bool)af.h);
+			setFlag(PV, parity(af.h));
+			std::cout << "[Z80] `daa` executed.";
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
+			break;
+		case 0x28: // jr z, *
+			jrC(getFlag(Z), "z");
+			break;
+		case 0x29: // add hl, hl
+			addHLSS(&hl.word, "hl");
+			break;
+		case 0x2A: // ld hl, (**)
+			{
+				static uint16_t addr;
+				switch (subcycle) {
+					case 1:
+						CPUState = MEM_READ;
+						buffer = PC++;
+						subcycle-=2;
+						break;
+					case 2:
+						addr = buffer & 0xFF;
+						CPUState = MEM_READ;
+						buffer = PC++;
+						break;
+					case 5:
+						addr |= ((buffer & 0xFF) << 8);
+						buffer = addr;
+						CPUState = MEM_READ;
+						break;
+					case 8:
+						hl.l = buffer & 0xFF;
+						buffer = addr+1;
+						CPUState = MEM_READ;
+						break;
+					case 11:
+						hl.h = buffer & 0xFF;
+						CPUState = INSTRUCTION_FETCH;
+						subcycle = 0;
+						std::cout << "[Z80] `ld hl, ("<<addr<<")` executed, value of hl: " <<(int)hl.word << "\n";
+						break;
+				}
+			}
+			break;
+		case 0x2B: // dec hl
+			decRP(&hl.word, "hl");
+			break;
+		case 0x2C: // inc l
+			incR(&hl.l, 'l');
+			break;
+		case 0x2D: // dec l
+			decR(&hl.l, 'l');
+			break;
+		case 0x2E: // ld l, *
+			ldR(&hl.l, 'l');
+			break;
+		case 0x2F: // cpl
+			setFlag(N, true);
+			setFlag(H, true);
+			af.h ^= 0xFF;
+			std::cout << "[Z80] `cpl` executed.\n";
+			subcycle = 0;
+			CPUState = INSTRUCTION_FETCH;
+			break;
 		default:
 		case 0x00: // nop
 			subcycle = 0;
