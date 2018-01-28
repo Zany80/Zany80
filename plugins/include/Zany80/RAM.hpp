@@ -2,6 +2,7 @@
 
 #include <Plugins.hpp>
 #include <liblib/liblib.hpp>
+#include <string.h>
 
 #define _t(x) uint ## x ## _t
 #define t(x) _t(x)
@@ -33,7 +34,7 @@ HardwareType hw_type = RAM;
 extern "C" {
 	PluginType *getType();
 	HardwareType *getHardwareType();
-	const char *getSignature();
+	bool isSignatureCompatible(const char *sig);
 	const char *neededPlugins();
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
@@ -49,8 +50,8 @@ HardwareType *getHardwareType() {
 	return &hw_type;
 }
 
-const char *getSignature() {
-	return s(sig(ADDRESS_BUS_SIZE,DATA_BUS_SIZE));
+bool isSignatureCompatible(const char *sig) {
+	return strcmp(s(sig(ADDRESS_BUS_SIZE,DATA_BUS_SIZE)), sig) == 0;
 }
 
 #undef t

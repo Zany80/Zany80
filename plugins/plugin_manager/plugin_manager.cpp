@@ -99,8 +99,7 @@ bool unneeded(liblib::Library *prereq) {
 					try {
 						if (*(PluginType*)((*prereq)["getType"]()) == Hardware) {
 							if (*(HardwareType*)((*prereq)["getHardwareType"]()) == CPU) {
-								std::string signature = (const char *)(*prereq)["getSignature"]();
-								if (signature == id) {
+								if (((bool(*)(const char *))(*prereq)["isSignatureCompatible"])(id.c_str())) {
 									// The prereq is needed by another plugin
 									return false;
 								}
@@ -113,8 +112,7 @@ bool unneeded(liblib::Library *prereq) {
 					try {
 						if (*(PluginType*)((*prereq)["getType"]()) == Hardware) {
 							if (*(HardwareType*)((*prereq)["getHardwareType"]()) == RAM) {
-								std::string signature = (const char *)(*prereq)["getSignature"]();
-								if (signature == id) {
+								if (((bool(*)(const char *))(*prereq)["isSignatureCompatible"])(id.c_str())) {
 									// The prereq is needed by another plugin
 									return false;
 								}
@@ -156,8 +154,7 @@ bool prereqsLoaded(liblib::Library **library) {
 					// Check if any of the loaded CPUs match the signature specified
 					for (liblib::Library *cpu : *CPUs) {
 						try {
-							std::string signature = (const char *)(*cpu)["getSignature"]();
-							if (signature == id) {
+							if (((bool(*)(const char *))(*cpu)["isSignatureCompatible"])(id.c_str())) {
 								cur_found = true;
 								break;
 							}
@@ -172,8 +169,7 @@ bool prereqsLoaded(liblib::Library **library) {
 					for (liblib::Library *ram : *hardware) {
 						try {
 							if (*((HardwareType*)((*ram)["getHardwareType"]())) == RAM) {
-								std::string signature = (const char *)(*ram)["getSignature"]();
-								if (signature == id) {
+								if (((bool(*)(const char *))(*ram)["isSignatureCompatible"])(id.c_str())) {
 									cur_found = true;
 									break;
 								}
@@ -299,8 +295,7 @@ liblib::Library *getDefaultRunner() {
 liblib::Library *getCPU(const char *signature) {
 	if(getCPUs() != nullptr) {
 		for (liblib::Library *cpu : *CPUs) {
-			const char *sig = (const char *)((*cpu)["getSignature"]());
-			if (strcmp(signature,sig) == 0) {
+			if (((bool(*)(const char *))(*cpu)["isSignatureCompatible"])(signature)) {
 				return cpu;
 			}
 		}
@@ -311,8 +306,7 @@ liblib::Library *getCPU(const char *signature) {
 liblib::Library *getRAM(const char *signature) {
 	if(getHardware() != nullptr) {
 		for (liblib::Library *ram : *hardware) {
-			const char *sig = (const char *)((*ram)["getSignature"]());
-			if (strcmp(signature,sig) == 0) {
+			if (((bool(*)(const char *))(*ram)["isSignatureCompatible"])(signature)) {
 				return ram;
 			}
 		}

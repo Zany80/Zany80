@@ -7,6 +7,7 @@ PluginType type = Runner;
 extern RunnerType runner_type;
 
 extern "C" {
+	bool isSignatureCompatible(const char *sig);
 	PluginType *getType();
 	RunnerType *getRunnerType();
 	const char *neededPlugins();

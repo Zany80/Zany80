@@ -28,7 +28,7 @@ extern "C" {
 	uint64_t *getCycles();
 	uint8_t getAddressBusSize();
 	uint8_t getDataBusSize();
-	const char *getSignature();
+	bool isSignatureCompatible(const char *sig);
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
 	const char *neededPlugins();
@@ -63,9 +63,15 @@ uint8_t getDataBusSize() {
 	return DATA_BUS_SIZE;
 }
 
-const char *getSignature() {
-	return signature;
+#ifndef OVERRIDE_SIG
+
+#include <string.h>
+
+bool isSignatureCompatible(const char *sig) {
+	return strcmp(sig,signature) == 0;
 }
+
+#endif
 
 #ifndef OVERRIDE_EMULATE
 
