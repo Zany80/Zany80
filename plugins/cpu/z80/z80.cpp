@@ -541,6 +541,176 @@ void executeOpcode (uint8_t opcode) {
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
+		case 0x30: // jr nc, *
+			jrC(!getFlag(C), "nc");
+			break;
+		case 0x31: // ld sp, **
+			ldRP(&SP, "sp");
+			break;
+		case 0x32: // ld (**), a
+			{
+				static uint16_t addr;
+				switch (subcycle) {
+					case 1:
+						CPUState = MEM_READ;
+						buffer = PC++;
+						subcycle-=2;
+						break;
+					case 2:
+						addr = buffer & 0xFF;
+						CPUState = MEM_READ;
+						buffer = PC++;
+						break;
+					case 5:
+						addr |= ((buffer & 0xFF) << 8);
+						buffer = (addr << 8) | af.h | MEM_WRITE_EXECUTE;
+						CPUState = MEM_WRITE;
+						break;
+					case 8:
+						CPUState = INSTRUCTION_FETCH;
+						subcycle = 0;
+						std::cout << "[Z80] `ld ("<<addr<<"), a` executed.\n";
+						break;
+				}
+			}
+			break;
+		case 0x33: // inc sp
+			incRP(&SP.word, "sp");
+			break;
+		case 0x34: // inc (hl)
+			switch (subcycle) {
+				static uint8_t old;
+				case 1:
+					CPUState = MEM_READ;
+					buffer = hl.word;
+					subcycle-=2;
+					break;
+				// takes *four* cycles to read+increment (as opposed to the usual 3)
+				case 3:
+					old = buffer & 0xFF;
+					buffer = (hl.word << 8) | (old+1) | MEM_WRITE_EXECUTE;
+					CPUState = MEM_WRITE;
+					subcycle--;
+					break;
+				case 5:
+					setFlag(S, (old+1) & 0x80);
+					setFlag(Z, (old+1) == 0);
+					setFlag(H, (old & 0x0F) == 0x0F);
+					setFlag(PV, old == 0x7F);
+					setFlag(N, false);
+					std::cout << "[Z80]`inc (hl)` executed.\n";
+					CPUState = INSTRUCTION_FETCH;
+					subcycle = 0;
+					break;
+			}
+			break;
+		case 0x35: // dec (hl)
+		switch (subcycle) {
+				static uint8_t old;
+				case 1:
+					CPUState = MEM_READ;
+					buffer = hl.word;
+					subcycle-=2;
+					break;
+				// takes *four* cycles to read+decrement (as opposed to the usual 3)
+				case 3:
+					old = buffer & 0xFF;
+					buffer = (hl.word << 8) | (old-1) | MEM_WRITE_EXECUTE;
+					CPUState = MEM_WRITE;
+					subcycle--;
+					break;
+				case 5:
+					setFlag(S, (old-1) & 0x80);
+					setFlag(Z, (old-1) == 0);
+					setFlag(H, (old & 0x0F) == 0x00);
+					setFlag(PV, old == 0x80);
+					setFlag(N, false);
+					std::cout << "[Z80]`dec (hl)` executed.\n";
+					CPUState = INSTRUCTION_FETCH;
+					subcycle = 0;
+					break;
+			}
+			break;
+		case 0x36: // ld (hl), *
+			switch (subcycle) {
+				static uint8_t value;
+				case 1:
+					CPUState = MEM_READ;
+					buffer = PC++;
+					subcycle-=2;
+					break;
+				case 2:
+					CPUState = MEM_WRITE;
+					value = buffer & 0xFF;
+					buffer = (hl.word << 8) | (value) | MEM_WRITE_EXECUTE;
+					break;
+				case 5:
+					std::cout << "[Z80] `ld (hl), "<<(int)value<<"` executed.\n";
+					CPUState = INSTRUCTION_FETCH;
+					subcycle = 0;
+					break;
+			}
+			break;
+		case 0x37: // scf
+			setFlag(C, true);
+			setFlag(N, false);
+			setFlag(H, false);
+			std::cout << "[Z80] `scf` executed.\n";
+			CPUState = INSTRUCTION_FETCH;
+			subcycle = 0;
+			break;
+		case 0x38: // jr c, *
+			jrC(getFlag(C),"c");
+			break;
+		case 0x39: // add hl, sp
+			addHLSS(&SP.word, "sp");
+			break;
+		case 0x3A: // ld a, (**)
+			switch (subcycle) {
+				static uint16_t addr;
+				case 1:
+					CPUState = MEM_READ;
+					buffer = PC++;
+					subcycle-=2;
+					break;
+				case 2:
+					addr = buffer & 0xFF;
+					CPUState = MEM_READ;
+					buffer = PC++;
+					break;
+				case 5:
+					addr |= (buffer & 0xFF) << 8;
+					CPUState = MEM_READ;
+					buffer = addr;
+					break;
+				case 8:
+					af.h = buffer & 0xFF;
+					std::cout << "[Z80] `ld a, ("<<(int)addr<<")` executed.\n";
+					subcycle = 0;
+					CPUState = INSTRUCTION_FETCH;
+					break;
+			}
+			break;
+		case 0x3B: // dec sp
+			decRP(&SP.word, "sp");
+			break;
+		case 0x3C: // inc a
+			incR(&af.h, 'a');
+			break;
+		case 0x3D: // dec a
+			decR(&af.h, 'a');
+			break;
+		case 0x3E: // ld a, *
+			ldR(&af.h, 'a');
+			break;
+		case 0x3F: // ccf
+			setFlag(H, getFlag(C));
+			setFlag(C, !getFlag(C));
+			setFlag(N, false);
+			std::cout << "[Z80] `ccf` executed.\n";
+			CPUState = INSTRUCTION_FETCH;
+			subcycle = 0;
+			break;
 		default:
 		case 0x00: // nop
 			subcycle = 0;
