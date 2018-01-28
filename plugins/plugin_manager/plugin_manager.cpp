@@ -35,9 +35,10 @@ std::vector<std::string> *enumerate_plugins() {
 	//TODO: either use a file to track installed plugins or query all valid files in the folder recursively.
 	if (plugin_paths == nullptr) {
 		plugin_paths = new std::vector <std::string>;
-		plugin_paths->push_back("plugins/rom_runner");
 		plugin_paths->push_back("plugins/cpu/z80");
+		plugin_paths->push_back("plugins/rom_runner");
 		plugin_paths->push_back("plugins/RAM16_8");
+		plugin_paths->push_back("plugins/simple_shell");
 	}
 	return plugin_paths;
 }
@@ -132,8 +133,9 @@ bool unneeded(liblib::Library *prereq) {
 }
 
 bool prereqsLoaded(liblib::Library **library) {
+	// let the exception fall through
+	std::string needed = (const char *)(**library)["neededPlugins"]();
 	try {
-		std::string needed = (const char *)(**library)["neededPlugins"]();
 		if (needed == "") {
 			std::cout << "[Plugin Manager] No prereqs\n";
 			return true;
@@ -215,8 +217,19 @@ void gatherPlugins(PluginType type, std::vector<liblib::Library*> *vector) {
 	vector->clear();
 	for (auto pair : *plugins) {
 		liblib::Library *library = pair.second;
-		if (*((PluginType*)(*library)["getType"]()) == type) {
-			vector->push_back(library);
+		try {
+			if (*((PluginType*)(*library)["getType"]()) == type) {
+				vector->push_back(library);
+			}
+		}
+		catch (std::exception) {
+			std::cout << "[Plugin Manager] Invalid plugin detected: "<<pair.first<<", removing...\n";
+			try {
+				(*pair.second)["cleanup"]();
+			}
+			catch (std::exception){}
+			delete pair.second;
+			plugins->erase(pair.first);
 		}
 	}
 }
@@ -224,8 +237,13 @@ void gatherPlugins(PluginType type, std::vector<liblib::Library*> *vector) {
 void gatherPlugins(HardwareType type, std::vector<liblib::Library*> *vector) {
 	vector->clear();
 	for (liblib::Library *library : *hardware) {
-		if (*((HardwareType*)(*library)["getHardwareType"]()) == type) {
-			vector->push_back(library);
+		try {
+			if (*((HardwareType*)(*library)["getHardwareType"]()) == type) {
+				vector->push_back(library);
+			}
+		}
+		catch (std::exception) {
+			
 		}
 	}
 }
@@ -332,6 +350,17 @@ void finishLoading() {
 	while (plength != offloaded->size() && !offloaded->empty());
 	delete offloaded;
 	offloaded = nullptr;
+}
+
+void removePlugin(liblib::Library *plugin) {
+	for (auto pair : *plugins) {
+		if (pair.second == plugin) {
+			std::cout << "[Plugin Manager] Removing "<<pair.first<<"\n";
+			plugins->erase(pair.first);
+			return;
+		}
+	}
+	std::cerr << "[Plugin Manager] Plugin removal requested but plugin not found!\n";
 }
 
 liblib::Library *plugin_manager;
