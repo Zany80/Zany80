@@ -2,6 +2,7 @@
 
 #include <Plugins.hpp>
 #include <liblib/liblib.hpp>
+#include <SFML/Window.hpp>
 
 PluginType type = Runner;
 extern RunnerType runner_type;
@@ -16,6 +17,7 @@ extern "C" {
 	void cleanup();
 	// Called every time the runner is activated - this can be used to e.g. reset timers
 	void activate();
+	void event(sf::Event &e);
 }
 
 PluginType *getType(){

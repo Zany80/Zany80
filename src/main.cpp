@@ -4,6 +4,20 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+void Zany80::replaceRunner(){
+	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
+	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
+	if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
+		close("Unable to find suitable runner.\n");
+	}
+	else {
+		try {
+			(*runner)["activate"]();
+		}
+		catch (std::exception &e) {}
+	}
+}
+
 void Zany80::close(std::string message) {
 	std::cerr << "[Crash Handler] "<<message<<
 		"[Crash Handler] Notifying user and shutting down...\n";
@@ -129,8 +143,12 @@ void Zany80::frame(){
 				close();
 				break;
 			default:
-				//if (tool != nullptr)
-					//tool->event(e);
+				try {
+					((void(*)(sf::Event&))((*runner)["event"]))(e);
+				}
+				catch (std::exception) {
+					replaceRunner();
+				}
 				break;
 		}
 	}
@@ -138,17 +156,7 @@ void Zany80::frame(){
 		(*runner)["run"]();
 	}
 	catch (std::exception) {
-		std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
-		((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
-		if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
-			close("Unable to find suitable runner.\n");
-		}
-		else {
-			try {
-				(*runner)["activate"]();
-			}
-			catch (std::exception &e) {}
-		}
+		replaceRunner();
 	}
 	window->display();
 }

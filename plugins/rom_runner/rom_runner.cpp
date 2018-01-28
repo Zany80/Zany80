@@ -1,5 +1,6 @@
 #include <Zany80/Runner.hpp>
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 
@@ -43,7 +44,8 @@ void init(liblib::Library *plugin_manager) {
 	}
 }
 
-void loadROM(std::string path) {
+extern "C"
+void loadROM(const char *path) {
 	if (ROM != nullptr) {
 		delete[] ROM;
 	}
@@ -52,6 +54,7 @@ void loadROM(std::string path) {
 	ROM = new uint8_t[size];
 	ROMFile.seekg(0);
 	ROMFile.read((char*)ROM,size);
+	ROMFile.close();
 }
 
 void cleanup() {
@@ -77,4 +80,22 @@ void run() {
 void activate() {
 	timer.restart();
 	precision.restart();
+}
+
+extern "C"
+bool isROMValid(const char *path) {
+	std::ifstream ROMFile(path,std::ios::binary | std::ios::ate);
+	int size = ROMFile.tellg();
+	uint8_t *data = new uint8_t[size];
+	ROMFile.seekg(0);
+	ROMFile.read((char*)ROM,size);
+	ROMFile.close();
+	// Proper Zany ROMs have the first four characters as ASCII "ZANY" (no null-terminator).
+	bool valid = strncmp((const char *)data, "ZANY",4) == 0;
+	delete[] data;
+	return valid;
+}
+
+void event(sf::Event &e) {
+	
 }

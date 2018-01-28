@@ -18,6 +18,7 @@ public:
 	void frame();
 	void close();
 	void close(std::string message);
+	void replaceRunner();
 	sf::RenderWindow *window;
 	sf::Texture font;
 	

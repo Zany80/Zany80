@@ -15,6 +15,7 @@ extern "C" {
 	std::vector<liblib::Library*> *getCPUs();
 	liblib::Library *getCPU(const char *signature);
 	liblib::Library *getRAM(const char *signature);
+	liblib::Library *getROMRunner(const char *signature);
 	void removePlugin(liblib::Library *plugin);
 }
 
