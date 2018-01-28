@@ -112,6 +112,7 @@ Zany80::~Zany80(){
 	catch (std::exception &e) {
 		std::cerr << "[Crash handler] Error cleaning up plugins\n";
 	}
+	delete plugin_manager;
 }
 
 void Zany80::run(){
@@ -133,7 +134,22 @@ void Zany80::frame(){
 				break;
 		}
 	}
-	((*runner)["run"])();
+	try {
+		(*runner)["run"]();
+	}
+	catch (std::exception) {
+		std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
+		((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
+		if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
+			close("Unable to find suitable runner.\n");
+		}
+		else {
+			try {
+				(*runner)["activate"]();
+			}
+			catch (std::exception &e) {}
+		}
+	}
 	window->display();
 }
 
