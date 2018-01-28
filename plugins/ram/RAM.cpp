@@ -33,6 +33,16 @@ void init(liblib::Library *plugin_manager) {
 	// djnz -3
 	ram[8] = 0x10;
 	ram[9] = -2;
+	// ld a, 0x16
+	ram[10] = 0x3E;
+	ram[11] = 0x16;
+	// ld (15), a
+	ram[12] = 0x32;
+	ram[13] = 0x0F;
+	ram[14] = 0x00;
+	// 15 and 16 are used for the `ld d, 0` instruction - 15 is set by the above instruction
+	// inc (hl)
+	ram[17] = 0x34;
 }
 
 void cleanup() {

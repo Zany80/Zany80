@@ -32,6 +32,7 @@ extern "C" {
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
 	const char *neededPlugins();
+	void setRAM(liblib::Library *RAM);
 }
 
 PluginType type = Hardware;

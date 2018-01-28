@@ -25,6 +25,16 @@ typedef union{
 #endif
 } word;
 
+uint64_t tstates;
+uint8_t subcycle;
+
+// simple buffer used to tell the MEM_READ/MEM_WRITE cycles what to do
+uint32_t buffer;
+
+enum {
+	INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
+} CPUState;
+
 uint16_t PC;
 uint8_t opcode;
 word af,bc,de,hl;
@@ -55,15 +65,16 @@ bool getFlag(uint8_t flag) {
 	return af.l & flag;
 }
 
-uint64_t tstates;
-uint8_t subcycle;
-
-// simple buffer used to tell the MEM_READ/MEM_WRITE cycles what to do
-uint32_t buffer;
-
-enum {
-	INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
-} CPUState;
+void init(liblib::Library *plugin_manager) {
+	CPUState = INSTRUCTION_FETCH;
+	PC = 0;
+	af.word = bc.word = de.word = hl.word = 0;
+	af_.word = bc_.word = de_.word = hl_.word = 0;
+	tstates = 0;
+	subcycle = 0;
+	readRAM = nullptr;
+	writeRAM = nullptr;
+}
 
 inline void incR(uint8_t *r, char id) {
 	uint8_t old = (*r)++;
@@ -209,22 +220,6 @@ inline void jrC(bool c, const char *id) {
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
 			break;
-	}
-}
-
-void init(liblib::Library *plugin_manager) {
-	CPUState = INSTRUCTION_FETCH;
-	PC = 0;
-	af.word = bc.word = de.word = hl.word = 0;
-	af_.word = bc_.word = de_.word = hl_.word = 0;
-	tstates = 0;
-	subcycle = 0;
-	liblib::Library *ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
-	if (ram != nullptr) {
-		setRAM(ram);
-	}
-	else {
-		throw std::exception();
 	}
 }
 
@@ -555,6 +550,9 @@ void executeOpcode (uint8_t opcode) {
 }
 
 void cycle() {
+	if (readRAM == nullptr || writeRAM == nullptr) {
+		throw "";
+	}
 	tstates++;
 	subcycle++;
 	if (CPUState == INSTRUCTION_FETCH) {

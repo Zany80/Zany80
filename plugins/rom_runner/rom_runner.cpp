@@ -18,7 +18,7 @@ float to_run;
 sf::Clock timer, precision;
 
 const char *neededPlugins() {
-	return "CPU/z80";
+	return "CPU/z80;RAM/16_8";
 }
 
 void init(liblib::Library *plugin_manager) {
@@ -27,6 +27,13 @@ void init(liblib::Library *plugin_manager) {
 	try {
 		z80 = ((liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]))("z80");
 		if (z80 == nullptr) {
+			throw std::exception();
+		}
+		liblib::Library *ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
+		if (ram != nullptr) {
+			((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
+		}
+		else {
 			throw std::exception();
 		}
 		emulate=(void(*)(uint64_t))((*z80)["emulate"]);
