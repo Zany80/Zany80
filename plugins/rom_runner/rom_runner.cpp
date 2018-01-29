@@ -16,6 +16,7 @@ void (*emulate)(uint64_t cycles);
 uint8_t * ROM = nullptr;
 
 float to_run;
+// timer is used to calculate how many cycles have passes, precision is needed to determine clock precision
 sf::Clock timer, precision;
 
 const char *neededPlugins() {
