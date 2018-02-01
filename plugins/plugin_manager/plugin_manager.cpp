@@ -285,11 +285,17 @@ liblib::Library *getDefaultRunner() {
 	}
 	for (liblib::Library *library : *runners) {
 		if (*(RunnerType*)((*library)["getRunnerType"]()) == Shell) {
+			if (((bool(*)(const char *))(*library)["activate"])("")) {
+				return library;
+			}
+		}
+	}
+	// No usable shell, but there *are* other runners. Just go with the first valid one.
+	for (liblib::Library *library : *runners) {
+		if (((bool(*)(const char *))(*library)["activate"])("")) {
 			return library;
 		}
 	}
-	// No shell, but there *are* other runners. Just go with the first one.
-	return (*runners)[0];
 }
 
 liblib::Library *getCPU(const char *signature) {
@@ -355,6 +361,21 @@ void removePlugin(liblib::Library *plugin) {
 		}
 	}
 	std::cerr << "[Plugin Manager] Plugin removal requested but plugin not found!\n";
+}
+
+bool activateRunner(RunnerType type, const char *arg) {
+	// if there's no runners, something is really, *really* wrong.
+	if (getRunners() == nullptr)
+		throw;
+	for (liblib::Library *l : *runners) {
+		if (*(RunnerType*)(*l)["getRunnerType"]() != type)
+			continue;
+		if (((bool(*)(const char *))((*l)["activate"]))(arg)) {
+			zany->setRunner(l);
+			return true;
+		}
+	}
+	return false;
 }
 
 liblib::Library *plugin_manager;

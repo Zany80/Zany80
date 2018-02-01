@@ -5,6 +5,8 @@
 #include <vector>
 #include <liblib/liblib.hpp>
 
+#include <Zany80/Plugins.hpp>
+
 extern "C" {
 	std::vector<std::string> * enumerate_plugins();
 	void cleanup();
@@ -17,6 +19,7 @@ extern "C" {
 	liblib::Library *getRAM(const char *signature);
 	liblib::Library *getROMRunner(const char *signature);
 	void removePlugin(liblib::Library *plugin);
+	bool activateRunner(RunnerType runner, const char *arg);
 }
 
 bool attemptLoad(std::string name, liblib::Library ** library);

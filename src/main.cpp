@@ -106,12 +106,6 @@ Zany80::Zany80(){
 		if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
 			close("Unable to find suitable runner.\n");
 		}
-		else {
-			try {
-				(*runner)["activate"]();
-			}
-			catch (std::exception &e) {}
-		}
 	}
 	catch (std::exception &e) {
 		close("Invalid plugin manager.\n");
@@ -163,3 +157,7 @@ void Zany80::frame(){
 }
 
 Zany80 * zany;
+
+void Zany80::setRunner(liblib::Library *runner) {
+	this->runner = runner;
+}

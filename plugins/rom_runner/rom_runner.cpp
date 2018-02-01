@@ -23,7 +23,10 @@ const char *neededPlugins() {
 	return "CPU/z80;RAM/16_8";
 }
 
-void init(liblib::Library *plugin_manager) {
+liblib::Library *plugin_manager;
+
+void init(liblib::Library *pm) {
+	plugin_manager = pm;
 	to_run = 0;
 	std::cout << "[ROM Runner] Retrieving z80 plugin...\n";
 	try {
@@ -45,17 +48,20 @@ void init(liblib::Library *plugin_manager) {
 	}
 }
 
-extern "C"
-void loadROM(const char *path) {
+bool loadROM(const char *path) {
 	if (ROM != nullptr) {
 		delete[] ROM;
 	}
 	std::ifstream ROMFile(path,std::ios::binary | std::ios::ate);
+	if (!ROMFile.is_open()) {
+		return false;
+	}
 	int size = ROMFile.tellg();
 	ROM = new uint8_t[size];
 	ROMFile.seekg(0);
 	ROMFile.read((char*)ROM,size);
 	ROMFile.close();
+	return true;
 }
 
 void cleanup() {
@@ -78,14 +84,11 @@ void run() {
 	to_run -= (uint64_t)to_run;
 }
 
-void activate() {
-	timer.restart();
-	precision.restart();
-}
-
-extern "C"
 bool isROMValid(const char *path) {
 	std::ifstream ROMFile(path,std::ios::binary | std::ios::ate);
+	if (!ROMFile.is_open()) {
+		return false;
+	}
 	int size = ROMFile.tellg();
 	uint8_t *data = new uint8_t[size];
 	ROMFile.seekg(0);
@@ -94,9 +97,23 @@ bool isROMValid(const char *path) {
 	// Proper Zany ROMs have the first four characters as ASCII "ZANY" (no null-terminator).
 	bool valid = strncmp((const char *)data, "ZANY",4) == 0;
 	delete[] data;
+	std::cout << "ROM valid: "<<valid<<'\n';
 	return valid;
 }
 
 void event(sf::Event &e) {
-	
+	switch (e.type) {
+		case sf::Event::KeyPressed:
+			if (e.key.code == sf::Keyboard::Escape) {
+				((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
+			}
+			break;
+	}
+}
+
+bool activate(const char *arg) {
+	timer.restart();
+	precision.restart();
+	return true;
+	return isROMValid(arg);
 }

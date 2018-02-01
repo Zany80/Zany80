@@ -18,6 +18,8 @@ std::string *command_string = nullptr;
 
 void addToHistory(std::string);
 
+liblib::Library *plugin_manager;
+
 #include "commands.cpp"
 
 const char *neededPlugins(){
@@ -25,6 +27,7 @@ const char *neededPlugins(){
 }
 
 void init(liblib::Library *pm) {
+	plugin_manager = pm;
 	if (history == nullptr) {
 		history = new std::vector<std::string>;
 	}
@@ -44,8 +47,8 @@ void cleanup() {
 	}
 }
 
-void activate() {
-	
+bool activate(const char *arg) {
+	return true;
 }
 
 void addToHistory(std::string line) {
@@ -90,15 +93,15 @@ void executeCommand(std::string c) {
 		commands.at(command).function(args);
 	}
 	catch (std::exception) {
-		// No such command_string
 		addToHistory("No such command: \"" + command + "\"");
+		return;
 	}
 }
 
 void event(sf::Event &e) {
 	switch (e.type) {
 		case sf::Event::TextEntered:
-			if (e.text.unicode > 127)
+			if (e.text.unicode > 127 || e.text.unicode < 32)
 				break;
 			switch (e.text.unicode) {
 				case 13: // CR - in case on some platforms this *isn't* the enter key, use the KeyPressed event for enter instead.
@@ -114,6 +117,9 @@ void event(sf::Event &e) {
 					executeCommand(*command_string);
 				}
 				command_string->clear();
+			}
+			else if (e.key.code == sf::Keyboard::BackSpace) {
+				command_string->pop_back();
 			}
 			break;
 		default:
