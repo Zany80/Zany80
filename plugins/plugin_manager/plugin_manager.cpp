@@ -1,6 +1,6 @@
 #include <plugin_manager.hpp>
 #include <iostream>
-#include <Plugins.hpp>
+#include <Zany80/Plugins.hpp>
 #include <cstring>
 
 extern std::string folder;

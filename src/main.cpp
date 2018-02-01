@@ -1,5 +1,5 @@
-#include <Zany80.hpp>
-#include <Plugins.hpp>
+#include <Zany80/Zany80.hpp>
+#include <Zany80/Plugins.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <iostream>

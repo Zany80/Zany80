@@ -1,5 +1,5 @@
 #pragma once
-#include <Plugins.hpp>
+#include <Zany80/Plugins.hpp>
 #include <liblib/liblib.hpp>
 
 #define _t(x) uint ## x ## _t

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Plugins.hpp>
+#include <Zany80/Plugins.hpp>
 #include <liblib/liblib.hpp>
 #include <string.h>
 
