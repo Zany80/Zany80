@@ -9,8 +9,13 @@
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 320
 
-#define FONT_WIDTH 6
-#define FONT_HEIGHT 12
+#define GLYPH_WIDTH 6
+#define GLYPH_HEIGHT 12
+#define FONT_WIDTH 96
+#define FONT_HEIGHT 72
+
+#define GLYPHS_PER_ROW (FONT_WIDTH / GLYPH_WIDTH)
+#define GLYPHS_PER_COLUMN (FONT_HEIGHT / GLYPH_HEIGHT)
 
 class Zany80 {
 

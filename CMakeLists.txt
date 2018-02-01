@@ -39,6 +39,7 @@ add_subdirectory(plugins)
 add_executable(zany80 ${SOURCES})
 
 set_target_properties(zany80 PROPERTIES LINK_FLAGS "-Wl,--dynamic-list=${ZANY80_SOURCE_DIR}/symbols")
+#set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
 include_directories(${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
