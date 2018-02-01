@@ -3,15 +3,21 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <string>
 
-typedef void(*command_t)(std::vector<sf::String>);
+typedef struct {
+	void(*function)(std::vector<std::string>);
+	std::string help;
+} command_t;
 
 RunnerType runner_type = Shell;
 
-std::vector<sf::String> *history = nullptr;
-sf::String *command_string = nullptr;
+std::vector<std::string> *history = nullptr;
+std::string *command_string = nullptr;
 
-std::map <sf::String, command_t> commands;
+void addToHistory(std::string);
+
+#include "commands.cpp"
 
 const char *neededPlugins(){
 	return "";
@@ -19,10 +25,10 @@ const char *neededPlugins(){
 
 void init(liblib::Library *pm) {
 	if (history == nullptr) {
-		history = new std::vector<sf::String>;
+		history = new std::vector<std::string>;
 	}
 	if (command_string == nullptr) {
-		command_string = new sf::String;
+		command_string = new std::string;
 	}
 }
 
@@ -41,49 +47,67 @@ void activate() {
 	
 }
 
+void addToHistory(std::string line) {
+	// First, make sure every line isn't too big
+	if (line.size() <= (LCD_WIDTH / (FONT_WIDTH)) - 1) {
+		// It fits - most likely situation
+		history->push_back(line);
+	}
+	else {
+		while (line.size() > 40) {
+			history->push_back(line.substr(0,40));
+			line = line.substr(40,line.size()-40);
+		}
+		history->push_back(line);
+	}
+}
+
 void run() {
 	
 }
 
-void executeCommand(sf::String c) {
+void executeCommand(std::string c) {
 	size_t space = c.find(" ");
-	std::vector<sf::String> args;
-	sf::String command = c;
-	if (space != sf::String::InvalidPos) {
-		command = command.substring(0, space);
+	std::vector<std::string> args;
+	std::string command = c;
+	if (space != std::string::npos) {
+		command = command.substr(0, space);
 		c.replace(0,space+1,"");
-		while ((space = c.find(" ")) != sf::String::InvalidPos) {
+		while ((space = c.find(" ")) != std::string::npos) {
 			if (space != 0) {
-				args.push_back(c.substring(0,space));
+				args.push_back(c.substr(0,space));
 			}
 			c.replace(0,space+1,"");
 		}
 	}
 	try {
-		commands.at(command)(args);
+		commands.at(command).function(args);
 	}
 	catch (std::exception) {
-		std::cerr << "Unable to execute command \""<<command.toAnsiString()<<"\"...\n";
+		std::cerr << "Unable to execute command \""<<command<<"\"\n";
 		// No such command_string
-		history->push_back("");
+		addToHistory("No such command: \"" + command + "\"");
 	}
 }
 
 void event(sf::Event &e) {
 	switch (e.type) {
 		case sf::Event::TextEntered:
+			if (e.text.unicode > 127)
+				break;
 			switch (e.text.unicode) {
 				case 13: // CR - in case on some platforms this *isn't* the enter key, use the KeyPressed event for enter instead.
 					break;
 				default:
 					*command_string += e.text.unicode;
-					std::cout << "Character typed: "<<e.text.unicode<<"\n";
 					break;
 			}
 			break;
 		case sf::Event::KeyPressed:
 			if (e.key.code == sf::Keyboard::Return) {
-				executeCommand(*command_string);
+				if (command_string->size() > 0) {
+					executeCommand(*command_string);
+				}
 				command_string->clear();
 			}
 			break;
