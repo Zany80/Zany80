@@ -5,7 +5,7 @@ enum PluginType {
 };
 
 enum RunnerType {
-	Shell, ROMRunner,
+	Shell, ROMRunner,Generic
 };
 
 enum HardwareType {
