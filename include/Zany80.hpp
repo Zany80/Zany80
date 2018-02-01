@@ -9,6 +9,9 @@
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 320
 
+#define FONT_WIDTH 6
+#define FONT_HEIGHT 12
+
 class Zany80 {
 
 public:

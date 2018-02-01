@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Zany80/Zany80.hpp>
+
 enum PluginType {
 	Runner, Hardware,
 };
