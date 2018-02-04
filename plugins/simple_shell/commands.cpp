@@ -5,9 +5,12 @@ std::map <sf::String, command_t> commands = {
 	
 	{"echo", {
 			.function = [](std::vector<std::string> args){
+				std::string all_args;
 				for (std::string s: args) {
-					addToHistory(s);
+					all_args += s + " ";
 				}
+				all_args.pop_back();
+				addToHistory(all_args);
 			},
 			.help = "Echoes all received arguments to the history buffer.\n"
 	}},

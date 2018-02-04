@@ -81,12 +81,16 @@ void executeCommand(std::string c) {
 	if (space != std::string::npos) {
 		command = command.substr(0, space);
 		c = c.substr(space+1,c.size() - space);
+		space = c.find_first_of(' ');
 		do {
 			if (space != 0) {
 				args.push_back(c.substr(0,space));
 			}
 			c.replace(0,space+1,"");
 		} while ((space = c.find_first_of(' ')) != std::string::npos);
+		if (c.size() > 0) {
+			args.push_back(c);
+		}
 	}
 	try {
 		addToHistory(*command_string);
