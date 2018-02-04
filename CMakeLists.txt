@@ -51,11 +51,20 @@ target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDEN
 target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 if(WIN32)
-  install(FILES font.png DESTINATION .)
-  install (TARGETS zany80 DESTINATION .)
+	if (NOT DEFINED LIBGCC_LIBRARY)
+		set(LIBGCC_LIBRARY "" CACHE FILEPATH "libgcc dll - needed for windows cross-compilation" FORCE)
+	endif()
+	if (NOT DEFINED LIBSTDCPLUSPLUS_LIBRARY)
+		set(LIBSTDCPLUSPLUS_LIBRARY "" CACHE FILEPATH "libstdc++ dll - needed for windows cross-compilation" FORCE)
+	endif()
+	install(FILES ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
+	install (TARGETS zany80 zany
+		RUNTIME DESTINATION .
+		LIBRARY DESTINATION .
+	)
 else()
-  install(FILES font.png DESTINATION share/zany80)
-  install (TARGETS zany80 DESTINATION bin)
+	install(FILES font.png DESTINATION share/zany80)
+	install (TARGETS zany80 zany DESTINATION bin)
 endif()
 
 include(InstallRequiredSystemLibraries)

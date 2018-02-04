@@ -2,7 +2,7 @@ set(z80_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/z80.cpp
 )
 
-add_library(z80 SHARED ${z80_SOURCES})
+add_library(z80 MODULE ${z80_SOURCES})
 set_target_properties(z80 PROPERTIES PREFIX "../")
 target_include_directories(z80 PRIVATE ../../include ${CMAKE_SOURCE_DIR}/include)
 if (WIN32)
