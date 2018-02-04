@@ -1,6 +1,7 @@
 add_library(simple_shell SHARED ${CMAKE_CURRENT_SOURCE_DIR}/simple_shell.cpp)
 set_target_properties(simple_shell PROPERTIES PREFIX "../")
 target_include_directories(simple_shell PRIVATE includes ${CMAKE_SOURCE_DIR}/include ../include)
+target_link_libraries(simple_shell ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)
 if (WIN32)
 	install(TARGETS simple_shell DESTINATION plugins)
 else()

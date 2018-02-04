@@ -92,7 +92,7 @@ bool isROMValid(const char *path) {
 	int size = ROMFile.tellg();
 	uint8_t *data = new uint8_t[size];
 	ROMFile.seekg(0);
-	ROMFile.read((char*)ROM,size);
+	ROMFile.read((char*)data,size);
 	ROMFile.close();
 	// Proper Zany ROMs have the first four characters as ASCII "ZANY" (no null-terminator).
 	bool valid = strncmp((const char *)data, "ZANY",4) == 0;
@@ -114,6 +114,8 @@ void event(sf::Event &e) {
 bool activate(const char *arg) {
 	timer.restart();
 	precision.restart();
-	return true;
-	return isROMValid(arg);
+	if (isROMValid(arg)) {
+		return loadROM(arg);
+	}
+	return false;
 }

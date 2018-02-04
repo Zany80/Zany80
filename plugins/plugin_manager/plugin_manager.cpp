@@ -1,3 +1,11 @@
+/*
+ * Important note: this plugin is very poorly written.
+ * Written as quickly as possible to flesh out the main system and the plugin
+ * interface as much as possible. Will be completely redone pending a stable
+ * release of Zany80.
+ *
+ * TODO: actually rewrite this garbage.
+ */
 #include <plugin_manager.hpp>
 #include <iostream>
 #include <Zany80/Plugins.hpp>
