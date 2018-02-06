@@ -151,7 +151,7 @@ bool activate(const char *arg) {
 		if (loadROM(arg)) {
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
 			((message_t)(*plugin_manager)["message"])({
-				0, (char *)"setPC", strlen("setPC"), "Runner/ROM", (char*)&(((ROMMetadata*)ROM)->PC)
+				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&(((ROMMetadata*)ROM)->PC)
 			}, "CPU/z80");
 			return true;
 		}
