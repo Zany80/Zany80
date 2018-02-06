@@ -428,7 +428,7 @@ void message(PluginMessage m, const char *_target) {
 			else {
 				// unrecognized type
 				message((PluginMessage){
-					100, (char*)"unrecognized", strlen("unrecognized"), "PluginManager", (char*)&m
+					100, (char*)"unrecognized", (int)strlen("unrecognized"), "PluginManager", (char*)&m
 				},m.source);
 			}
 		}
