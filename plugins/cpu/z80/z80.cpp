@@ -1,16 +1,16 @@
 #define ADDRESS_BUS_SIZE 16
 #define DATA_BUS_SIZE 8
 
+#include <Zany80/Zany80.hpp>
+
 #include <Zany80/CPU.hpp>
 #include <iostream>
 
 #include <SFML/System.hpp>
 
-const char *signature = "z80";
+liblib::Library *pm;
 
-const char *neededPlugins() {
-	return "RAM/16_8";
-}
+const char *signature = "z80";
 
 typedef union{
 	uint16_t word;
@@ -25,6 +25,29 @@ typedef union{
 #endif
 } word;
 
+uint16_t PC;
+uint8_t opcode;
+word af,bc,de,hl;
+word af_,bc_,de_,hl_;
+
+word SP;
+
+const char *neededPlugins() {
+	return "RAM/16_8";
+}
+
+void postMessage(PluginMessage m) {
+	if (strcmp(m.data, "reset") == 0) {
+		try {
+			((textMessage_t)(*pm)["textMessage"])("boot_flash","CPU/z80;Runner/ROM");
+		}
+		catch (std::exception){}
+	}
+	else if (strcmp(m.data, "setPC") == 0) {
+		PC = *(uint16_t*)m.context;
+	}
+}
+
 uint64_t tstates;
 uint8_t subcycle;
 
@@ -34,13 +57,6 @@ uint32_t buffer;
 enum {
 	INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
 } CPUState;
-
-uint16_t PC;
-uint8_t opcode;
-word af,bc,de,hl;
-word af_,bc_,de_,hl_;
-
-word SP;
 
 #define S 0x80
 #define Z 0x40
@@ -66,6 +82,7 @@ bool getFlag(uint8_t flag) {
 }
 
 void init(liblib::Library *plugin_manager) {
+	pm = plugin_manager;
 	CPUState = INSTRUCTION_FETCH;
 	PC = 0;
 	af.word = bc.word = de.word = hl.word = 0;
@@ -227,6 +244,7 @@ uint64_t *getCycles() {
 	return &tstates;
 }
 
+//TODO: remove cleanup/init function from all plugins, use message system instead. Bonus points if it works multithreaded ;)
 void cleanup() {
 	
 }

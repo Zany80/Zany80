@@ -11,7 +11,7 @@
 #include <Zany80/Plugins.hpp>
 #include <cstring>
 
-extern std::string folder;
+typedef void(*post_t)(PluginMessage m);
 
 void init(liblib::Library *pm) {
 	plugin_manager = pm;
@@ -384,6 +384,77 @@ bool activateRunner(RunnerType type, const char *arg) {
 		}
 	}
 	return false;
+}
+
+void message(PluginMessage m, const char *_target) {
+	std::string target = _target;
+	std::string cur;
+	while (target.size() > 0) {
+		if (target.find_first_of(';') != std::string::npos) {
+			cur = target.substr(0,target.find_first_of(';'));
+			target = target.substr(target.find_first_of(';') + 1, target.size());
+		}
+		else {
+			cur = target;
+			target = "";
+		}
+		if (cur.find_first_of('/') == std::string::npos) {
+			// scratch(this->head); aka: invalid requirement
+			return;
+		}
+		std::string category = cur.substr(0, cur.find_first_of('/'));
+		std::string secondary = cur.substr(cur.find_first_of('/') + 1, cur.size());
+		if (category == "Runner") {
+			if (getRunners() == nullptr)
+				throw;
+			if (secondary == "ROM") {
+				for (liblib::Library *runner : *runners) {
+					try {
+						if (*((RunnerType*)(*runner)["getRunnerType"]()) == ROMRunner) {
+							((post_t)(*runner)["postMessage"])(m);
+						}
+					}
+					catch (...) {}					
+				}
+			}
+			else if (secondary == "*") {
+				for (liblib::Library *runner : *runners) {
+					try {
+						((post_t)(*runner)["postMessage"])(m);
+					}
+					catch (...) {}
+				}
+			}
+			else {
+				// unrecognized type
+				message((PluginMessage){
+					100, (char*)"unrecognized", strlen("unrecognized"), "PluginManager", (char*)&m
+				},m.source);
+			}
+		}
+		else if (category == "CPU") {
+			if (getCPUs() == nullptr)
+				throw;
+			for (liblib::Library *CPU : *CPUs) {
+				try {
+					if (secondary == "*" || ((bool(*)(const char *))(*CPU)["isSignatureCompatible"])(secondary.c_str())) {
+						((post_t)(*CPU)["postMessage"])(m);
+					}
+				}
+				catch (...){}
+			}
+		}
+		else if (category == "GenericRunner") {
+			
+		}
+	}
+}
+
+void textMessage(const char *string, const char *routing) {
+	std::string r = routing;
+	message({
+		0, (char*)string, (int)strlen(string), (char*)r.substr(0,r.find_first_of(';')).c_str(),(char*)""
+	}, (char*)r.substr(r.find_first_of(';')+1,r.size()).c_str());
 }
 
 liblib::Library *plugin_manager;

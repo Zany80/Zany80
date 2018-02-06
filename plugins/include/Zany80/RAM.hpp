@@ -39,6 +39,7 @@ extern "C" {
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
 	void write(ADDRESS_BUS_SIZE_T address,DATA_BUS_SIZE_T value);
+	void polywrite(ADDRESS_BUS_SIZE_T address, DATA_BUS_SIZE_T *value_start, ADDRESS_BUS_SIZE_T length);
 	DATA_BUS_SIZE_T read(ADDRESS_BUS_SIZE_T address);
 }
 

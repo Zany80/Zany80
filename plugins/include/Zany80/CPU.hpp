@@ -23,15 +23,16 @@ typedef DATA_BUS_SIZE_T(*read_t)(ADDRESS_BUS_SIZE_T);
 extern "C" {
 	PluginType *getType();
 	HardwareType *getHardwareType();
+	void postMessage(PluginMessage m);
+	bool isSignatureCompatible(const char *sig);
+	void init(liblib::Library *plugin_manager);
+	void cleanup();
+	const char *neededPlugins();
 	void emulate(uint64_t cycles);
 	void cycle();
 	uint64_t *getCycles();
 	uint8_t getAddressBusSize();
 	uint8_t getDataBusSize();
-	bool isSignatureCompatible(const char *sig);
-	void init(liblib::Library *plugin_manager);
-	void cleanup();
-	const char *neededPlugins();
 	void setRAM(liblib::Library *RAM);
 }
 

@@ -17,6 +17,22 @@
 #define GLYPHS_PER_ROW (FONT_WIDTH / GLYPH_WIDTH)
 #define GLYPHS_PER_COLUMN (FONT_HEIGHT / GLYPH_HEIGHT)
 
+// Generic message type
+typedef struct {
+	// intended to be used as a way of determining *relative* priority, but can be used as a "hack" to ensure a message arrives if sender and receiver agree.
+	// normal priority is 0
+	int priority;
+	char *data;
+	int length;
+	const char *source;
+	// What caused this message to be sent? Did a plugin request unavailable info?
+	const char *context;
+} PluginMessage;
+
+typedef void (*message_t)(PluginMessage,const char *);
+typedef void (*textMessage_t)(const char *,const char *);
+typedef void (*broadcast_t)(PluginMessage);
+
 class Zany80 {
 
 public:

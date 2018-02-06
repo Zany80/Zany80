@@ -151,6 +151,12 @@ void Zany80::frame(){
 }
 
 void Zany80::setRunner(liblib::Library *runner) {
+	if (this->runner !=nullptr) {
+		try {
+			(*this->runner)["deactivate"]();
+		}
+		catch (...){}
+	}
 	this->runner = runner;
 }
 

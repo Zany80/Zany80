@@ -20,6 +20,13 @@ extern "C" {
 	liblib::Library *getROMRunner(const char *signature);
 	void removePlugin(liblib::Library *plugin);
 	bool activateRunner(RunnerType runner, const char *arg);
+	// sets sane defaults for PluginMessage for simple messages
+	void textMessage(const char *string, const char *routing);
+	// send a message to a specific target/targets
+	void message(PluginMessage message, const char *target);
+	// broadcast a message to all plugins
+	void broadcast(PluginMessage message);
+
 }
 
 bool attemptLoad(std::string name, liblib::Library ** library);

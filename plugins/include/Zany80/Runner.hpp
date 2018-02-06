@@ -16,7 +16,9 @@ extern "C" {
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
 	bool activate(const char *arg);
+	void deactivate();
 	void event(sf::Event &e);
+	void postMessage(PluginMessage m);
 }
 
 PluginType *getType(){
