@@ -21,7 +21,13 @@ std::map <sf::String, command_t> commands = {
 				return;
 			}
 			try {
-				((void(*)(RunnerType r,const char *arg))((*plugin_manager)["activateRunner"]))(ROMRunner,args[0].c_str());
+				if (((bool(*)(RunnerType r,const char *arg))((*plugin_manager)["activateRunner"]))(ROMRunner,args[0].c_str())) {
+					// ROM run successfully
+					addToHistory("ROM running, control ceded.");
+				}
+				else {
+					displayed = false;
+				}
 			}
 			catch (std::exception) {
 				addToHistory("Unable to run ROM!");

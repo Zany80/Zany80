@@ -118,10 +118,10 @@ void run() {
 	to_run -= (uint64_t)to_run;
 }
 
-bool isROMValid(const char *path) {
+int isROMValid(const char *path) {
 	std::ifstream ROMFile(path,std::ios::binary | std::ios::ate);
 	if (!ROMFile.is_open()) {
-		return false;
+		return -1;
 	}
 	int size = ROMFile.tellg();
 	uint8_t *data = new uint8_t[size];
@@ -131,7 +131,7 @@ bool isROMValid(const char *path) {
 	// Proper Zany ROMs have the first four characters as ASCII "ZANY" (no null-terminator).
 	bool valid = strncmp((const char *)data, "ZANY",4) == 0;
 	delete[] data;
-	return valid;
+	return valid ? 1 : 0;
 }
 
 void event(sf::Event &e) {
@@ -147,14 +147,33 @@ void event(sf::Event &e) {
 bool activate(const char *arg) {
 	timer.restart();
 	precision.restart();
-	if (isROMValid(arg)) {
+	int valid = isROMValid(arg);
+	switch (valid) {
+	case -1:
+		// not even a file
+		((message_t)(*plugin_manager)["message"])({
+			0, (char *)"history", (int)strlen("history"), "Runner/ROM", ((std::string)"No such file: "+arg).c_str()
+		}, "Runner/Shell");
+		break;
+	case 0:
+		((message_t)(*plugin_manager)["message"])({
+			0, (char *)"history", (int)strlen("history"), "Runner/ROM", ((std::string)"Invalid ROM: "+arg).c_str()
+		}, "Runner/Shell");
+		break;
+	case 1:
 		if (loadROM(arg)) {
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
 			((message_t)(*plugin_manager)["message"])({
-				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&(((ROMMetadata*)ROM)->PC)
+				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&((ROMMetadata*)ROM)->PC
 			}, "CPU/z80");
 			return true;
 		}
+		else {
+			((message_t)(*plugin_manager)["message"])({
+				0, (char *)"history", (int)strlen("history"), "Runner/ROM", "Unable to load valid ROM. Weird."
+			}, "Runner/Shell");
+		}
+		break;
 	}
 	return false;
 }

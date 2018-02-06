@@ -417,6 +417,16 @@ void message(PluginMessage m, const char *_target) {
 					catch (...) {}					
 				}
 			}
+			else if (secondary == "Shell") {
+				for (liblib::Library *runner : *runners) {
+					try {
+						if (*((RunnerType*)(*runner)["getRunnerType"]()) == Shell) {
+							((post_t)(*runner)["postMessage"])(m);
+						}
+					}
+					catch (...) {}					
+				}
+			}
 			else if (secondary == "*") {
 				for (liblib::Library *runner : *runners) {
 					try {

@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <string>
+#include <cstring>
 
 typedef struct {
 	void(*function)(std::vector<std::string>);
@@ -20,7 +21,23 @@ void addToHistory(std::string);
 
 liblib::Library *plugin_manager;
 
+bool displayed = false;
+
 #include "commands.cpp"
+
+void postMessage(PluginMessage m) {
+	if (strcmp(m.data, "history") == 0) {
+		if (strcmp(m.source, "Runner/ROM") == 0) {
+			if (!displayed) {
+				displayed = true;
+				addToHistory((std::string)m.context);
+			}
+		}
+		else {
+			addToHistory((std::string)m.context);
+		}
+	}
+}
 
 const char *neededPlugins(){
 	return "";
