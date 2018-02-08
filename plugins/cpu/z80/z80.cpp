@@ -102,7 +102,7 @@ inline void incR(uint8_t *r, char id) {
 	setFlag(PV, old == 0x7F);
 	subcycle = 0;
 	CPUState = INSTRUCTION_FETCH;
-	std::cout << "[Z80] `inc "<<id<<"` executed.\n";
+	//std::cout << "[Z80] `inc "<<id<<"` executed.\n";
 }
 
 inline void decR(uint8_t *r, char id) {
@@ -114,7 +114,7 @@ inline void decR(uint8_t *r, char id) {
 	setFlag(PV, (old & 0x7F) == 0);
 	subcycle = 0;
 	CPUState = INSTRUCTION_FETCH;
-	std::cout << "[Z80] `dec "<<id<<"` executed.\n";
+	//std::cout << "[Z80] `dec "<<id<<"` executed.\n";
 }
 
 inline void ldR(uint8_t *r, char id) {
@@ -125,9 +125,32 @@ inline void ldR(uint8_t *r, char id) {
 	}
 	else {
 		*r = buffer & 0xFF;
-		std::cout << "[Z80] `ld "<<id<<", "<<(int)*r<<"` executed.\n";
+		//std::cout << "[Z80] `ld "<<id<<", "<<(int)*r<<"` executed.\n";
 		subcycle = 0;
 		CPUState = INSTRUCTION_FETCH;
+	}
+}
+
+inline void ldRRx(uint8_t *r, uint8_t *rx, char id, char idx) {
+	*r = *rx;
+	// std::cout << "[Z80] `ld "<<id<<", "<<idx<<"` executed.\n";
+	CPUState = INSTRUCTION_FETCH;
+	subcycle = 0;
+}
+
+inline void ldR_HL_(uint8_t *r, char id) {
+	switch (subcycle) {
+		case 1:
+			CPUState = MEM_READ;
+			buffer = hl.word;
+			subcycle -= 2;
+			break;
+		case 2:
+			*r = buffer & 0xFF;
+			//std::cout << "[Z80] `ld "<<id<<", (hl)` executed.\n";
+			CPUState = INSTRUCTION_FETCH;
+			subcycle = 0;
+			break;
 	}
 }
 
@@ -139,7 +162,7 @@ inline void addHLSS(uint16_t *rp, const char *id) {
 		setFlag(C, result & 0x10000);
 		subcycle = 0;
 		CPUState = INSTRUCTION_FETCH;
-		std::cout << "[Z80] `add hl, "<<id<<"` executed.\n";
+		//std::cout << "[Z80] `add hl, "<<id<<"` executed.\n";
 	}
 }
 
@@ -153,7 +176,7 @@ inline void ldARP(uint16_t rp, const char *id) {
 		af.h = buffer & 0xFF;
 		CPUState = INSTRUCTION_FETCH;
 		subcycle = 0;
-		std::cout << "[Z80] `ld a, ("<<id<<")` executed.\n";
+		//std::cout << "[Z80] `ld a, ("<<id<<")` executed.\n";
 	}
 }
 
@@ -164,7 +187,7 @@ inline void ldRPA(uint16_t rp, const char *id) {
 		subcycle++;			
 	}
 	else {
-		std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
+		//std::cout << "[Z80] `ld ("<<id<<"), a` executed.\n";
 		CPUState = INSTRUCTION_FETCH;
 		subcycle = 0;
 	}
@@ -185,7 +208,7 @@ inline void ldRP(word *rp, const char *id) {
 		case 5:
 			rp->h = buffer & 0xFF;
 			subcycle = 0;
-			std::cout << "[Z80] `ld "<<id<<", "<<(int)rp->word<<"` executed.\n";
+			//std::cout << "[Z80] `ld "<<id<<", "<<(int)rp->word<<"` executed.\n";
 			CPUState = INSTRUCTION_FETCH;
 			break;
 	}
@@ -196,7 +219,7 @@ inline void incRP(uint16_t *rp,const char *id) {
 		(*rp)++;
 		subcycle = 0;
 		CPUState = INSTRUCTION_FETCH;
-		std::cout << "[Z80] `inc "<<id<<"` executed.\n";
+		//std::cout << "[Z80] `inc "<<id<<"` executed.\n";
 	}
 }
 
@@ -205,7 +228,7 @@ inline void decRP(uint16_t *rp, const char *id) {
 		(*rp)--;
 		CPUState = INSTRUCTION_FETCH;
 		subcycle = 0;
-		std::cout << "[Z80] `dec "<<id<<"` executed.\n";
+		//std::cout << "[Z80] `dec "<<id<<"` executed.\n";
 	}
 }
 
@@ -227,13 +250,13 @@ inline void jrC(bool c, const char *id) {
 			if (!c) {
 				subcycle = 0;
 				CPUState = INSTRUCTION_FETCH;
-				std::cout << "[Z80] `jr "<<id<<", "<<(int)((int8_t)buffer&0xFF)<<"` executed, not jumping...\n";
+				//std::cout << "[Z80] `jr "<<id<<", "<<(int)((int8_t)buffer&0xFF)<<"` executed, not jumping...\n";
 			}
 			break;
 		case 10:
 			int8_t e = buffer & 0xFF;
 			PC += e;
-			std::cout << "[Z80] `jr "<<id<<", "<<(int)e<<"` executed...\n";
+			//std::cout << "[Z80] `jr "<<id<<", "<<(int)e<<"` executed...\n";
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
 			break;
@@ -280,7 +303,7 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(H, false);
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
-			std::cout << "[Z80] `rlca` executed.\n";
+			//std::cout << "[Z80] `rlca` executed.\n";
 			break;
 		case 0x08: // ex af, af'
 			{
@@ -290,7 +313,7 @@ void executeOpcode (uint8_t opcode) {
 			}
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
-			std::cout << "[Z80] `ex af, af'` executed.\n";
+			//std::cout << "[Z80] `ex af, af'` executed.\n";
 			break;
 		case 0x09: // add hl, bc
 			addHLSS(&bc.word,"bc");
@@ -320,7 +343,7 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(H, false);
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
-			std::cout << "[Z80] `rrca` executed.\n";
+			//std::cout << "[Z80] `rrca` executed.\n";
 			break;
 		case 0x10: // djnz e
 			switch (subcycle) {
@@ -334,7 +357,7 @@ void executeOpcode (uint8_t opcode) {
 					if (bc.h == 0) {
 						subcycle = 0;
 						CPUState = INSTRUCTION_FETCH;
-						std::cout << "[Z80] `djnz "<<(int)((int8_t)(buffer & 0xFF))<<"` executed, not jumping\n";
+						//std::cout << "[Z80] `djnz "<<(int)((int8_t)(buffer & 0xFF))<<"` executed, not jumping\n";
 					}
 					break;
 				case 10:
@@ -342,7 +365,7 @@ void executeOpcode (uint8_t opcode) {
 					PC += e;
 					CPUState = INSTRUCTION_FETCH;
 					subcycle = 0;
-					std::cout << "[Z80] `djnz "<<(int)e<<"` executed.\n";
+					//std::cout << "[Z80] `djnz "<<(int)e<<"` executed.\n";
 					break;
 			}
 			break;
@@ -375,7 +398,7 @@ void executeOpcode (uint8_t opcode) {
 			}
 			setFlag(N, false);
 			setFlag(H, false);
-			std::cout << "[Z80] `rla` executed.\n";
+			//std::cout << "[Z80] `rla` executed.\n";
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
@@ -390,7 +413,7 @@ void executeOpcode (uint8_t opcode) {
 				PC += e;
 				subcycle = 0;
 				CPUState = INSTRUCTION_FETCH;
-				std::cout << "[Z80] `jr "<<(int)e<<"` executed.\n";
+				//std::cout << "[Z80] `jr "<<(int)e<<"` executed.\n";
 			}
 			break;
 		case 0x19: // add hl, de
@@ -422,7 +445,7 @@ void executeOpcode (uint8_t opcode) {
 			}
 			setFlag(H, false);
 			setFlag(N, false);
-			std::cout << "[Z80] `rra` executed.\n";
+			//std::cout << "[Z80] `rra` executed.\n";
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
@@ -458,7 +481,7 @@ void executeOpcode (uint8_t opcode) {
 					case 11:
 						CPUState = INSTRUCTION_FETCH;
 						subcycle = 0;
-						std::cout << "[Z80] `ld ("<<addr<<"), hl` executed.\n";
+						//std::cout << "[Z80] `ld ("<<addr<<"), hl` executed.\n";
 						break;
 				}
 			}
@@ -496,7 +519,7 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(S, af.h & 0x80);
 			setFlag(Z, !(bool)af.h);
 			setFlag(PV, parity(af.h));
-			std::cout << "[Z80] `daa` executed.";
+			//std::cout << "[Z80] `daa` executed.";
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
@@ -534,7 +557,7 @@ void executeOpcode (uint8_t opcode) {
 						hl.h = buffer & 0xFF;
 						CPUState = INSTRUCTION_FETCH;
 						subcycle = 0;
-						std::cout << "[Z80] `ld hl, ("<<addr<<")` executed, value of hl: " <<(int)hl.word << "\n";
+						//std::cout << "[Z80] `ld hl, ("<<addr<<")` executed, value of hl: " <<(int)hl.word << "\n";
 						break;
 				}
 			}
@@ -555,7 +578,7 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(N, true);
 			setFlag(H, true);
 			af.h ^= 0xFF;
-			std::cout << "[Z80] `cpl` executed.\n";
+			//std::cout << "[Z80] `cpl` executed.\n";
 			subcycle = 0;
 			CPUState = INSTRUCTION_FETCH;
 			break;
@@ -587,7 +610,7 @@ void executeOpcode (uint8_t opcode) {
 					case 8:
 						CPUState = INSTRUCTION_FETCH;
 						subcycle = 0;
-						std::cout << "[Z80] `ld ("<<addr<<"), a` executed.\n";
+						//std::cout << "[Z80] `ld ("<<addr<<"), a` executed.\n";
 						break;
 				}
 			}
@@ -616,7 +639,7 @@ void executeOpcode (uint8_t opcode) {
 					setFlag(H, (old & 0x0F) == 0x0F);
 					setFlag(PV, old == 0x7F);
 					setFlag(N, false);
-					std::cout << "[Z80]`inc (hl)` executed.\n";
+					//std::cout << "[Z80]`inc (hl)` executed.\n";
 					CPUState = INSTRUCTION_FETCH;
 					subcycle = 0;
 					break;
@@ -643,7 +666,7 @@ void executeOpcode (uint8_t opcode) {
 					setFlag(H, (old & 0x0F) == 0x00);
 					setFlag(PV, old == 0x80);
 					setFlag(N, false);
-					std::cout << "[Z80]`dec (hl)` executed.\n";
+					//std::cout << "[Z80]`dec (hl)` executed.\n";
 					CPUState = INSTRUCTION_FETCH;
 					subcycle = 0;
 					break;
@@ -663,7 +686,7 @@ void executeOpcode (uint8_t opcode) {
 					buffer = (hl.word << 8) | (value) | MEM_WRITE_EXECUTE;
 					break;
 				case 5:
-					std::cout << "[Z80] `ld (hl), "<<(int)value<<"` executed.\n";
+					//std::cout << "[Z80] `ld (hl), "<<(int)value<<"` executed.\n";
 					CPUState = INSTRUCTION_FETCH;
 					subcycle = 0;
 					break;
@@ -673,7 +696,7 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(C, true);
 			setFlag(N, false);
 			setFlag(H, false);
-			std::cout << "[Z80] `scf` executed.\n";
+			//std::cout << "[Z80] `scf` executed.\n";
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
 			break;
@@ -703,7 +726,7 @@ void executeOpcode (uint8_t opcode) {
 					break;
 				case 8:
 					af.h = buffer & 0xFF;
-					std::cout << "[Z80] `ld a, ("<<(int)addr<<")` executed.\n";
+					//std::cout << "[Z80] `ld a, ("<<(int)addr<<")` executed.\n";
 					subcycle = 0;
 					CPUState = INSTRUCTION_FETCH;
 					break;
@@ -725,9 +748,105 @@ void executeOpcode (uint8_t opcode) {
 			setFlag(H, getFlag(C));
 			setFlag(C, !getFlag(C));
 			setFlag(N, false);
-			std::cout << "[Z80] `ccf` executed.\n";
+			//std::cout << "[Z80] `ccf` executed.\n";
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
+			break;
+		case 0x40: // ld b, b
+			ldRRx(&bc.h, &bc.h, 'b', 'b');
+			break;
+		case 0x41: // ld b, c
+			ldRRx(&bc.h, &bc.l, 'b', 'c');
+			break;
+		case 0x42: // ld b, d
+			ldRRx(&bc.h, &de.h, 'b', 'd');
+			break;
+		case 0x43: // ld b, e
+			ldRRx(&bc.h, &de.l, 'b', 'e');
+			break;
+		case 0x44: // ld b, h
+			ldRRx(&bc.h, &hl.h, 'b', 'h');
+			break;
+		case 0x45: // ld b, l
+			ldRRx(&bc.h, &hl.l, 'b', 'l');
+			break;
+		case 0x46: // ld b, (hl)
+			ldR_HL_(&bc.h, 'b');
+			break;
+		case 0x47: // ld b, a
+			ldRRx(&bc.h, &af.h, 'b', 'a');
+			break;
+		case 0x48: // ld c, b
+			ldRRx(&bc.l, &bc.h, 'c', 'b');
+			break;
+		case 0x49: // ld c, c
+			ldRRx(&bc.l, &bc.l, 'c', 'c');
+			break;
+		case 0x4A: // ld c, d
+			ldRRx(&bc.l, &de.h, 'c', 'd');
+			break;
+		case 0x4B: // ld c, e
+			ldRRx(&bc.l, &de.l, 'c', 'e');
+			break;
+		case 0x4C: // ld c, h
+			ldRRx(&bc.l, &hl.h, 'c', 'h');
+			break;
+		case 0x4D: // ld c, l
+			ldRRx(&bc.l, &hl.l, 'c', 'l');
+			break;
+		case 0x4E: // ld c, (hl)
+			ldR_HL_(&bc.l, 'c');
+			break;
+		case 0x4F: // ld c, a
+			ldRRx(&bc.l, &af.h, 'c', 'a');
+			break;
+		case 0x50: // ld d, b
+			ldRRx(&de.h, &bc.h, 'd', 'b');
+			break;
+		case 0x51: // ld d, c
+			ldRRx(&de.h, &bc.l, 'd', 'c');
+			break;
+		case 0x52: // ld d, d
+			ldRRx(&de.h, &de.h, 'd', 'd');
+			break;
+		case 0x53: // ld d, e
+			ldRRx(&de.h, &de.l, 'd', 'e');
+			break;
+		case 0x54: // ld d, h
+			ldRRx(&de.h, &hl.h, 'd', 'h');
+			break;
+		case 0x55: // ld d, l
+			ldRRx(&de.h, &hl.l, 'd', 'l');
+			break;
+		case 0x56: // ld d, (hl)
+			ldR_HL_(&de.h, 'd');
+			break;
+		case 0x57: // ld d, a
+			ldRRx(&de.h, &af.h, 'd', 'a');
+			break;
+		case 0x58: // ld e, b
+			ldRRx(&de.l, &bc.h, 'e', 'b');
+			break;
+		case 0x59: // ld e, c
+			ldRRx(&de.l, &bc.l, 'e', 'c');
+			break;
+		case 0x5A: // ld e, d
+			ldRRx(&de.l, &de.h, 'e', 'd');
+			break;
+		case 0x5B: // ld e, e
+			ldRRx(&de.l, &de.l, 'e', 'e');
+			break;
+		case 0x5C: // ld e, h
+			ldRRx(&de.l, &hl.h, 'e', 'h');
+			break;
+		case 0x5D: // ld e, l
+			ldRRx(&de.l, &hl.l, 'e', 'l');
+			break;
+		case 0x5E: // ld e, (hl)
+			ldR_HL_(&de.l, 'e');
+			break;
+		case 0x5F: // ld e, a
+			ldRRx(&de.l, &af.h, 'e', 'a');
 			break;
 		default:
 		case 0x00: // nop
