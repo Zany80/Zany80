@@ -22,7 +22,7 @@ typedef struct {
 	// intended to be used as a way of determining *relative* priority, but can be used as a "hack" to ensure a message arrives if sender and receiver agree.
 	// normal priority is 0
 	int priority;
-	char *data;
+	const char *data;
 	int length;
 	const char *source;
 	// What caused this message to be sent? Did a plugin request unavailable info?

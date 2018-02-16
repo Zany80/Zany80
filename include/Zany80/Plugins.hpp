@@ -3,11 +3,11 @@
 #include <Zany80/Zany80.hpp>
 
 enum PluginType {
-	Runner, Hardware,
+	Runner, Hardware, Generic
 };
 
 enum RunnerType {
-	Shell, ROMRunner,Generic
+	Shell, ROMRunner, GenericRunner
 };
 
 enum HardwareType {

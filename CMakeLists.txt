@@ -16,6 +16,13 @@ if(NOT DEFINED SFML_STATIC_LIBRARIES)
 	set(SFML_STATIC_LIBRARIES FALSE CACHE BOOL "Use static SFML libs" FORCE)
 endif()
 
+if(MINGW)
+  ENABLE_LANGUAGE(RC)
+  set(CMAKE_RC_COMPILE_OBJECT
+    "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc CACHE FILEPATH "Icon file" FORCE) 
+endif(MINGW)
+
 project(ZANY80 VERSION 0.1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
@@ -37,12 +44,10 @@ endif()
 add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
 
+
 add_executable(zany80 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 add_subdirectory(plugins)
-
-set_target_properties(zany80 PROPERTIES LINK_FLAGS "-Wl,--dynamic-list=${ZANY80_SOURCE_DIR}/symbols")
-#set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
 include_directories(${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
@@ -63,8 +68,15 @@ if(WIN32)
 		LIBRARY DESTINATION .
 	)
 else()
-	install(FILES font.png DESTINATION share/zany80)
-	install (TARGETS zany80 zany DESTINATION bin)
+	install(
+		FILES font.png DESTINATION share/zany80
+	)
+	install (FILES misc/zany80.desktop DESTINATION share/applications)
+	install (FILES misc/zany80.png DESTINATION share/pixmaps)
+	install (TARGETS zany80 zany
+		RUNTIME DESTINATION bin
+		LIBRARY DESTINATION lib
+	)
 endif()
 
 include(InstallRequiredSystemLibraries)
@@ -72,6 +84,8 @@ set(CPACK_RESOURCE_FILE_LICENSE "${ZANY80_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR ${ZANY80_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${ZANY80_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${ZANY80_VERSION_PATCH})
-#set(CPACK_PACKAGE_EXECUTABLES ${executable_name} "icon")
+set(CPACK_PACKAGE_EXECUTABLES
+	zany80 "Zany80"
+)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "pixelherodev")
 include(CPack)

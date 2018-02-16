@@ -1,0 +1,7 @@
+add_library(experimental_dualcore MODULE main.cpp)
+target_include_directories(experimental_dualcore PRIVATE ../../include ${CMAKE_SOURCE_DIR}/include)
+if (WIN32)
+	install(TARGETS experimental_dualcore DESTINATION plugins/gpu)
+else()
+	install(TARGETS experimental_dualcore DESTINATION share/zany80/plugins/gpu)
+endif()

@@ -848,6 +848,25 @@ void executeOpcode (uint8_t opcode) {
 		case 0x5F: // ld e, a
 			ldRRx(&de.l, &af.h, 'e', 'a');
 			break;
+		case 0xD3: // out (*), a
+			switch (subcycle) {
+			case 1:
+				CPUState = MEM_READ;
+				subcycle -= 2;
+				buffer = PC++;
+				break;
+			case 6:
+				// prevent A from being modified
+				uint8_t backup = af.h;
+				((broadcast_t)(*pm)["broadcast"])({
+					(int)buffer & 0xFF, (char *)&af.h, 1, "CPU/z80", "output"
+				});
+				af.h = backup;
+				CPUState = INSTRUCTION_FETCH;
+				subcycle = 0;
+				break;
+			}
+			break;
 		default:
 		case 0x00: // nop
 			subcycle = 0;

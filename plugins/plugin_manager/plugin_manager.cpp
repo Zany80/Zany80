@@ -20,6 +20,7 @@ void init(liblib::Library *pm) {
 	std::cout << "[Plugin Manager] Path: "<<folder<<"plugins/\n";
 	bool runnerFound = false;
 	for (std::string s : *enumerate_plugins()) {
+		s = "plugins/" + s;
 		std::cout << "[Plugin Manager] "<<"Loading \""<<s<<"\"...\n";
 		liblib::Library * library;
 		if (attemptLoad(s,&library)) {
@@ -42,11 +43,13 @@ void init(liblib::Library *pm) {
 std::vector<std::string> *enumerate_plugins() {
 	//TODO: either use a file to track installed plugins or query all valid files in the folder recursively.
 	if (plugin_paths == nullptr) {
-		plugin_paths = new std::vector <std::string>;
-		plugin_paths->push_back("plugins/cpu/z80");
-		plugin_paths->push_back("plugins/rom_runner");
-		plugin_paths->push_back("plugins/RAM16_8");
-		plugin_paths->push_back("plugins/simple_shell");
+		plugin_paths = new std::vector <std::string> {
+			"cpu/z80",
+			"rom_runner",
+			"RAM16_8",
+			"simple_shell",
+			"gpu/zany_old"
+		};
 	}
 	return plugin_paths;
 }
@@ -384,6 +387,16 @@ bool activateRunner(RunnerType type, const char *arg) {
 		}
 	}
 	return false;
+}
+
+void broadcast(PluginMessage m) {
+	for (auto pair : *plugins) {
+		liblib::Library *plugin = pair.second;
+		try {
+			((post_t)(*plugin)["postMessage"])(m);
+		}
+		catch (...){}
+	}
 }
 
 void message(PluginMessage m, const char *_target) {

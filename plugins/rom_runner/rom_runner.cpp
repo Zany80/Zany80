@@ -114,7 +114,16 @@ void cleanup() {
 
 void run() {
 	to_run += SPEED * timer.restart().asSeconds();
-	emulate((uint64_t)to_run);
+	try {
+		emulate((uint64_t)to_run);
+	}
+	catch (std::exception e) {
+		std::cerr << "[ROM Runner] Emulation error!\n";
+		((message_t)(*plugin_manager)["message"])({
+			0, (char *)"history", (int)strlen("history"), "Runner/ROM", "[ROM Runner] Emulation Error!"
+		}, "Runner/Shell");
+		throw e;
+	}
 	to_run -= (uint64_t)to_run;
 }
 

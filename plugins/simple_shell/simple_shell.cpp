@@ -1,5 +1,6 @@
 #include <Zany80/Runner.hpp>
 #include <Zany80/Drawing.hpp>
+#include <Zany80/Zany80.hpp>
 
 #include <vector>
 #include <map>
@@ -69,15 +70,16 @@ bool activate(const char *arg) {
 }
 
 void addToHistory(std::string line) {
+	#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH)) - 1
 	// First, make sure every line isn't too big
-	if (line.size() <= (LCD_WIDTH / (FONT_WIDTH)) - 1) {
+	if (line.size() <= GLYPHS_PER_LINE) {
 		// It fits - most likely situation
 		history->push_back(line);
 	}
 	else {
-		while (line.size() > 40) {
-			history->push_back(line.substr(0,40));
-			line = line.substr(40,line.size()-40);
+		while (line.size() > GLYPHS_PER_LINE) {
+			history->push_back(line.substr(0,GLYPHS_PER_LINE));
+			line = line.substr(GLYPHS_PER_LINE,line.size()-GLYPHS_PER_LINE);
 		}
 		history->push_back(line);
 	}
