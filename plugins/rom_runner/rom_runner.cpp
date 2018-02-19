@@ -171,7 +171,9 @@ bool activate(const char *arg) {
 		break;
 	case 1:
 		if (loadROM(arg)) {
+			// valid ROM! yay!
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
+			// TODO: have ZanyOS (running in the z80 CPU) boot up the ROM instead
 			((message_t)(*plugin_manager)["message"])({
 				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&((ROMMetadata*)ROM)->PC
 			}, "CPU/z80");

@@ -36,12 +36,11 @@ const char *neededPlugins() {
 	return "RAM/16_8";
 }
 
+void reset();
+
 void postMessage(PluginMessage m) {
 	if (strcmp(m.data, "reset") == 0) {
-		try {
-			((textMessage_t)(*pm)["textMessage"])("boot_flash","CPU/z80;Runner/ROM");
-		}
-		catch (std::exception){}
+		reset();
 	}
 	else if (strcmp(m.data, "setPC") == 0) {
 		PC = *(uint16_t*)m.context;
@@ -55,8 +54,17 @@ uint8_t subcycle;
 uint32_t buffer;
 
 enum {
-	INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
+	HALTED,INSTRUCTION_FETCH,INSTRUCTION_EXECUTE,MEM_READ,MEM_WRITE
 } CPUState;
+
+void reset() {
+	try {
+		((textMessage_t)(*pm)["textMessage"])("boot_flash","CPU/z80;Runner/ROM");
+	}
+	catch (std::exception){}
+	CPUState = INSTRUCTION_FETCH;
+	PC = 0;
+}
 
 #define S 0x80
 #define Z 0x40
@@ -83,7 +91,7 @@ bool getFlag(uint8_t flag) {
 
 void init(liblib::Library *plugin_manager) {
 	pm = plugin_manager;
-	CPUState = INSTRUCTION_FETCH;
+	CPUState = HALTED;
 	PC = 0;
 	af.word = bc.word = de.word = hl.word = 0;
 	af_.word = bc_.word = de_.word = hl_.word = 0;
@@ -152,6 +160,30 @@ inline void ldR_HL_(uint8_t *r, char id) {
 			subcycle = 0;
 			break;
 	}
+}
+
+inline void ld_HL_R(uint8_t r, char id) {
+	CPUState = MEM_WRITE;
+	buffer = (hl.word << 8) | r | MEM_WRITE_EXECUTE;
+	subcycle++;
+}
+
+inline void addA(uint8_t value) {
+	uint16_t result = af.h + value;
+	uint8_t r = result & 0xFF;
+	setFlag(S, r & 0x80);
+	setFlag(Z, !r);
+	setFlag(H, ((af.h & 0x0F) + (value & 0x0F)) & 0x10 == 0x10);
+	setFlag(PV, (af.h & 0x80) == (value & 0x80) && (value & 0x80) != (r & 0x80));
+	setFlag(N, false);
+	setFlag(C, result & 0x100);
+	af.h = r;
+	subcycle = 0;
+	CPUState = INSTRUCTION_FETCH;
+}
+
+inline void addAR(uint8_t value, char id) {
+	addA(value);
 }
 
 inline void addHLSS(uint16_t *rp, const char *id) {
@@ -848,6 +880,135 @@ void executeOpcode (uint8_t opcode) {
 		case 0x5F: // ld e, a
 			ldRRx(&de.l, &af.h, 'e', 'a');
 			break;
+		case 0x60: // ld h, b
+			ldRRx(&hl.h, &bc.h, 'h', 'b');
+			break;
+		case 0x61: // ld h, c
+			ldRRx(&hl.h, &bc.l, 'h', 'c');
+			break;
+		case 0x62: // ld h, d
+			ldRRx(&hl.h, &de.h, 'h', 'd');
+			break;
+		case 0x63: // ld h, e
+			ldRRx(&hl.h, &de.l, 'h', 'e');
+			break;
+		case 0x64: // ld h, h
+			ldRRx(&hl.h, &hl.h, 'h', 'h');
+			break;
+		case 0x65: // ld h, l
+			ldRRx(&hl.h, &hl.l, 'h', 'l');
+			break;
+		case 0x66: // ld h, (hl)
+			ldR_HL_(&hl.h, 'd');
+			break;
+		case 0x67: // ld h, a
+			ldRRx(&hl.h, &af.h, 'h', 'a');
+			break;
+		case 0x68: // ld l, b
+			ldRRx(&hl.l, &bc.h, 'l', 'b');
+			break;
+		case 0x69: // ld l, c
+			ldRRx(&hl.l, &bc.l, 'l', 'c');
+			break;
+		case 0x6A: // ld l, d
+			ldRRx(&hl.l, &de.h, 'l', 'd');
+			break;
+		case 0x6B: // ld l, e
+			ldRRx(&hl.l, &de.l, 'l', 'e');
+			break;
+		case 0x6C: // ld l, h
+			ldRRx(&hl.l, &hl.h, 'l', 'h');
+			break;
+		case 0x6D: // ld l, l
+			ldRRx(&hl.l, &hl.l, 'l', 'l');
+			break;
+		case 0x6E: // ld l, (hl)
+			ldR_HL_(&hl.l, 'l');
+			break;
+		case 0x6F: // ld l, a
+			ldRRx(&hl.l, &af.h, 'l', 'a');
+			break;
+		case 0x70: // ld (hl), b
+			ld_HL_R(bc.h, 'b');
+			break;
+		case 0x71: // ld (hl), c
+			ld_HL_R(bc.l, 'b');
+			break;
+		case 0x72: // ld (hl), d
+			ld_HL_R(de.h, 'b');
+			break;
+		case 0x73: // ld (hl), e
+			ld_HL_R(de.l, 'b');
+			break;
+		case 0x74: // ld (hl), h
+			ld_HL_R(hl.h, 'b');
+			break;
+		case 0x75: // ld (hl), l
+			ld_HL_R(hl.l, 'b');
+			break;
+		case 0x76: // halt
+			CPUState = HALTED;
+			break;
+		case 0x77: // ld (hl), a
+			ld_HL_R(af.h, 'a');
+			break;
+		case 0x78: // ld a, b
+			ldRRx(&af.h, &bc.h, 'a', 'b');
+			break;
+		case 0x79: // ld a, c
+			ldRRx(&af.h, &bc.l, 'a', 'c');
+			break;
+		case 0x7A: // ld a, d
+			ldRRx(&af.h, &de.h, 'a', 'd');
+			break;
+		case 0x7B: // ld a, e
+			ldRRx(&af.h, &de.l, 'a', 'e');
+			break;
+		case 0x7C: // ld a, h
+			ldRRx(&af.h, &hl.h, 'a', 'h');
+			break;
+		case 0x7D: // ld a, l
+			ldRRx(&af.h, &hl.l, 'a', 'l');
+			break;
+		case 0x7E: // ld a, (hl)
+			ldR_HL_(&af.h, 'a');
+			break;
+		case 0x7F: // ld a, a
+			ldRRx(&af.h, &af.h, 'a', 'a');
+			break;
+		case 0x80: // add a, b
+			addAR(bc.h, 'b');
+			break;
+		case 0x81: // add a, c
+			addAR(bc.l, 'c');
+			break;
+		case 0x82: // add a, d
+			addAR(de.h, 'd');
+			break;
+		case 0x83: // add a, e
+			addAR(de.l, 'e');
+			break;
+		case 0x84: // add a, h
+			addAR(hl.h, 'h');
+			break;
+		case 0x85: // add a, l
+			addAR(hl.l, 'l');
+			break;
+		case 0x86: // add a, (hl)
+			if (subcycle == 1) {
+				CPUState = MEM_READ;
+				buffer = hl.word;
+				subcycle -= 2;
+			}
+			else {
+				addA(buffer & 0xFF);
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+			}
+			break;
+		case 0x87: // add a, a
+			addAR(af.h, 'a');
+			break;
 		case 0xD3: // out (*), a
 			switch (subcycle) {
 			case 1:
@@ -877,7 +1038,7 @@ void executeOpcode (uint8_t opcode) {
 
 void cycle() {
 	if (readRAM == nullptr || writeRAM == nullptr) {
-		throw "";
+		throw;
 	}
 	tstates++;
 	subcycle++;
@@ -925,5 +1086,13 @@ void cycle() {
 			CPUState = INSTRUCTION_FETCH;
 			subcycle = 0;
 		}
+	}
+	else if (CPUState == HALTED) {
+		executeOpcode(0);
+		/*  NOP sets states to INSTRUCTION_EXECUTE; setting here vs if statement there
+		 * Checking if it's halted every time there is an extra jump every cycle when not halted
+		 * this is a single assignment when halted
+		 * microoptimizing! Yay! */
+		CPUState = HALTED;
 	}
 }
