@@ -8,6 +8,17 @@
 #include <string>
 #include <cstring>
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef _WIN32
+	#include <direct.h>
+	#define GetCurrentDir _getcwd
+#else
+	#include <unistd.h>
+	#define GetCurrentDir getcwd
+#endif
+
+char *workingDirectory;
+
 typedef struct {
 	void(*function)(std::vector<std::string>);
 	std::string help;
@@ -46,11 +57,32 @@ const char *neededPlugins(){
 
 void init(liblib::Library *pm) {
 	plugin_manager = pm;
+	workingDirectory = nullptr;
 	if (history == nullptr) {
 		history = new std::vector<std::string>;
 	}
 	if (command_string == nullptr) {
 		command_string = new std::string;
+	}
+
+	updateWorkingDirectory();
+	
+}
+
+void updateWorkingDirectory() {
+	if (workingDirectory != nullptr) {
+		delete[] workingDirectory;
+	}
+	workingDirectory = new char[256];
+	if (GetCurrentDir(workingDirectory, 256)) {
+		int len = strlen(workingDirectory);
+		if (len < 256) {
+			strcpy(workingDirectory + len, "$ ");
+		}
+	}
+	else {
+		delete[] workingDirectory;
+		workingDirectory = nullptr;
 	}
 }
 
@@ -86,7 +118,12 @@ void addToHistory(std::string line) {
 }
 
 void run() {
-	text(command_string->c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT);
+	int offset = 0;
+	if (workingDirectory != nullptr) {
+		text(workingDirectory, 0, LCD_HEIGHT - GLYPH_HEIGHT);
+		offset = GLYPH_WIDTH * strlen(workingDirectory);
+	}
+	text(command_string->c_str(), offset, LCD_HEIGHT - GLYPH_HEIGHT);
 	int y = -6;
 	for (std::string s : *history) {
 		text(s.c_str(), 0, y += GLYPH_HEIGHT);
@@ -112,7 +149,13 @@ void executeCommand(std::string c) {
 	}
 	try {
 		addToHistory(*command_string);
-		commands.at(command).function(args);
+		command_t _command = commands.at(command);
+		try {
+			_command.function(args);
+		}
+		catch (std::exception &e) {
+			addToHistory("Error executing command: \"" + command + "\"");
+		}
 	}
 	catch (std::exception) {
 		addToHistory("No such command: \"" + command + "\"");
@@ -141,7 +184,8 @@ void event(sf::Event &e) {
 				command_string->clear();
 			}
 			else if (e.key.code == sf::Keyboard::BackSpace) {
-				command_string->pop_back();
+				if (command_string->size() > 0)
+					command_string->pop_back();
 			}
 			break;
 		default:

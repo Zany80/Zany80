@@ -1,7 +1,18 @@
 #include <exception>
 #include <Zany80/Plugins.hpp>
 
-std::map <sf::String, command_t> commands = {
+#include <string>
+
+#ifdef _WIN32
+int _chdir(const char *);
+using chdir = _chdir;
+#else
+int chdir(const char *);
+#endif
+
+extern void updateWorkingDirectory();
+
+std::map <std::string, command_t> commands = {
 	
 	{"echo", {
 			.function = [](std::vector<std::string> args){
@@ -33,6 +44,18 @@ std::map <sf::String, command_t> commands = {
 				addToHistory("Unable to run ROM!");
 			}
 		}
+	}},
+
+	{"cd", {
+		.function = [](std::vector<std::string> args) {
+			if (args.size() != 1) {
+				addToHistory("Usage: `cd directory`");
+				return;
+			}
+			chdir(args[0].c_str());
+			updateWorkingDirectory();
+		},
+		.help = "Changes the current directory"
 	}}
 	
 };
