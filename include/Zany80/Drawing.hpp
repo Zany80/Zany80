@@ -5,7 +5,15 @@
 
 #include <SFML/Graphics.hpp>
 
-void text(const char *string, int x, int y);
-void cleanupTexts();
+void text(std::string string, int x, int y);
 
-extern std::map <std::string,sf::RenderTexture *> texts;
+class Text : public sf::Drawable {
+public:
+	Text(const char *string);
+	Text(const char *string, int x, int y);
+	~Text();
+private:
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	sf::Vertex * vertices;
+	const int length;
+};

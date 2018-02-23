@@ -148,7 +148,7 @@ void executeCommand(std::string c) {
 		}
 	}
 	try {
-		addToHistory(*command_string);
+		addToHistory((std::string)workingDirectory + *command_string);
 		command_t _command = commands.at(command);
 		try {
 			_command.function(args);
