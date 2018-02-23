@@ -186,6 +186,10 @@ inline void addAR(uint8_t value, char id) {
 	addA(value);
 }
 
+inline void adcAR(uint8_t value, char id) {
+	addA(value + getFlag(C));
+}
+
 inline void addHLSS(uint16_t *rp, const char *id) {
 	if (subcycle == 8) {
 		uint32_t result = hl.word + *rp;
@@ -1009,6 +1013,40 @@ void executeOpcode (uint8_t opcode) {
 		case 0x87: // add a, a
 			addAR(af.h, 'a');
 			break;
+		case 0x88: // adc a, b
+			adcAR(bc.h, 'b');
+			break;
+		case 0x89: // adc a, c
+			adcAR(bc.l, 'c');
+			break;
+		case 0x8A: // adc a, d
+			adcAR(de.h, 'd');
+			break;
+		case 0x8B: // adc a, e
+			adcAR(de.l, 'e');
+			break;
+		case 0x8C: // adc a, h
+			adcAR(hl.h, 'h');
+			break;
+		case 0x8D: // adc a, l
+			adcAR(hl.l, 'l');
+			break;
+		case 0x8E: // adc a, (hl)
+			if (subcycle == 1) {
+				CPUState = MEM_READ;
+				buffer = hl.word;
+				subcycle -= 2;
+			}
+			else {
+				addA(buffer & 0xFF + getFlag(C));
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+			}
+			break;
+		case 0x8F: // adc a, a
+			adcAR(af.h, 'a');
+			break;
+		
 		case 0xD3: // out (*), a
 			switch (subcycle) {
 			case 1:
