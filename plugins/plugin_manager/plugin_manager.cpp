@@ -9,6 +9,7 @@
 #include <plugin_manager.hpp>
 #include <iostream>
 #include <Zany80/Plugins.hpp>
+#include <Zany80/GenericException.hpp>
 #include <cstring>
 
 typedef void(*post_t)(PluginMessage m);
@@ -44,7 +45,7 @@ std::vector<std::string> *enumerate_plugins() {
 	//TODO: either use a file to track installed plugins or query all valid files in the folder recursively.
 	if (plugin_paths == nullptr) {
 		plugin_paths = new std::vector <std::string> {
-			"cpu/z80",
+			"cpu/z80cpp_core",
 			"rom_runner",
 			"RAM16_8",
 			"simple_shell",
@@ -378,13 +379,18 @@ bool activateRunner(RunnerType type, const char *arg) {
 	// if there's no runners, something is really, *really* wrong.
 	if (getRunners() == nullptr)
 		throw;
+	bool none_found = true;
 	for (liblib::Library *l : *runners) {
 		if (*(RunnerType*)(*l)["getRunnerType"]() != type)
 			continue;
+		none_found = false;
 		if (((bool(*)(const char *))((*l)["activate"]))(arg)) {
 			zany->setRunner(l);
 			return true;
 		}
+	}
+	if (none_found) {
+		throw GenericException("Incompatible ROM!");
 	}
 	return false;
 }

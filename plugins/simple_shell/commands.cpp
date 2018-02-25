@@ -1,4 +1,4 @@
-#include <exception>
+#include <Zany80/GenericException.hpp>
 #include <Zany80/Plugins.hpp>
 
 #include <string>
@@ -39,6 +39,9 @@ std::map <std::string, command_t> commands = {
 				else {
 					displayed = false;
 				}
+			}
+			catch (GenericException e) {
+				addToHistory(e.what());
 			}
 			catch (std::exception) {
 				addToHistory("Unable to run ROM!");
