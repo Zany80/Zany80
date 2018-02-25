@@ -7,6 +7,7 @@
 #include <Zany80/CPU.hpp>
 
 #include <iostream>
+#include <sstream>
 
 const char *signature = "z80";
 
@@ -46,6 +47,11 @@ void postMessage(PluginMessage m) {
 		cpu->reset();
 	}
 	else if (!strcmp(m.data, "setPC")) {
+		std::cout << "Setting PC...\n";
+		//suppress output from instructions
+		std::stringstream ss;
+		std::streambuf *old = std::cout.rdbuf();
+		std::cout.rdbuf(ss.rdbuf());
 		uint16_t target = *(uint16_t*)m.context;
 		uint8_t buffer[3] = {};
 		for (int i = 0; i < 3;i++)
@@ -56,6 +62,7 @@ void postMessage(PluginMessage m) {
 		cpu->execute();
 		for (int i = 0; i < 3;i++)
 			writeRAM(i, buffer[i]);
+		std::cout.rdbuf(old);
 	}
 }
 
