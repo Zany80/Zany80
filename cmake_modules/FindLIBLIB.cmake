@@ -17,7 +17,7 @@ find_path(LIBLIB_INCLUDE_DIR liblib/liblib.hpp
 )
 find_library(LIBLIB_LIBRARY NAMES lib liblib
 	PATH_SUFFIXES include
-	PATHS ${FIND_SFML_PATHS}
+	PATHS ${LIBLIB_PATHS}
 )
 
 include(FindPackageHandleStandardArgs)
