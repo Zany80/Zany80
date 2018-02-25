@@ -19,6 +19,7 @@ install:
   - cd ../..
   - git clone https://github.com/jsanchezv/z80cpp
   - cd z80cpp
+  - cp ../misc/z80cppCMakeLists.txt CMakeLists.txt
   - mkdir build
   - cd build
   - cmake ..
