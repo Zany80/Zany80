@@ -42,10 +42,13 @@ void Text::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	target.draw(vertices, length * 4, sf::Quads, states);
 }
 
+typedef std::pair<std::string, std::pair<int, int>> PositionedText;
+
 void text(std::string string, int x, int y) {
-	static std::map<std::string, Text*> texts;
-	if (texts.find(string) == texts.end()) {
-		texts[string] = new Text(string.c_str(), x, y);
+	static std::map<PositionedText, Text*> texts;
+	PositionedText positioned_text = std::make_pair(string, std::make_pair(x,y));
+	if (texts.find(positioned_text) == texts.end()) {
+		texts[positioned_text] = new Text(string.c_str(), x, y);
 	}
-	zany->window->draw(*texts[string], &zany->font);
+	zany->window->draw(*texts[positioned_text], &zany->font);
 }
