@@ -1,5 +1,6 @@
 #include <Zany80/Zany80.hpp>
 #include <iostream>
+#include <cstring>
 
 void Zany80::replaceRunner(){
 	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
@@ -153,7 +154,9 @@ void Zany80::frame(){
 void Zany80::setRunner(liblib::Library *runner) {
 	if (this->runner !=nullptr) {
 		try {
-			(*this->runner)["deactivate"]();
+			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
+				0, "deactivate", strlen("deactivate"), "Zany80", nullptr
+			});
 		}
 		catch (...){}
 	}

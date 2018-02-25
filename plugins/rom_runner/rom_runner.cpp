@@ -34,6 +34,8 @@ typedef struct {
 float to_run;
 // timer is used to calculate how many cycles have passes, precision is needed to determine clock precision
 sf::Clock timer, precision;
+float time_passed;
+bool activated;
 
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "boot_flash")) {
@@ -55,14 +57,20 @@ void postMessage(PluginMessage m) {
 			catch (std::exception){}
 		}
 	}
+	else if (!strcmp(m.data, "deactivate")) {
+		time_passed += precision.restart().asSeconds();
+		activated = false;
+	}
 	else if(!strcmp(m.data, "init")) {
 		init((liblib::Library*)m.context);
 	}
 	else if(!strcmp(m.data, "cleanup")) {
-		float time_passed = precision.getElapsedTime().asSeconds();
 		if (ROM != nullptr) {
 			delete[] ROM;
 			ROM = nullptr;
+		}
+		if (activated) {
+			time_passed += precision.restart().asSeconds();
 		}
 		uint64_t cycles = (float)*(uint64_t*)((*z80)["getCycles"]());
 		uint64_t target = SPEED * time_passed;
@@ -77,6 +85,8 @@ void postMessage(PluginMessage m) {
 void init(liblib::Library *pm) {
 	plugin_manager = pm;
 	to_run = 0;
+	activated = false;
+	time_passed = 0;
 	std::cout << "[ROM Runner] Retrieving z80 plugin...\n";
 	try {
 		z80 = ((liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]))("z80");
@@ -156,6 +166,7 @@ void event(sf::Event &e) {
 bool activate(const char *arg) {
 	timer.restart();
 	precision.restart();
+	activated = true;
 	int valid = isROMValid(arg);
 	switch (valid) {
 	case -1:
