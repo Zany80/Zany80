@@ -17,6 +17,14 @@ install:
   - make -j4
   - sudo make install
   - cd ../..
+  - git clone https://github.com/jsanchezv/z80cpp
+  - cd z80cpp
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make -j4
+  - sudo make install
+  - cd ../..
 
 script:
   - mkdir build
