@@ -71,7 +71,9 @@ void cleanup() {
 					if (unneeded(pair.second)) {
 						std::cout << "[Plugin Manager] Cleaning up "<<pair.first<<"\n";
 						try {
-							(*pair.second)["cleanup"]();
+							((post_t)(*pair.second)["postMessage"])({
+								0, "cleanup", sizeof(char) * 7, "PluginManager", nullptr
+							});
 						} catch(...){}
 						delete pair.second;
 						plugins->erase(pair.first);
@@ -208,7 +210,9 @@ bool attemptLoad(std::string name, liblib::Library **library) {
 		*library = new liblib::Library(folder + name);
 		// Before initializing it, verify that all needed plugins are loaded
 		if (prereqsLoaded(library)) {
-			((init_t)(**library)["init"])(plugin_manager);
+			((post_t)(**library)["postMessage"])({
+				0, "init", sizeof(char) * 4, "PluginManager", (char *)plugin_manager
+			});
 			return true;
 		}
 		else {
@@ -345,7 +349,9 @@ void finishLoading() {
 				std::cout << "[Plugin Manager] Attempting late-load of " << pair.first << "\n";
 				if (prereqsLoaded(&library)) {
 					(*plugins)[pair.first] = library;
-					((init_t)(*library)["init"])(plugin_manager);
+					((post_t)(*library)["postMessage"])({
+						0, "init", sizeof(char) * 4, "PluginManager", (char *)plugin_manager
+					});
 					offloaded->erase(pair.first);
 					std::cout << "[Plugin Manager] Late-load of " << pair.first << " successful!\n";
 					break;
@@ -355,7 +361,7 @@ void finishLoading() {
 				}
 			}
 			catch (std::exception &e) {
-				std::cerr << "[Plugin Manager] Late-load of " << pair.first << " unsuccessful.\n";
+				std::cerr << "[Plugin Manager] Late-load of " << pair.first << " unsuccessful (E).\n";
 			}
 		}
 	}

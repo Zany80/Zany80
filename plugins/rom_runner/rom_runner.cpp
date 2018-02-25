@@ -1,4 +1,6 @@
+#define NEEDED_PLUGINS "CPU/z80;RAM/16_8"
 #include <Zany80/Runner.hpp>
+
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -34,7 +36,7 @@ float to_run;
 sf::Clock timer, precision;
 
 void postMessage(PluginMessage m) {
-	if (strncmp(m.data, "boot_flash", m.length) == 0) {
+	if (!strcmp(m.data, "boot_flash")) {
 		if (ROM != nullptr) {
 			std::cout << "[ROM Runner] Booting up, flashing RAM...\n";
 			try {
@@ -53,10 +55,23 @@ void postMessage(PluginMessage m) {
 			catch (std::exception){}
 		}
 	}
-}
-
-const char *neededPlugins() {
-	return "CPU/z80;RAM/16_8";
+	else if(!strcmp(m.data, "init")) {
+		init((liblib::Library*)m.context);
+	}
+	else if(!strcmp(m.data, "cleanup")) {
+		float time_passed = precision.getElapsedTime().asSeconds();
+		if (ROM != nullptr) {
+			delete[] ROM;
+			ROM = nullptr;
+		}
+		uint64_t cycles = (float)*(uint64_t*)((*z80)["getCycles"]());
+		uint64_t target = SPEED * time_passed;
+		z80 = nullptr;
+		if (cycles == 0)
+			return;
+		std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
+		std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
+	}
 }
 
 void init(liblib::Library *pm) {
@@ -95,21 +110,6 @@ bool loadROM(const char *path) {
 	ROMFile.read((char*)ROM,size);
 	ROMFile.close();
 	return true;
-}
-
-void cleanup() {
-	float time_passed = precision.getElapsedTime().asSeconds();
-	if (ROM != nullptr) {
-		delete[] ROM;
-		ROM = nullptr;
-	}
-	uint64_t cycles = (float)*(uint64_t*)((*z80)["getCycles"]());
-	uint64_t target = SPEED * time_passed;
-	z80 = nullptr;
-	if (cycles == 0)
-		return;
-	std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
-	std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
 }
 
 void run() {

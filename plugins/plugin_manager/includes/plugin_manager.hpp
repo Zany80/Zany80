@@ -41,5 +41,3 @@ extern std::vector <std::string> *plugin_paths;
 extern liblib::Library *plugin_manager;
 
 void finishLoading();
-
-typedef void (*init_t)(liblib::Library *);

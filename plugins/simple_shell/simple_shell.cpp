@@ -1,3 +1,5 @@
+#define NEEDED_PLUGINS ""
+
 #include <Zany80/Runner.hpp>
 #include <Zany80/Drawing.hpp>
 #include <Zany80/Zany80.hpp>
@@ -49,24 +51,27 @@ void postMessage(PluginMessage m) {
 			addToHistory((std::string)m.context);
 		}
 	}
-}
-
-const char *neededPlugins(){
-	return "";
-}
-
-void init(liblib::Library *pm) {
-	plugin_manager = pm;
-	workingDirectory = nullptr;
-	if (history == nullptr) {
-		history = new std::vector<std::string>;
+	else if (strcmp(m.data, "init") == 0) {
+		plugin_manager = (liblib::Library*)m.context;
+		workingDirectory = nullptr;
+		if (history == nullptr) {
+			history = new std::vector<std::string>;
+		}
+		if (command_string == nullptr) {
+			command_string = new std::string;
+		}
+		updateWorkingDirectory();
 	}
-	if (command_string == nullptr) {
-		command_string = new std::string;
+	else if (strcmp(m.data, "cleanup") == 0) {
+		if (history != nullptr) {
+			delete history;
+			history = nullptr;
+		}
+		if (command_string != nullptr) {
+			delete command_string;
+			command_string = nullptr;
+		}
 	}
-
-	updateWorkingDirectory();
-	
 }
 
 void updateWorkingDirectory() {
@@ -83,17 +88,6 @@ void updateWorkingDirectory() {
 	else {
 		delete[] workingDirectory;
 		workingDirectory = nullptr;
-	}
-}
-
-void cleanup() {
-	if (history != nullptr) {
-		delete history;
-		history = nullptr;
-	}
-	if (command_string != nullptr) {
-		delete command_string;
-		command_string = nullptr;
 	}
 }
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NEEDED_PLUGINS
+#error Must define NEEDED_PLUGINS !
+#endif
+
 #include <Zany80/Plugins.hpp>
 #include <liblib/liblib.hpp>
 #include <SFML/Window.hpp>
@@ -27,4 +31,8 @@ PluginType *getType(){
 
 RunnerType *getRunnerType() {
 	return &runner_type;
+}
+
+const char *neededPlugins() {
+	return NEEDED_PLUGINS;
 }

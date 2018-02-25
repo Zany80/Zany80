@@ -1,6 +1,8 @@
 #pragma once
-#include <Zany80/Plugins.hpp>
-#include <liblib/liblib.hpp>
+
+#ifndef NEEDED_PLUGINS
+#error Must define NEEDED_PLUGINS !
+#endif
 
 #define _t(x) uint ## x ## _t
 #define t(x) _t(x)
@@ -16,6 +18,9 @@
 #else
 #error DATA_BUS_SIZE must be defined!
 #endif
+
+#include <Zany80/Plugins.hpp>
+#include <liblib/liblib.hpp>
 
 typedef void(*write_t)(ADDRESS_BUS_SIZE_T,DATA_BUS_SIZE_T);
 typedef DATA_BUS_SIZE_T(*read_t)(ADDRESS_BUS_SIZE_T);
@@ -83,6 +88,10 @@ void emulate(uint64_t cycles) {
 }
 
 #endif
+
+const char *neededPlugins() {
+	return NEEDED_PLUGINS;
+}
 
 #undef t
 #undef _t

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NEEDED_PLUGINS
+#error Must define NEEDED_PLUGINS !
+#endif
+
 #include <Zany80/Plugins.hpp>
 #include <liblib/liblib.hpp>
 #include <string.h>
@@ -36,8 +40,7 @@ extern "C" {
 	HardwareType *getHardwareType();
 	bool isSignatureCompatible(const char *sig);
 	const char *neededPlugins();
-	void init(liblib::Library *plugin_manager);
-	void cleanup();
+	void postMessage(PluginMessage m);
 	void write(ADDRESS_BUS_SIZE_T address,DATA_BUS_SIZE_T value);
 	void polywrite(ADDRESS_BUS_SIZE_T address, DATA_BUS_SIZE_T *value_start, ADDRESS_BUS_SIZE_T length);
 	DATA_BUS_SIZE_T read(ADDRESS_BUS_SIZE_T address);
@@ -53,6 +56,10 @@ HardwareType *getHardwareType() {
 
 bool isSignatureCompatible(const char *sig) {
 	return strcmp(s(sig(ADDRESS_BUS_SIZE,DATA_BUS_SIZE)), sig) == 0;
+}
+
+const char *neededPlugins() {
+	return NEEDED_PLUGINS;
 }
 
 #undef t

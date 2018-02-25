@@ -1,15 +1,12 @@
 #define ADDRESS_BUS_SIZE 16
 #define DATA_BUS_SIZE 8
 
+#define NEEDED_PLUGINS ""
 #include <Zany80/RAM.hpp>
 
 #include <iostream>
 
 uint8_t * ram = nullptr;
-
-const char *neededPlugins(){
-	return "";
-}
 
 void init(liblib::Library *plugin_manager) {
 	if (ram != nullptr)
@@ -45,13 +42,6 @@ void init(liblib::Library *plugin_manager) {
 	//ram[17] = 0x34;
 }
 
-void cleanup() {
-	if (ram!= nullptr){
-		delete[] ram;
-		ram = nullptr;
-	}
-}
-
 void write(uint16_t address, uint8_t value) {
 	std::cout << "[RAM] Value "<<(int)value << " written to "<<(int)address<<"\n";
 	ram[address] = value;
@@ -68,5 +58,17 @@ void polywrite(uint16_t address, uint8_t *value_start, uint16_t length) {
 	}
 	else {
 		std::cerr << "[RAM] Data overflow!\n";
+	}
+}
+
+void postMessage(PluginMessage m) {
+	if (!strcmp(m.data, "init")) {
+		init((liblib::Library*)m.context);
+	}
+	else if (!strcmp(m.data, "cleanup")) {
+		if (ram!= nullptr){
+			delete[] ram;
+			ram = nullptr;
+		}
 	}
 }

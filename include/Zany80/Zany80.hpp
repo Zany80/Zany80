@@ -26,6 +26,8 @@ typedef struct {
 	int length;
 	const char *source;
 	// What caused this message to be sent? Did a plugin request unavailable info?
+	// Also used in some cases to pass a generic pointer - when data is "init",
+	// context contains the address of the plugin manager
 	const char *context;
 } PluginMessage;
 

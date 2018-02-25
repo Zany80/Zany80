@@ -3,6 +3,7 @@
 
 #include <Zany80/Zany80.hpp>
 
+#define NEEDED_PLUGINS "RAM/16_8"
 #include <Zany80/CPU.hpp>
 #include <iostream>
 
@@ -32,20 +33,7 @@ word af_,bc_,de_,hl_;
 
 word SP;
 
-const char *neededPlugins() {
-	return "RAM/16_8";
-}
-
 void reset();
-
-void postMessage(PluginMessage m) {
-	if (strcmp(m.data, "reset") == 0) {
-		reset();
-	}
-	else if (strcmp(m.data, "setPC") == 0) {
-		PC = *(uint16_t*)m.context;
-	}
-}
 
 uint64_t tstates;
 uint8_t subcycle;
@@ -87,18 +75,6 @@ void setFlag(uint8_t flag,bool state) {
 
 bool getFlag(uint8_t flag) {
 	return af.l & flag;
-}
-
-void init(liblib::Library *plugin_manager) {
-	pm = plugin_manager;
-	CPUState = HALTED;
-	PC = 0;
-	af.word = bc.word = de.word = hl.word = 0;
-	af_.word = bc_.word = de_.word = hl_.word = 0;
-	tstates = 0;
-	subcycle = 0;
-	readRAM = nullptr;
-	writeRAM = nullptr;
 }
 
 inline void incR(uint8_t *r, char id) {
@@ -1219,5 +1195,25 @@ void cycle() {
 		 * this is a single assignment when halted
 		 * microoptimizing! Yay! */
 		CPUState = HALTED;
+	}
+}
+
+void postMessage(PluginMessage m) {
+	if (strcmp(m.data, "reset") == 0) {
+		reset();
+	}
+	else if (strcmp(m.data, "setPC") == 0) {
+		PC = *(uint16_t*)m.context;
+	}
+	else if (!strcmp(m.data, "init")) {
+		pm = (liblib::Library*)m.context;
+		CPUState = HALTED;
+		PC = 0;
+		af.word = bc.word = de.word = hl.word = 0;
+		af_.word = bc_.word = de_.word = hl_.word = 0;
+		tstates = 0;
+		subcycle = 0;
+		readRAM = nullptr;
+		writeRAM = nullptr;
 	}
 }
