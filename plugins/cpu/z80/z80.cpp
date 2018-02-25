@@ -190,6 +190,28 @@ inline void adcAR(uint8_t value, char id) {
 	addA(value + getFlag(C));
 }
 
+inline void subA(uint8_t value) {
+	uint16_t result = af.h - value;
+	uint8_t r = result & 0xFF;
+	setFlag(S, r & 0x80);
+	setFlag(Z, !r);
+	setFlag(H, ((af.h & 0x0F) - (value & 0x0F)) & 0x10 == 0x10);
+	setFlag(PV, (af.h & 0x80) == (value & 0x80) && (value & 0x80) != (r & 0x80));
+	setFlag(N, true);
+	setFlag(C, result & 0x100);
+	af.h = r;
+	subcycle = 0;
+	CPUState = INSTRUCTION_FETCH;
+}
+
+inline void subAR(uint8_t value, char id) {
+	subA(value);
+}
+
+inline void sbcAR(uint8_t value, char id) {
+	subA(value + getFlag(C));
+}
+
 inline void addHLSS(uint16_t *rp, const char *id) {
 	if (subcycle == 8) {
 		uint32_t result = hl.word + *rp;
@@ -1046,7 +1068,72 @@ void executeOpcode (uint8_t opcode) {
 		case 0x8F: // adc a, a
 			adcAR(af.h, 'a');
 			break;
-		
+		case 0x90: // sub b
+			subAR(bc.h, 'b');
+			break;
+		case 0x91: // sub c
+			subAR(bc.l, 'c');
+			break;
+		case 0x92: // sub d
+			subAR(de.h, 'd');
+			break;
+		case 0x93: // sub e
+			subAR(de.l, 'e');
+			break;
+		case 0x94: // sub h
+			subAR(hl.h, 'h');
+			break;
+		case 0x95: // sub l
+			subAR(hl.l, 'l');
+			break;
+		case 0x96: // sub (hl)
+			if (subcycle == 1) {
+				CPUState = MEM_READ;
+				buffer = hl.word;
+				subcycle -= 2;
+			}
+			else {
+				subA(buffer & 0xFF);
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+			}
+			break;
+		case 0x97: // sub a
+			subAR(af.h, 'a');
+			break;
+		case 0x98: // sbc a, b
+			sbcAR(bc.h, 'b');
+			break;
+		case 0x99: // sbc a, c
+			sbcAR(bc.l, 'c');
+			break;
+		case 0x9A: // sbc a, d
+			sbcAR(de.h, 'd');
+			break;
+		case 0x9B: // sbc a, e
+			sbcAR(de.l, 'e');
+			break;
+		case 0x9C: // sbc a, h
+			sbcAR(hl.h, 'h');
+			break;
+		case 0x9D: // sbc a, l
+			sbcAR(hl.l, 'l');
+			break;
+		case 0x9E: // sbc a, (hl)
+			if (subcycle == 1) {
+				CPUState = MEM_READ;
+				buffer = hl.word;
+				subcycle -= 2;
+			}
+			else {
+				subA(buffer & 0xFF + getFlag(C));
+				subcycle = 0;
+				CPUState = INSTRUCTION_FETCH;
+			}
+			break;
+		case 0x9F: // sbc a, a
+			sbcAR(af.h, 'a');
+			break;
 		case 0xD3: // out (*), a
 			switch (subcycle) {
 			case 1:
