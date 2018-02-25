@@ -33,8 +33,6 @@ word af_,bc_,de_,hl_;
 
 word SP;
 
-void reset();
-
 uint64_t tstates;
 uint8_t subcycle;
 
@@ -297,8 +295,8 @@ inline void jrC(bool c, const char *id) {
 	}
 }
 
-uint64_t *getCycles() {
-	return &tstates;
+uint64_t getCycles() {
+	return tstates;
 }
 
 //TODO: remove cleanup/init function from all plugins, use message system instead. Bonus points if it works multithreaded ;)

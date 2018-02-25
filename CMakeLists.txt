@@ -43,13 +43,12 @@ endif()
 
 add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
-
-
 add_executable(zany80 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 add_subdirectory(plugins)
 
-include_directories(${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+target_include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+target_include_directories(zany PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
 target_include_directories(zany PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
 target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)

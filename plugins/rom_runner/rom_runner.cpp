@@ -72,7 +72,7 @@ void postMessage(PluginMessage m) {
 		if (activated) {
 			time_passed += precision.restart().asSeconds();
 		}
-		uint64_t cycles = (float)*(uint64_t*)((*z80)["getCycles"]());
+		uint64_t cycles = (uint64_t)((*z80)["getCycles"]());
 		uint64_t target = SPEED * time_passed;
 		z80 = nullptr;
 		if (cycles == 0)
