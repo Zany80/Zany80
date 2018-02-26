@@ -155,7 +155,7 @@ void Zany80::setRunner(liblib::Library *runner) {
 	if (this->runner !=nullptr) {
 		try {
 			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
-				0, "deactivate", strlen("deactivate"), "Zany80", nullptr
+				0, "deactivate", (int)strlen("deactivate"), "Zany80", nullptr
 			});
 		}
 		catch (...){}
