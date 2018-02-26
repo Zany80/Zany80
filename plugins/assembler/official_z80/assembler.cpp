@@ -2,8 +2,7 @@
 
 #include <cstring>
 #include <iostream>
-
-std::vector<std::string> *tokens;
+#include <fstream>
 
 liblib::Library *plugin_manager;
 
@@ -27,10 +26,33 @@ void postMessage(PluginMessage m) {
 	}
 }
 
+void messageShell(const char *message) {
+	((message_t)(*plugin_manager)["message"])({
+		0, "history", (int)strlen("history"), "Assembler/z80", message
+	}, "Runner/Shell");
+}
+
 void run(std::vector<std::string> *args) {
-	if (args->size() == 0) {
-		((message_t)(*plugin_manager)["message"])({
-			0, "history", (int)strlen("history"), "Assembler/z80", "No arguments provided!"
-		}, "Runner/Shell");
+	if (args->size() == 2) {
+		assemble((*args)[0], (*args)[1]);
 	}
+	else {
+		messageShell("Usage: `assemble source target");
+	}
+}
+
+void assemble(std::string source, std::string target) {
+	std::ifstream source_file(source);
+	if (!source_file.is_open()) {
+		messageShell("Source file doesn't exist!");
+		return;
+	}
+	std::vector<std::string> *input_tokens = new std::vector<std::string>(
+		std::istream_iterator<std::string>(source_file),
+		std::istream_iterator<std::string>()
+	);
+	for (std::string &s : *input_tokens) {
+		messageShell(((std::string)"Token: " + s).c_str());
+	}
+	delete input_tokens;
 }

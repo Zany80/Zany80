@@ -9,3 +9,5 @@ extern "C" {
 }
 
 void run(std::vector<std::string> *args);
+void messageShell(const char *message);
+void assemble(std::string source, std::string destination);
