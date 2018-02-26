@@ -23,7 +23,8 @@ std::map <std::string, command_t> commands = {
 				all_args.pop_back();
 				addToHistory(all_args);
 			},
-			.help = "Echoes all received arguments to the history buffer.\n"
+			.help = "Echoes all received arguments to the history buffer.\n",
+			.detailed_help = "Run `echo Hello there, self!` to see it in action."
 	}},
 	{"run", {
 		.function = [](std::vector<std::string> args) {
@@ -36,9 +37,6 @@ std::map <std::string, command_t> commands = {
 					// ROM run successfully
 					addToHistory("ROM running, control ceded.");
 				}
-				else {
-					displayed = false;
-				}
 			}
 			catch (GenericException e) {
 				addToHistory(e.what());
@@ -46,7 +44,8 @@ std::map <std::string, command_t> commands = {
 			catch (std::exception) {
 				addToHistory("Unable to run ROM!");
 			}
-		}
+		},
+		.help = "Launches the specified cart."
 	}},
 
 	{"cd", {
@@ -59,6 +58,48 @@ std::map <std::string, command_t> commands = {
 			updateWorkingDirectory();
 		},
 		.help = "Changes the current directory"
+	}},
+
+	{"assemble", {
+		.function = [](std::vector<std::string> args) {
+			((message_t)(*plugin_manager)["message"])({
+				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
+			}, "Assembler/z80");
+		},
+		.help = "Invokes the assembler to turn an assembly input file into an object file."
+	}},
+
+	{"help", {
+		.function = [](std::vector<std::string> args) {
+			if (args.size() == 0) {
+				addToHistory("Commands: ");
+				for (auto pair : commands) {
+					std::string command_info = "\t" + pair.first + ": "+pair.second.help;
+					addToHistory(command_info);
+				}
+			}
+			else if (args.size() == 1) {
+				auto command = commands.find(args[0]);
+				if (command != commands.end()) {
+					std::string help = command->second.detailed_help;
+					if (help == "") {
+						addToHistory("No help available for that command!");
+					}
+					else {
+						addToHistory(help);
+					}
+				}
+				else {
+					addToHistory("No such command!");
+				}
+			}
+			else {
+				addToHistory("Usage: `help [command]`");
+			}
+		},
+		.help = "Prints out information on commands. For more information, run `help help`",
+		.detailed_help = "Prints out information on commands. With no arguments, gives general help. "
+		"If run with the name of a command (e.g. `help run`), gives more detailed information."
 	}}
 	
 };

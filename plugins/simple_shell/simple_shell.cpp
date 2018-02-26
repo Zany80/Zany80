@@ -24,6 +24,7 @@ char *workingDirectory;
 typedef struct {
 	void(*function)(std::vector<std::string>);
 	std::string help;
+	std::string detailed_help;
 } command_t;
 
 RunnerType runner_type = Shell;
@@ -35,17 +36,12 @@ void addToHistory(std::string);
 
 liblib::Library *plugin_manager;
 
-bool displayed = false;
-
 #include "commands.cpp"
 
 void postMessage(PluginMessage m) {
 	if (strcmp(m.data, "history") == 0) {
 		if (strcmp(m.source, "Runner/ROM") == 0) {
-			if (!displayed) {
-				displayed = true;
-				addToHistory((std::string)m.context);
-			}
+			addToHistory((std::string)m.context);
 		}
 		else {
 			addToHistory((std::string)m.context);
@@ -96,18 +92,20 @@ bool activate(const char *arg) {
 }
 
 void addToHistory(std::string line) {
-	#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH)) - 1
+	#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH))
 	// First, make sure every line isn't too big
 	if (line.size() <= GLYPHS_PER_LINE) {
 		// It fits - most likely situation
 		history->push_back(line);
 	}
 	else {
+		std::cout << line << "\n";
 		while (line.size() > GLYPHS_PER_LINE) {
 			history->push_back(line.substr(0,GLYPHS_PER_LINE));
 			line = line.substr(GLYPHS_PER_LINE,line.size()-GLYPHS_PER_LINE);
 		}
 		history->push_back(line);
+		std::cout << line << "\n";
 	}
 }
 

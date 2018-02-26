@@ -8,10 +8,12 @@
 
 #include <SFML/System.hpp>
 
+#include <Zany80/ClockSpeed.hpp>
+
 typedef void (*post_t)(PluginMessage m);
 
 //Run at 10Hz for now. This makes output smaller and easier to debug during emulator implementation.
-#define SPEED 10
+#define SPEED 4 MHz
 
 RunnerType runner_type = ROMRunner;
 liblib::Library *z80, *ram;

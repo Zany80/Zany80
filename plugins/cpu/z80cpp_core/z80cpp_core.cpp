@@ -58,7 +58,7 @@ void z80cpp_core::addressOnBus(uint16_t address, int32_t tstates) {
 }
 
 void z80cpp_core::interruptHandlingTime(int32_t tstates) {
-	
+	this->tstates += tstates;
 }
 
 bool z80cpp_core::isActiveINT() {

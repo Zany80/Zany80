@@ -23,15 +23,9 @@ Text::Text(const char *string, int x, int y) : length(strlen(string)) {
 		 //bottom left vertex
 		vertices[i * 4 + 3] = sf::Vertex(sf::Vector2f(x + i * GLYPH_WIDTH,y + GLYPH_HEIGHT));
 		vertices[i * 4 + 3].texCoords = sf::Vector2f(cX, cY + GLYPH_HEIGHT);
+		//std::cout << c << ;
 	}
 }
-
-//Text::Text(const char *string) : length(strlen(string)) {
-	//vertices = new sf::Vertex[length];
-	//for (int i = 0; i < strlen(string); i++) {
-		//vertices[i] = sf::Vertex(sf::Vector2f(0,0));
-	//}
-//}
 
 Text::~Text() {
 	if (vertices != nullptr)

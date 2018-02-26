@@ -49,7 +49,8 @@ std::vector<std::string> *enumerate_plugins() {
 			"rom_runner",
 			"RAM16_8",
 			"simple_shell",
-			"gpu/zany_old"
+			"gpu/zany_old",
+			"assembler/official_z80"
 		};
 	}
 	return plugin_paths;
@@ -481,6 +482,23 @@ void message(PluginMessage m, const char *_target) {
 		}
 		else if (category == "GenericRunner") {
 			
+		}
+		else {
+			// TODO: remove all checks, have plugins decide whether to accept
+			// the message (make the following the default)
+			for (auto pair : *plugins) {
+				liblib::Library *library = pair.second;
+				try {
+					if (((bool(*)(const char *))(*library)["isCategory"])(category.c_str())) {
+						if (secondary == "*" || ((bool(*)(const char *))(*library)["isType"])(secondary.c_str())) {
+							((post_t)(*library)["postMessage"])(m);
+						}
+					}
+				}
+				catch (std::exception &e) {
+					std::cerr << "[Plugin Manager] Error querying "<<pair.first << " for messaging: "<<e.what()<<"\n";
+				}
+			}
 		}
 	}
 }
