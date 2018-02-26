@@ -4,17 +4,17 @@
 #error Must define NEEDED_PLUGINS !
 #endif
 
-#define _t(x) uint ## x ## _t
-#define t(x) _t(x)
+#define _num_to_type(x) uint ## x ## _t
+#define num_to_type(x) _num_to_type(x)
 
 #ifdef ADDRESS_BUS_SIZE
-#define ADDRESS_BUS_SIZE_T t(ADDRESS_BUS_SIZE)
+#define ADDRESS_BUS_SIZE_T num_to_type(ADDRESS_BUS_SIZE)
 #else
 #error ADDRESS_BUS_SIZE must be defined!
 #endif
 
 #ifdef DATA_BUS_SIZE
-#define DATA_BUS_SIZE_T t(DATA_BUS_SIZE)
+#define DATA_BUS_SIZE_T num_to_type(DATA_BUS_SIZE)
 #else
 #error DATA_BUS_SIZE must be defined!
 #endif
@@ -98,5 +98,5 @@ const char *neededPlugins() {
 	return NEEDED_PLUGINS;
 }
 
-#undef t
-#undef _t
+#undef num_to_type
+#undef _num_to_type
