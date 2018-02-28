@@ -495,8 +495,11 @@ void message(PluginMessage m, const char *_target) {
 						}
 					}
 				}
-				catch (std::exception &e) {
+				catch (liblib::SymbolLoadingException &e) {
 					std::cerr << "[Plugin Manager] Error querying "<<pair.first << " for messaging: "<<e.what()<<"\n";
+				}
+				catch (std::exception &e) {
+					std::cerr << "[Plugin Manager] Plugin "<<pair.first<<" threw an exception after receiving a message! Error: "<<e.what()<<"\n";
 				}
 			}
 		}
