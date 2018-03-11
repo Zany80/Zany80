@@ -74,17 +74,9 @@ Zany80::Zany80(){
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
 	if (!font.loadFromFile(folder + "font.png")) {
 		// hack for development
-		if (!font.loadFromFile("font.png")) {
-			if (!font.loadFromFile("../font.png")) {
-				std::cerr << "Failed to load font!\n";
-				exit(1);
-			}
-			else {
-				std::cout << "[Zany80] " << folder << " setup invalid, falling back to ";
-				folder = path.substr(0,path.find_last_of("/")+1);
-				folder = folder.substr(0,folder.find_last_of("/")+1);
-				std::cout << folder << "\n";
-			}
+		if (!font.loadFromFile("font.png") && !font.loadFromFile("../font.png")) {
+			std::cerr << "Failed to load font!\n";
+			exit(1);
 		}
 		else {
 			// If the font is in this folder, everything else should be as well
