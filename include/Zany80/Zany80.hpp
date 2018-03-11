@@ -49,7 +49,6 @@ public:
 	void setRunner(liblib::Library *runner);
 	
 private:
-	//TODO: see if instead of keeping the library pointer, caching the needed functions provides a significant speed boost
 	void replaceRunner();
 	liblib::Library *runner = nullptr, *plugin_manager = nullptr;
 	bool attemptLoad(std::string name, liblib::Library ** library);

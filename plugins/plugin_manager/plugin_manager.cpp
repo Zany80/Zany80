@@ -51,6 +51,7 @@ std::vector<std::string> *enumerate_plugins() {
 			"simple_shell",
 			"gpu/zany_old",
 			"assembler/scas",
+			"compiler/kcc",
 			"editor/official"
 		};
 	}
@@ -481,9 +482,6 @@ void message(PluginMessage m, const char *_target) {
 				catch (...){}
 			}
 		}
-		else if (category == "GenericRunner") {
-			
-		}
 		else {
 			// TODO: remove all checks, have plugins decide whether to accept
 			// the message (make the following the default)
@@ -497,7 +495,7 @@ void message(PluginMessage m, const char *_target) {
 					}
 				}
 				catch (liblib::SymbolLoadingException &e) {
-					std::cerr << "[Plugin Manager] Error querying "<<pair.first << " for messaging: "<<e.what()<<"\n";
+					//std::cerr << "[Plugin Manager] Error querying "<<pair.first << " for messaging: "<<e.what()<<"\n";
 				}
 				catch (std::exception &e) {
 					std::cerr << "[Plugin Manager] Plugin "<<pair.first<<" threw an exception after receiving a message! Error: "<<e.what()<<"\n";

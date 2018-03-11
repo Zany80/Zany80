@@ -19,6 +19,8 @@
 	#define GetCurrentDir getcwd
 #endif
 
+int scroll_up;
+
 char *workingDirectory;
 
 typedef struct {
@@ -52,10 +54,14 @@ void postMessage(PluginMessage m) {
 		workingDirectory = nullptr;
 		if (history == nullptr) {
 			history = new std::vector<std::string>;
+			addToHistory("Zany80 Simple Shell...");
+			addToHistory("Hello! For help, contact me at pleasantatk@gmail.com");
+			addToHistory("You can scroll using CTRL+UP and CTRL+DOWN");
 		}
 		if (command_string == nullptr) {
 			command_string = new std::string;
 		}
+		scroll_up = 0;
 		updateWorkingDirectory();
 	}
 	else if (strcmp(m.data, "cleanup") == 0) {
@@ -115,11 +121,13 @@ void run() {
 		text(workingDirectory, 0, LCD_HEIGHT - GLYPH_HEIGHT);
 		offset = GLYPH_WIDTH * strlen(workingDirectory);
 	}
-	text(command_string->c_str(), offset, LCD_HEIGHT - GLYPH_HEIGHT);
-	int y = -6;
-	for (std::string s : *history) {
-		text(s.c_str(), 0, y += GLYPH_HEIGHT);
+	int y = LCD_HEIGHT - GLYPH_HEIGHT;
+	text(command_string->c_str(), offset, y);
+	for (int i = history->size() -1; i > 0;i--) {
+		std::string s = (*history)[i];
+		text(s.c_str(), 0, -scroll_up + (y -= GLYPH_HEIGHT));
 	}
+	
 }
 
 void executeCommand(std::string c) {
@@ -178,6 +186,15 @@ void event(sf::Event &e) {
 			else if (e.key.code == sf::Keyboard::BackSpace) {
 				if (command_string->size() > 0)
 					command_string->pop_back();
+			}
+			if (e.key.control && e.key.code == sf::Keyboard::Up) {
+				scroll_up += 5;
+			}
+			if (e.key.control && e.key.code == sf::Keyboard::Down) {
+				scroll_up -= 5;
+			}
+			if (e.key.control && e.key.code == sf::Keyboard::Equal) {
+				scroll_up = 0;
 			}
 			break;
 		default:

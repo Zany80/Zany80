@@ -11,7 +11,7 @@ extern std::string folder;
 extern "C" {
 
 	bool isCategory(const char *cat) {
-		return (!strcmp(cat, "Assembler")) || (!strcmp(cat, "Development") || (!strcmp(cat, "Linker")));
+		return (!strcmp(cat, "CCompiler")) || (!strcmp(cat, "Development"));
 	}
 
 	bool isType(const char *type) {
@@ -22,7 +22,7 @@ extern "C" {
 
 void messageShell(const char *message) {
 	((message_t)(*plugin_manager)["message"])({
-		0, "history", (int)strlen("history"), "Assembler/z80", message
+		0, "history", (int)strlen("history"), "CCompiler/z80", message
 	}, "Runner/Shell");
 }
 
@@ -34,23 +34,23 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
-		std::string command = "scas ";
+		std::string command = "kcc ";
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}
-		command += "2>scas_error.log";
+		command += "2>kcc_error.log";
 		if (system(command.c_str()) == 0) {
-			messageShell("Assembled successfully!");
+			messageShell("Compiled successfully!");
 		}
 		else {
-			std::ifstream error("scas_error.log");
+			std::ifstream error("kcc_error.log");
 			if (error.is_open()) {
 				std::string buf;
 				while (std::getline(error, buf)) {
 					messageShell(buf.c_str());
 				}
 				error.close();
-				remove("scas_error.log");
+				remove("kcc_error.log");
 			}
 			else {
 				messageShell("Error!");

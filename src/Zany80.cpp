@@ -97,8 +97,8 @@ Zany80::Zany80(){
 	}
 	char *working_directory = new char[FILENAME_MAX];
 	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
-		std::string path_env = working_directory;
-		path_env += "/plugins/assembler/";
+		std::string path_env = working_directory + (std::string)"/" + folder;
+		path_env += "/plugins/binaries/";
 		#ifdef WIN32
 		_putenv_s("PATH",path_env.c_str());
 		#else
