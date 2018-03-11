@@ -2,6 +2,15 @@
 #include <iostream>
 #include <cstring>
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef _WIN32
+	#include <direct.h>
+	#define GetCurrentDir _getcwd
+#else
+	#include <unistd.h>
+	#define GetCurrentDir getcwd
+#endif
+
 void Zany80::replaceRunner(){
 	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
 	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
@@ -85,6 +94,16 @@ Zany80::Zany80(){
 			folder =  path.substr(0,path.find_last_of("/")+1);
 			std::cout << folder << "\n";
 		}
+	}
+	char *working_directory = new char[FILENAME_MAX];
+	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
+		std::string path_env = working_directory;
+		path_env += "/plugins/assembler/";
+		setenv("PATH",path_env.c_str(),1);
+		system("echo $PATH");
+	}
+	else {
+		exit(1);
 	}
 	if (!attemptLoad("plugins/plugin_manager",&plugin_manager)) {
 		close("Error loading plugin manager!\n");

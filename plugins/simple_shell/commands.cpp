@@ -5,12 +5,13 @@
 
 #ifdef _WIN32
 int _chdir(const char *);
-using chdir = _chdir;
+#define chdir _chdir;
 #else
 int chdir(const char *);
 #endif
 
 extern void updateWorkingDirectory();
+extern std::string folder;
 
 std::map <std::string, command_t> commands = {
 	

@@ -50,7 +50,8 @@ std::vector<std::string> *enumerate_plugins() {
 			"RAM16_8",
 			"simple_shell",
 			"gpu/zany_old",
-			"assembler/official_z80"
+			"assembler/scas",
+			"editor/official"
 		};
 	}
 	return plugin_paths;
