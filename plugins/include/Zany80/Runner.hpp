@@ -17,10 +17,7 @@ extern "C" {
 	RunnerType *getRunnerType();
 	const char *neededPlugins();
 	void run();
-	void init(liblib::Library *plugin_manager);
-	void cleanup();
 	bool activate(const char *arg);
-	void deactivate();
 	void event(sf::Event &e);
 	void postMessage(PluginMessage m);
 }

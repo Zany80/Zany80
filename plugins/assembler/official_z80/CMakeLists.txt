@@ -1,5 +1,7 @@
 set(official_z80_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/assembler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/MachineObject.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/instructions.cpp
 )
 
 add_library(official_z80 MODULE ${official_z80_SOURCES})

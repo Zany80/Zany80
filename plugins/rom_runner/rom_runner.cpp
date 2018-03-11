@@ -39,51 +39,6 @@ sf::Clock timer, precision;
 float time_passed;
 bool activated;
 
-void postMessage(PluginMessage m) {
-	if (!strcmp(m.data, "boot_flash")) {
-		if (ROM != nullptr) {
-			std::cout << "[ROM Runner] Booting up, flashing RAM...\n";
-			try {
-				((void(*)(uint16_t,uint8_t *,uint16_t))(*ram)["polywrite"])(0,ROM,0xFFFF);
-				std::cout << "[ROM Runner] RAM flashed successfully!\n";
-			}
-			catch (std::exception) {
-				std::cout << "[ROM Runner] Error flashing RAM!\n";
-			}
-		}
-		else {
-			std::cout << "[ROM Runner] No flash detected, unable to flash RAM!\n";
-			try {
-				((textMessage_t)(*plugin_manager)["textMessage"])("no_rom",((std::string)"Runner/ROM;"+m.source).c_str());
-			}
-			catch (std::exception){}
-		}
-	}
-	else if (!strcmp(m.data, "deactivate")) {
-		time_passed += precision.restart().asSeconds();
-		activated = false;
-	}
-	else if(!strcmp(m.data, "init")) {
-		init((liblib::Library*)m.context);
-	}
-	else if(!strcmp(m.data, "cleanup")) {
-		if (ROM != nullptr) {
-			delete[] ROM;
-			ROM = nullptr;
-		}
-		if (activated) {
-			time_passed += precision.restart().asSeconds();
-		}
-		uint64_t cycles = (uint64_t)((*z80)["getCycles"]());
-		uint64_t target = SPEED * time_passed;
-		z80 = nullptr;
-		if (cycles == 0)
-			return;
-		std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
-		std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
-	}
-}
-
 void init(liblib::Library *pm) {
 	plugin_manager = pm;
 	to_run = 0;
@@ -200,4 +155,49 @@ bool activate(const char *arg) {
 		break;
 	}
 	return false;
+}
+
+void postMessage(PluginMessage m) {
+	if (!strcmp(m.data, "boot_flash")) {
+		if (ROM != nullptr) {
+			std::cout << "[ROM Runner] Booting up, flashing RAM...\n";
+			try {
+				((void(*)(uint16_t,uint8_t *,uint16_t))(*ram)["polywrite"])(0,ROM,0xFFFF);
+				std::cout << "[ROM Runner] RAM flashed successfully!\n";
+			}
+			catch (std::exception) {
+				std::cout << "[ROM Runner] Error flashing RAM!\n";
+			}
+		}
+		else {
+			std::cout << "[ROM Runner] No flash detected, unable to flash RAM!\n";
+			try {
+				((textMessage_t)(*plugin_manager)["textMessage"])("no_rom",((std::string)"Runner/ROM;"+m.source).c_str());
+			}
+			catch (std::exception){}
+		}
+	}
+	else if (!strcmp(m.data, "deactivate")) {
+		time_passed += precision.restart().asSeconds();
+		activated = false;
+	}
+	else if(!strcmp(m.data, "init")) {
+		init((liblib::Library*)m.context);
+	}
+	else if(!strcmp(m.data, "cleanup")) {
+		if (ROM != nullptr) {
+			delete[] ROM;
+			ROM = nullptr;
+		}
+		if (activated) {
+			time_passed += precision.restart().asSeconds();
+		}
+		uint64_t cycles = (uint64_t)((*z80)["getCycles"]());
+		uint64_t target = SPEED * time_passed;
+		z80 = nullptr;
+		if (cycles == 0)
+			return;
+		std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
+		std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
+	}
 }

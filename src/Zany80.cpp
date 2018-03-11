@@ -10,7 +10,9 @@ void Zany80::replaceRunner(){
 	}
 	else {
 		try {
-			(*runner)["activate"]();
+			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
+				0, "activate", (int)strlen("activate"), "Zany80", nullptr
+			});
 		}
 		catch (std::exception &e) {}
 	}

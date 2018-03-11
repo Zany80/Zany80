@@ -68,6 +68,15 @@ std::map <std::string, command_t> commands = {
 		},
 		.help = "Invokes the assembler to turn an assembly input file into an object file."
 	}},
+	
+	{"link", {
+		.function = [](std::vector<std::string> args) {
+			((message_t)(*plugin_manager)["message"])({
+				1, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
+			}, "Linker/z80");
+		},
+		.help = "Invokes the assembler to turn an assembly input file into an object file."
+	}},
 
 	{"help", {
 		.function = [](std::vector<std::string> args) {
