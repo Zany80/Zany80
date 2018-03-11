@@ -7,6 +7,7 @@ set(official_z80_SOURCES
 add_library(official_z80 MODULE ${official_z80_SOURCES})
 set_target_properties(official_z80 PROPERTIES PREFIX "../")
 target_include_directories(official_z80 PRIVATE ../../include ${CMAKE_SOURCE_DIR}/include ./include)
+target_link_libraries(official_z80 zany)
 
 if (WIN32)
 	install(TARGETS official_z80 DESTINATION plugins/assembler)

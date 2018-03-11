@@ -99,7 +99,11 @@ Zany80::Zany80(){
 	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
 		std::string path_env = working_directory;
 		path_env += "/plugins/assembler/";
+		#ifdef WIN32
+		_putenv_s("PATH",path_env.c_str());
+		#else
 		setenv("PATH",path_env.c_str(),1);
+		#endif
 		system("echo $PATH");
 	}
 	else {
