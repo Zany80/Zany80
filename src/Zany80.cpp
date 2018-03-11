@@ -75,11 +75,19 @@ Zany80::Zany80(){
 	if (!font.loadFromFile(folder + "font.png")) {
 		// hack for development
 		if (!font.loadFromFile("font.png")) {
-			std::cerr << "Failed to load font!\n";
-			exit(1);
+			if (!font.loadFromFile("../font.png")) {
+				std::cerr << "Failed to load font!\n";
+				exit(1);
+			}
+			else {
+				std::cout << "[Zany80] " << folder << " setup invalid, falling back to ";
+				folder = path.substr(0,path.find_last_of("/")+1);
+				folder = folder.substr(0,folder.find_last_of("/")+1);
+				std::cout << folder << "\n";
+			}
 		}
 		else {
-			// If the font is in this folder, everything lse should be as well
+			// If the font is in this folder, everything else should be as well
 			// Note: this only happens when the font is here AND ALSO NOT where it should be
 			std::cout << "[Zany80] " << folder << " setup invalid, falling back to ";
 			folder =  path.substr(0,path.find_last_of("/")+1);
