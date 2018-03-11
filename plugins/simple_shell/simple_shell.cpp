@@ -111,7 +111,6 @@ void addToHistory(std::string line) {
 			line = line.substr(GLYPHS_PER_LINE,line.size()-GLYPHS_PER_LINE);
 		}
 		history->push_back(line);
-		std::cout << line << "\n";
 	}
 }
 
@@ -126,6 +125,8 @@ void run() {
 	for (int i = history->size() -1; i > 0;i--) {
 		std::string s = (*history)[i];
 		text(s.c_str(), 0, -scroll_up + (y -= GLYPH_HEIGHT));
+		if (y - scroll_up < 0)
+			break;
 	}
 	
 }
