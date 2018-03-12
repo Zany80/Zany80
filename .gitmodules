@@ -1,0 +1,3 @@
+[submodule "libc"]
+	path = libc
+	url = https://github.com/zany80/libc
