@@ -11,6 +11,18 @@
 	#define GetCurrentDir getcwd
 #endif
 
+std::string absolutize(std::string relativish) {
+	size_t pos;
+	// /usr/bin/../
+	while ((pos = relativish.find("../")) != std::string::npos) {
+		std::string parent = relativish.substr(0, pos - 3);
+		parent = parent.substr(0, parent.rfind("/") + 1);
+		std::string child = relativish.substr(pos + 3);
+		relativish = parent + child;
+	}
+	return relativish;
+}
+
 void Zany80::replaceRunner(){
 	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
 	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
@@ -56,7 +68,7 @@ void Zany80::close() {
 	exit(0);
 }
 
-std::string path,folder;
+std::string path,folder,true_folder;
 
 typedef void (*init_t)(liblib::Library *);
 
@@ -98,8 +110,8 @@ Zany80::Zany80(){
 	}
 	char *working_directory = new char[FILENAME_MAX];
 	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
-		std::string path_env = working_directory + (std::string)"/" + folder;
-		path_env += "/plugins/binaries/";
+		true_folder = absolutize(working_directory + (std::string)"/" + folder);
+		std::string path_env = true_folder + "/plugins/binaries/";
 		#ifdef WIN32
 		_putenv_s("PATH",path_env.c_str());
 		#else

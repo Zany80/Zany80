@@ -21,7 +21,7 @@
 
 int scroll_up;
 
-char *workingDirectory;
+std::string workingDirectory;
 
 typedef struct {
 	void(*function)(std::vector<std::string>);
@@ -51,7 +51,7 @@ void postMessage(PluginMessage m) {
 	}
 	else if (strcmp(m.data, "init") == 0) {
 		plugin_manager = (liblib::Library*)m.context;
-		workingDirectory = nullptr;
+		workingDirectory = "";
 		if (history == nullptr) {
 			history = new std::vector<std::string>;
 			addToHistory("Zany80 Simple Shell...");
@@ -77,19 +77,12 @@ void postMessage(PluginMessage m) {
 }
 
 void updateWorkingDirectory() {
-	if (workingDirectory != nullptr) {
-		delete[] workingDirectory;
-	}
-	workingDirectory = new char[256];
-	if (GetCurrentDir(workingDirectory, 256)) {
-		int len = strlen(workingDirectory);
-		if (len < 256) {
-			strcpy(workingDirectory + len, "$ ");
-		}
+	char _workingDirectory[FILENAME_MAX];
+	if (GetCurrentDir(_workingDirectory, FILENAME_MAX)) {
+		workingDirectory = _workingDirectory;
 	}
 	else {
-		delete[] workingDirectory;
-		workingDirectory = nullptr;
+		workingDirectory = "";
 	}
 }
 
@@ -115,10 +108,8 @@ void addToHistory(std::string line) {
 
 void run() {
 	int offset = 0;
-	if (workingDirectory != nullptr) {
-		text(workingDirectory, 0, LCD_HEIGHT - GLYPH_HEIGHT);
-		offset = GLYPH_WIDTH * strlen(workingDirectory);
-	}
+	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT);
+	offset = GLYPH_WIDTH * (workingDirectory + "$ ").size();
 	int y = LCD_HEIGHT - GLYPH_HEIGHT;
 	text(command_string->c_str(), offset, y);
 	for (int i = history->size() -1; i > 0;i--) {
@@ -148,7 +139,7 @@ void executeCommand(std::string c) {
 		}
 	}
 	try {
-		addToHistory((std::string)workingDirectory + *command_string);
+		addToHistory((std::string)workingDirectory + "$ " + *command_string);
 		command_t _command = commands.at(command);
 		try {
 			_command.function(args);

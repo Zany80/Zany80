@@ -1,5 +1,6 @@
 #include <Zany80/GenericException.hpp>
 #include <Zany80/Plugins.hpp>
+#include <Zany80/Zany80.hpp>
 
 #include <string>
 
@@ -11,7 +12,6 @@ int chdir(const char *);
 #endif
 
 extern void updateWorkingDirectory();
-extern std::string folder;
 
 std::map <std::string, command_t> commands = {
 	
@@ -72,6 +72,8 @@ std::map <std::string, command_t> commands = {
 	
 	{"compile", {
 		.function = [](std::vector<std::string> args) {
+			args.push_back("-I");
+			args.push_back(true_folder + "/libc/include");
 			((message_t)(*plugin_manager)["message"])({
 				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "CCompiler/z80");
@@ -85,7 +87,7 @@ std::map <std::string, command_t> commands = {
 				1, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "Linker/z80");
 		},
-		.help = "Invokes the assembler to turn an assembly input file into an object file."
+		.help = "Invokes the linker to turn object files into a usable ROM"
 	}},
 	
 	{"clear", {

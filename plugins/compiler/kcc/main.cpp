@@ -1,12 +1,12 @@
 #define NEEDED_PLUGINS ""
 #include <Zany80/Generic.hpp>
+#include <Zany80/Zany80.hpp>
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 liblib::Library *plugin_manager;
-
-extern std::string folder;
 
 extern "C" {
 
@@ -39,6 +39,7 @@ void postMessage(PluginMessage m) {
 			command += s + " ";
 		}
 		command += "2>kcc_error.log";
+		std::cout << '\n' << command << '\n';
 		if (system(command.c_str()) == 0) {
 			messageShell("Compiled successfully!");
 		}
@@ -50,11 +51,11 @@ void postMessage(PluginMessage m) {
 					messageShell(buf.c_str());
 				}
 				error.close();
-				remove("kcc_error.log");
 			}
 			else {
 				messageShell("Error!");
 			}
 		}
+		remove("kcc_error.log");
 	}
 }

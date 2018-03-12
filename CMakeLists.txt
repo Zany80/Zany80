@@ -66,7 +66,9 @@ if(WIN32)
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
-	install(FILES misc/win32/scas.exe misc/win32/kcc.exe DESTINATION plugins/binaries/)
+	file(GLOB BINARIES misc/win32/*)
+	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
+	install(DIRECTORY libc/include DESTINATION share/zany80)
 else()
 	install(
 		FILES font.png DESTINATION share/zany80
@@ -77,7 +79,9 @@ else()
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 	)
-	install(FILES misc/linux/scas misc/linux/kcc misc/linux/cpp DESTINATION share/zany80/plugins/binaries/)
+	file(GLOB BINARIES misc/linux/*)
+	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
+	install(DIRECTORY libc/include DESTINATION share/zany80/libc/include)
 endif()
 
 include(InstallRequiredSystemLibraries)
