@@ -1,2 +1,4 @@
 build*/
 dll
+misc/win32/
+misc/linux/

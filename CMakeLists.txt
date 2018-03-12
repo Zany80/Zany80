@@ -77,7 +77,7 @@ else()
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 	)
-	install(FILES misc/linux/scas misc/linux/kcc DESTINATION share/zany80/plugins/binaries/)
+	install(FILES misc/linux/scas misc/linux/kcc misc/linux/cpp DESTINATION share/zany80/plugins/binaries/)
 endif()
 
 include(InstallRequiredSystemLibraries)
