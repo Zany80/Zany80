@@ -81,6 +81,7 @@ bool Zany80::attemptLoad(std::string name, liblib::Library **library) {
 
 Zany80::Zany80(){
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
+	window->setFramerateLimit(60);
 	if (!font.loadFromFile(folder + "font.png")) {
 		// hack for development
 		if (!font.loadFromFile("font.png") && !font.loadFromFile("../font.png")) {
