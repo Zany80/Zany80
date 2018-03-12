@@ -105,7 +105,6 @@ void addToHistory(std::string line) {
 		history->push_back(line);
 	}
 	else {
-		std::cout << line << "\n";
 		while (line.size() > GLYPHS_PER_LINE) {
 			history->push_back(line.substr(0,GLYPHS_PER_LINE));
 			line = line.substr(GLYPHS_PER_LINE,line.size()-GLYPHS_PER_LINE);

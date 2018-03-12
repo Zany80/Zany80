@@ -87,6 +87,13 @@ std::map <std::string, command_t> commands = {
 		},
 		.help = "Invokes the assembler to turn an assembly input file into an object file."
 	}},
+	
+	{"clear", {
+		.function = [](std::vector<std::string> args) {
+			history->clear();
+		},
+		.help = "Clears the shell display"
+	}},
 
 	{"help", {
 		.function = [](std::vector<std::string> args) {
