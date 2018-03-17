@@ -10,7 +10,7 @@ int main(int argc, const char **argv){
 	#ifdef linux
 	folder += "../share/zany80/";
 	#endif
-	zany = new Zany80();
+	new Zany80();
 	zany->run();
 	return 0;
 }

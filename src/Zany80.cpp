@@ -92,6 +92,7 @@ bool Zany80::attemptLoad(std::string name, liblib::Library **library) {
 }
 
 Zany80::Zany80(){
+	zany = this;
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
 	window->setFramerateLimit(60);
 	if (!font.loadFromFile(folder + "font.png")) {
@@ -163,7 +164,7 @@ void Zany80::run(){
 }
 
 void Zany80::frame(){
-	window->clear(sf::Color(0,0,0,255));
+	window->clear(background);
 	sf::Event e;
 	while (window->pollEvent(e)) {
 		switch (e.type) {

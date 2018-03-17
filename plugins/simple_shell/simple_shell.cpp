@@ -87,6 +87,7 @@ void updateWorkingDirectory() {
 }
 
 bool activate(const char *arg) {
+	zany->background = sf::Color(0, 0, 100, 255);
 	return true;
 }
 
@@ -113,8 +114,10 @@ void run() {
 	int y = LCD_HEIGHT - GLYPH_HEIGHT;
 	text(command_string->c_str(), offset, y);
 	for (int i = history->size() -1; i > 0;i--) {
+		if ((y -= GLYPH_HEIGHT) - scroll_up > (LCD_HEIGHT - GLYPH_HEIGHT * 2))
+			continue;
 		std::string s = (*history)[i];
-		text(s.c_str(), 0, -scroll_up + (y -= GLYPH_HEIGHT));
+		text(s.c_str(), 0, -scroll_up + y);
 		if (y - scroll_up < 0)
 			break;
 	}

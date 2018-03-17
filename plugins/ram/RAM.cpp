@@ -8,6 +8,12 @@
 
 uint8_t * ram = nullptr;
 
+extern "C" {
+	uint8_t *getRAM() {
+		return ram;
+	};
+}
+
 void init(liblib::Library *plugin_manager) {
 	if (ram != nullptr)
 		return;
@@ -43,12 +49,12 @@ void init(liblib::Library *plugin_manager) {
 }
 
 void write(uint16_t address, uint8_t value) {
-	std::cout << "[RAM] Value "<<(int)value << " written to "<<(int)address<<"\n";
+	//std::cout << "[RAM] Value "<<(int)value << " written to "<<(int)address<<"\n";
 	ram[address] = value;
 }
 
 uint8_t read(uint16_t address) {
-	std::cout << "[RAM] Value "<<(int)ram[address] << " read from "<<(int)address<<"\n";
+	//std::cout << "[RAM] Value "<<(int)ram[address] << " read from "<<(int)address<<"\n";
 	return ram[address];
 }
 

@@ -1,12 +1,11 @@
 #define NEEDED_PLUGINS ""
 #include <Zany80/Generic.hpp>
+#include <Zany80/Zany80.hpp>
 
 #include <cstring>
 #include <fstream>
 
 liblib::Library *plugin_manager;
-
-extern std::string folder;
 
 extern "C" {
 
@@ -35,6 +34,9 @@ void postMessage(PluginMessage m) {
 	}
 	else if (!strcmp(m.data, "invoke")) {
 		std::string command = "scas ";
+		if (m.priority) {
+			command += true_folder + "/libc/libc.o ";
+		}
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}

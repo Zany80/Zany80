@@ -46,6 +46,7 @@ public:
 	void close(std::string message);
 	sf::RenderWindow *window;
 	sf::Texture font;
+	sf::Color background;
 	void setRunner(liblib::Library *runner);
 	
 private:

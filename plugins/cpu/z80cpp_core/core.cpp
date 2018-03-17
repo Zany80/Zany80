@@ -6,6 +6,8 @@
 #define OVERRIDE_RAM
 #include <Zany80/CPU.hpp>
 
+#include <Zany80/Drawing.hpp>
+
 #include <iostream>
 #include <sstream>
 
@@ -24,10 +26,16 @@ void setRAM(liblib::Library *RAM) {
 	writeRAM = (write_t)(*RAM)["write"];
 }
 
+sf::Color palette[] = {
+	{0,0,0},{255,255,255},{255,0,0},{0,255,0},{0,0,255},{255,255,0},{255,0,255},{0,255,255},
+	{3,224,187},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}
+};
+
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
 		core = new z80cpp_core();
 		cpu = new Z80(core);
+		//cpu->setBreakpoint(0x001D, true);
 		to_execute = 0;
 		plugin_manager = (liblib::Library*)m.context;
 	}
@@ -71,8 +79,7 @@ void cycle() {
 	if (to_execute ++< 1)
 		return;
 	/**
-	 * Executes one *instruction*, *not* one cycle. to_execute ke
-	 * eps track of
+	 * Executes one *instruction*, *not* one cycle. to_execute keeps track of
 	 * how many extra cycles have been executed.
 	 */
 	cpu->execute();
@@ -84,9 +91,34 @@ uint64_t getCycles() {
 }
 
 void out(uint16_t port, uint8_t value) {
-	
+	//std::cout << (int)value << " written to "<<(int)port <<"\n";
+	//std::cout << (int)cpu->getRegA()<<' '<< (int)cpu->getRegB()<<' '<< (int)cpu->getRegC()<<' '<< (int)cpu->getRegD()<<' '<< (int)cpu->getRegE()<<' '<< (int)cpu->getRegH()<<' '<< (int)cpu->getRegL()<<"\n";
+	if ((port & 0xFF) == 2) {
+		if (value == 4) {
+			// b, c, e - x, y, color
+			text(((char*)(*_RAM)["getRAM"]()) + cpu->getRegHL(), cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
+		}
+		else if (value == 5) {
+			zany->background = palette[cpu->getRegB()];
+		}
+	}
 }
 
 uint8_t in(uint16_t port) {
-	
+	if ((port) & 0xFF == 0x01) {
+		uint8_t val = 0;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
+			val |= 1;
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) {
+			val |= 2;
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+			val |= 4;
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+			val |= 8;
+		}
+		return val;
+	}
 }
