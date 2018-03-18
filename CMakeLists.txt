@@ -86,7 +86,7 @@ if(WIN32)
 	)
 	file(GLOB BINARIES misc/win32/*)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION BIOS.rom)
+	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION .)
 else()
 	install(
 		FILES font.png DESTINATION share/zany80
@@ -99,7 +99,7 @@ else()
 	)
 	file(GLOB BINARIES misc/linux/*)
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION share/zany80/BIOS.rom)
+	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION share/zany80/)
 endif()
 
 include(InstallRequiredSystemLibraries)

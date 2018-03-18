@@ -112,13 +112,6 @@ Zany80::Zany80(){
 	char *working_directory = new char[FILENAME_MAX];
 	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
 		true_folder = absolutize(working_directory + (std::string)"/" + folder);
-		std::string path_env = true_folder + "/plugins/binaries/";
-		#ifdef WIN32
-		_putenv_s("PATH",path_env.c_str());
-		#else
-		setenv("PATH",path_env.c_str(),1);
-		#endif
-		system("echo $PATH");
 	}
 	else {
 		exit(1);

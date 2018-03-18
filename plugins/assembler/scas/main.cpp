@@ -33,7 +33,7 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
-		std::string command = "scas ";
+		std::string command = true_folder + "/plugins/binaries/scas ";
 		if (m.priority) {
 			command += true_folder + "/libc/libc.o ";
 		}
