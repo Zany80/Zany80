@@ -98,7 +98,7 @@ void out(uint16_t port, uint8_t value) {
 }
 
 uint8_t in(uint16_t port) {
-	if ((port) & 0xFF == 0x00) {
+	if ((port & 0xFF) == 0x00) {
 		uint8_t val = 0;
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
 			val |= 1;

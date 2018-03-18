@@ -114,12 +114,12 @@ void postMessage(PluginMessage m) {
 			}
 			else {
 				((message_t)(*plugin_manager)["message"])({
-					0, "history", strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Error loading BIOS!"
+					0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Error loading BIOS!"
 				}, "Runner/Shell");
 			}
 			for (int i = 0; i < 3; i++) {
 				((message_t)(*plugin_manager)["message"])({
-					i, "map_bank", strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
+					i, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
 				}, "Hardware/MMU");
 			}
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/BIOSLauncher;CPU/z80");
