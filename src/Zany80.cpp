@@ -164,7 +164,6 @@ void Zany80::run(){
 }
 
 void Zany80::frame(){
-	window->clear(background);
 	sf::Event e;
 	while (window->pollEvent(e)) {
 		switch (e.type) {

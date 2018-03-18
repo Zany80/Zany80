@@ -45,9 +45,10 @@ std::vector<std::string> *enumerate_plugins() {
 	//TODO: either use a file to track installed plugins or query all valid files in the folder recursively.
 	if (plugin_paths == nullptr) {
 		plugin_paths = new std::vector <std::string> {
+			"BIOSLauncher",
 			"cpu/z80cpp_core",
-			"rom_runner",
-			"RAM16_8",
+			//"rom_runner",
+			"MMU",
 			"simple_shell",
 			"gpu/zany_old",
 			"assembler/scas",
@@ -138,6 +139,13 @@ bool unneeded(liblib::Library *prereq) {
 					}
 					catch (std::exception e){}
 				}
+				else {
+					if (((bool(*)(const char *))(*library)["isCategory"])(category.c_str())) {
+						if (id == "*" || ((bool(*)(const char *))(*library)["isType"])(id.c_str())) {
+							return false;
+						}
+					}
+				}
 			}
 		}
 		catch (std::exception) {
@@ -193,6 +201,21 @@ bool prereqsLoaded(liblib::Library **library) {
 							}
 						}
 						catch (std::exception) {}
+					}
+				}
+			}
+			else {
+				for (auto pair : *plugins) {
+					liblib::Library *library = pair.second;
+					try {
+						if (((bool(*)(const char *))(*library)["isCategory"])(category.c_str())) {
+							if (id == "*" || ((bool(*)(const char *))(*library)["isType"])(id.c_str())) {
+								cur_found = true;
+							}
+						}
+					}
+					catch (...) {
+						
 					}
 				}
 			}

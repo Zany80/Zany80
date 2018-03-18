@@ -14,6 +14,8 @@ extern RunnerType runner_type;
 extern "C" {
 	bool isSignatureCompatible(const char *sig);
 	PluginType *getType();
+	bool isCategory(const char *sig);
+	bool isType(const char *sig);
 	RunnerType *getRunnerType();
 	const char *neededPlugins();
 	void run();

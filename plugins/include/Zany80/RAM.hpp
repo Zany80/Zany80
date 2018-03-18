@@ -39,6 +39,8 @@ extern "C" {
 	PluginType *getType();
 	HardwareType *getHardwareType();
 	bool isSignatureCompatible(const char *sig);
+	bool isCategory(const char *sig);
+	bool isType(const char *sig);
 	const char *neededPlugins();
 	void postMessage(PluginMessage m);
 	void write(ADDRESS_BUS_SIZE_T address,DATA_BUS_SIZE_T value);
@@ -52,10 +54,6 @@ PluginType *getType(){
 
 HardwareType *getHardwareType() {
 	return &hw_type;
-}
-
-bool isSignatureCompatible(const char *sig) {
-	return strcmp(s(sig(ADDRESS_BUS_SIZE,DATA_BUS_SIZE)), sig) == 0;
 }
 
 const char *neededPlugins() {

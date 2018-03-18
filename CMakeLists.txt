@@ -43,9 +43,7 @@ endif()
 
 add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
-add_executable(zany80 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
-
-add_subdirectory(plugins)
+add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 target_include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
@@ -53,6 +51,26 @@ target_include_directories(zany80 PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY8
 target_include_directories(zany PRIVATE "${ZANY80_BINARY_DIR}" PUBLIC "${ZANY80_SOURCE_DIR}/include")
 target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)
 target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+
+add_subdirectory(plugins)
+
+add_executable(BIOSMerge ${CMAKE_SOURCE_DIR}/tools/BIOSMerge.cpp)
+
+add_custom_target(ZanyBIOS COMMAND make WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/BIOS)
+add_dependencies(zany80 ZanyBIOS)
+
+add_custom_command(
+	TARGET ZanyBIOS
+	POST_BUILD
+	COMMAND BIOSMerge
+	ARGS
+		${CMAKE_BINARY_DIR}/BIOS.rom
+		${CMAKE_SOURCE_DIR}/BIOS/bin/bank1.rom
+		${CMAKE_SOURCE_DIR}/BIOS/bin/bank2.rom
+		${CMAKE_SOURCE_DIR}/BIOS/bin/bank3.rom
+	DEPENDS BIOSMerge
+	VERBATIM
+)
 
 if(WIN32)
 	if (NOT DEFINED LIBGCC_LIBRARY)
@@ -62,13 +80,13 @@ if(WIN32)
 		set(LIBSTDCPLUSPLUS_LIBRARY "" CACHE FILEPATH "libstdc++ dll - needed for windows cross-compilation" FORCE)
 	endif()
 	install(FILES ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
-	install (TARGETS zany80 zany
+	install (TARGETS zany80 zanylib
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
 	file(GLOB BINARIES misc/win32/*)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
-	install(DIRECTORY libc/include DESTINATION share/zany80)
+	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION BIOS.rom)
 else()
 	install(
 		FILES font.png DESTINATION share/zany80
@@ -81,7 +99,7 @@ else()
 	)
 	file(GLOB BINARIES misc/linux/*)
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
-	install(DIRECTORY libc/include DESTINATION share/zany80/libc/include)
+	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION share/zany80/BIOS.rom)
 endif()
 
 include(InstallRequiredSystemLibraries)

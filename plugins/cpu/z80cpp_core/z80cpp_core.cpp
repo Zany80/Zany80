@@ -1,9 +1,14 @@
 #include "z80cpp_core.hpp"
 
+#include <iostream>
+#include <vector>
+
 extern uint8_t(*readRAM)(uint16_t);
 extern void(*writeRAM)(uint16_t, uint8_t);
 extern uint8_t in(uint16_t);
 extern void out(uint16_t, uint8_t);
+
+extern std::vector<uint8_t> int_queue;
 
 z80cpp_core::z80cpp_core() {
 	tstates = 0;
@@ -19,7 +24,9 @@ uint64_t z80cpp_core::getCycles() {
 
 uint8_t z80cpp_core::fetchOpcode(uint16_t address) {
 	tstates++;
-	return peek8(address);
+	uint8_t opcode = peek8(address);
+	//std::cout << (int)opcode<<"at"<<(int)address<<'\n';
+	return opcode;
 }
 
 uint8_t z80cpp_core::peek8(uint16_t address) {
@@ -62,11 +69,22 @@ void z80cpp_core::interruptHandlingTime(int32_t tstates) {
 }
 
 bool z80cpp_core::isActiveINT() {
-	
+	if (!int_queue.empty()) {
+		return true;
+	}
+	return false;
+}
+
+uint8_t z80cpp_core::interrupt_value() {
+	uint8_t v = int_queue.back();
+	int_queue.pop_back();
+	return v;
 }
 
 uint8_t z80cpp_core::breakpoint(uint16_t address, uint8_t opcode) {
 	// can be used to modify opcode
+	//extern Z80 *cpu;
+	//std::cout << "HL: "<<cpu->getRegHL() << "\n";
 	return opcode;
 }
 

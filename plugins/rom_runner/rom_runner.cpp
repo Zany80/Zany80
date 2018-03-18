@@ -26,12 +26,17 @@ typedef struct {
 	union {
 		struct {
 			uint8_t zany[4];
-			uint16_t virtual_title;
+			uint16_t title;
 			uint16_t PC;
 		};
-		uint8_t data[0x10000];
+		struct {
+			uint8_t bank1[0x4000];
+			uint8_t bank2[0x4000];
+			uint8_t bank3[0x4000];
+			uint8_t bank4[0x4000];
+		};
 	};
-} ROMMetadata;
+} ROM_t;
 
 float to_run;
 // timer is used to calculate how many cycles have passes, precision is needed to determine clock precision
@@ -143,7 +148,7 @@ bool activate(const char *arg) {
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
 			// TODO: have ZanyOS (running in the z80 CPU) boot up the ROM instead
 			((message_t)(*plugin_manager)["message"])({
-				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&((ROMMetadata*)ROM)->PC
+				0, (char *)"setPC", (int)strlen("setPC"), "Runner/ROM", (char*)&((ROM_t*)ROM)->PC
 			}, "CPU/z80");
 			return true;
 		}

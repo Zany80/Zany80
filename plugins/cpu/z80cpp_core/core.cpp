@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 const char *signature = "z80";
 
@@ -31,11 +32,14 @@ sf::Color palette[] = {
 	{3,224,187},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}
 };
 
+std::vector<uint8_t> int_queue;
+
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
 		core = new z80cpp_core();
 		cpu = new Z80(core);
-		//cpu->setBreakpoint(0x001D, true);
+		//for (int i = 0x8000; i < 0x8100;i++)
+			//cpu->setBreakpoint(i, true);
 		to_execute = 0;
 		plugin_manager = (liblib::Library*)m.context;
 	}
@@ -48,29 +52,11 @@ void postMessage(PluginMessage m) {
 		}
 	}
 	else if (!strcmp(m.data, "reset")) {
-		try {
-			((textMessage_t)(*plugin_manager)["textMessage"])("boot_flash","CPU/z80;Runner/ROM");
-		}
-		catch (std::exception){}
+		int_queue.clear();
 		cpu->reset();
 	}
-	else if (!strcmp(m.data, "setPC")) {
-		std::cout << "Setting PC...\n";
-		//suppress output from instructions
-		std::stringstream ss;
-		std::streambuf *old = std::cout.rdbuf();
-		std::cout.rdbuf(ss.rdbuf());
-		uint16_t target = *(uint16_t*)m.context;
-		uint8_t buffer[3] = {};
-		for (int i = 0; i < 3;i++)
-			buffer[i] = readRAM(i);
-		writeRAM(0, 0xC3);
-		writeRAM(1, target & 0xFF);
-		writeRAM(2, (target & 0xFF00) >> 8);
-		cpu->execute();
-		for (int i = 0; i < 3;i++)
-			writeRAM(i, buffer[i]);
-		std::cout.rdbuf(old);
+	else if (!strcmp(m.data, "interrupt")) {
+		int_queue.push_back(*(uint8_t*)m.context);
 	}
 }
 
@@ -93,19 +79,26 @@ uint64_t getCycles() {
 void out(uint16_t port, uint8_t value) {
 	//std::cout << (int)value << " written to "<<(int)port <<"\n";
 	//std::cout << (int)cpu->getRegA()<<' '<< (int)cpu->getRegB()<<' '<< (int)cpu->getRegC()<<' '<< (int)cpu->getRegD()<<' '<< (int)cpu->getRegE()<<' '<< (int)cpu->getRegH()<<' '<< (int)cpu->getRegL()<<"\n";
-	if ((port & 0xFF) == 2) {
-		if (value == 4) {
+	if ((port & 0xFF) == 0) {
+		if (value == 0) {
 			// b, c, e - x, y, color
-			text(((char*)(*_RAM)["getRAM"]()) + cpu->getRegHL(), cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
+			std::string string = "";
+			for (int i = 0; ;i++) {
+				char c = readRAM(i + cpu->getRegHL());
+				if (c == 0)
+					break;
+				string += c;
+			}
+			text(string, cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
 		}
-		else if (value == 5) {
-			zany->background = palette[cpu->getRegB()];
+		else if (value == 1) {
+			zany->window->clear(palette[cpu->getRegB()]);
 		}
 	}
 }
 
 uint8_t in(uint16_t port) {
-	if ((port) & 0xFF == 0x01) {
+	if ((port) & 0xFF == 0x00) {
 		uint8_t val = 0;
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
 			val |= 1;
@@ -120,5 +113,8 @@ uint8_t in(uint16_t port) {
 			val |= 8;
 		}
 		return val;
+	}
+	else if ((port & 0xFF) == 0x01) {
+		return 0;
 	}
 }

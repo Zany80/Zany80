@@ -10,6 +10,14 @@
 #include <string>
 #include <cstring>
 
+bool isCategory(const char *sig) {
+	return !strcmp(sig, "Runner") || !strcmp(sig, "Shell");
+}
+
+bool isType(const char *sig) {
+	return !strcmp(sig, "Shell");
+}
+
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef _WIN32
 	#include <direct.h>
@@ -87,7 +95,6 @@ void updateWorkingDirectory() {
 }
 
 bool activate(const char *arg) {
-	zany->background = sf::Color(0, 0, 100, 255);
 	return true;
 }
 
@@ -108,6 +115,7 @@ void addToHistory(std::string line) {
 }
 
 void run() {
+	zany->window->clear(sf::Color(0, 0, 100, 255));
 	int offset = 0;
 	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT);
 	offset = GLYPH_WIDTH * (workingDirectory + "$ ").size();
