@@ -5,6 +5,14 @@ compiler:
 sudo: required
 install:
 - sudo apt install libsfml-dev libboost-dev g++-mingw-w64-x86-64
+- git clone https://github.com/dlfcn-win32/dlfcn-win32
+- cd dlfcn-win32
+- mkdir build
+- cd build
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake
+- make -j4
+- sudo make install
+- cd ../..
 - git clone https://github.com/pixelherodev/liblib.git
 - cd liblib
 - mkdir build
@@ -16,6 +24,9 @@ install:
 - mkdir win32
 - cd win32
 - cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake
+- make -j4
+- sudo make install
+- cd ../..
 - git clone https://github.com/pixelherodev/z80cpp
 - cd z80cpp
 - git checkout interrupt
@@ -23,6 +34,12 @@ install:
 - mkdir build
 - cd build
 - cmake ..
+- make -j4
+- sudo make install
+- cd ..
+- mkdir win32
+- cd win32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake
 - make -j4
 - sudo make install
 - cd ../..
@@ -51,7 +68,11 @@ script:
 - cd ..
 - mkdir buildwin32
 - cd buildwin32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DLIBGCC_LIBRARY=../libgcc_s_sjlj-1.dll -DLIBSTDCPLUSPLUS_LIBRARY=../libstdc++-6.dll
+- cp ../build/BIOSMerge .
+- make -kj4
+- cpack
+- cd ..
 before_deploy:
 # Set up git user name and tag this commit
 - git config --local user.name "Noam Preil"
@@ -63,6 +84,7 @@ deploy:
     secure: JeF9NCSedvS5ZboGKlsOIjTVmECaztBku4gD4Z6ElnbU1kVYbjJlbApdehbmhT64eKRSy3W0I7DjyD8ygNFAebAePQAa4HfA47ijtKvAkZ7cetfvk24/kDc774sTvx5k97i9FX4q6h1pDq8HZz4yNjwfckDBvTUsVhXGpJZiC1TIdb7zLCMnqI927T3AXkmQoUjr3Ld9djMH95VnDjx5mSu+g2UxXUWZa3Fb0HjXliRhef82Rq/7nyAZfjiOsdxxSFV2u82GjRdCsdhbMdjKOitIA9vTL60V32CxoN+Un7q0G94isJrdK3Pr1OhFDU38uxh4Q6n4Bw5yZZipNDiiq7aVSfhI6r84Hj+dpqQdCqJw/BX42+yKQPrf8OHEUed/fzjXiJl5mwJ0eQf7rNnlTzWf9vgJX2sQesev6SI4Olxsd86qrBFA7XQt2jdBjx+wEqLeqxWpS3l/mi5ppP85JTmeL7gr6hL1OpQfUeIJLEwk8vDS5cPuYnnFJb16B8hi+kVf2t1u52LWB1SX6Aw1j9qxz1xG1r/9ybRpEmfLvk1k5vw6DMY/XrTgFgbrYfeWtnOcBrHmVLWhOT2RSqkfSkvjO0s/Qj+zXm0MjO5BN7+Jl0aHRe56jPCWGw6noCnk0hggRs/U8Ykel+fhoQP3uzUIRt6zPAfjkwBuLNIcrmc=
   file_glob: true
   file: build/Zany80*
+  file: buildwin32/Zany80*
   skip_cleanup: true
   on:
     repo: Zany80/Zany80
