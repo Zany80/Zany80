@@ -115,7 +115,7 @@ void addToHistory(std::string line) {
 }
 
 void run() {
-	zany->window->clear(sf::Color(0, 0, 100, 255));
+	clear(sf::Color(0, 0, 100, 255));
 	int offset = 0;
 	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT);
 	offset = GLYPH_WIDTH * (workingDirectory + "$ ").size();
@@ -129,7 +129,6 @@ void run() {
 		if (y - scroll_up < 0)
 			break;
 	}
-	
 }
 
 void executeCommand(std::string c) {

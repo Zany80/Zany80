@@ -6,3 +6,4 @@
 #include <SFML/Graphics.hpp>
 
 void text(std::string string, int x, int y, sf::Color color = sf::Color::White);
+void clear(sf::Color color);

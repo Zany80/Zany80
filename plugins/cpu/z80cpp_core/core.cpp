@@ -92,7 +92,7 @@ void out(uint16_t port, uint8_t value) {
 			text(string, cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
 		}
 		else if (value == 1) {
-			zany->window->clear(palette[cpu->getRegB()]);
+			clear(palette[cpu->getRegB()]);
 		}
 	}
 }

@@ -45,15 +45,16 @@ std::vector<std::string> *enumerate_plugins() {
 	//TODO: either use a file to track installed plugins or query all valid files in the folder recursively.
 	if (plugin_paths == nullptr) {
 		plugin_paths = new std::vector <std::string> {
-			"BIOSLauncher",
-			"cpu/z80cpp_core",
 			//"rom_runner",
-			"MMU",
 			"simple_shell",
-			"gpu/zany_old",
+			"editor/official",
+			"BIOSLauncher",
 			"assembler/scas",
 			"compiler/kcc",
-			"editor/official"
+			"cpu/z80cpp_core",
+			//"gpu/zany_old",
+			"MMU",
+			"CartridgeManager"
 		};
 	}
 	return plugin_paths;
