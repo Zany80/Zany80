@@ -57,7 +57,7 @@ add_subdirectory(plugins)
 
 add_executable(BIOSMerge ${CMAKE_SOURCE_DIR}/tools/BIOSMerge.cpp)
 
-add_custom_target(ZanyBIOS COMMAND make WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/BIOS)
+add_custom_target(ZanyBIOS COMMAND make WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/BIOS DEPENDS BIOSMerge)
 add_dependencies(zany80 ZanyBIOS)
 
 add_custom_command(

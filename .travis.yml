@@ -59,6 +59,14 @@ install:
 - make -j4
 - sudo make install
 - cd ../..
+- git clone https://github.com/sfml/sfml
+- cd sfml
+- mkdir build
+- cd build
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32
+- make -j4
+- sudo make install
+- cd ../..
 script:
 - mkdir build
 - cd build
