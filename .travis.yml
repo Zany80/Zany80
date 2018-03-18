@@ -27,6 +27,20 @@ install:
   - make -j4
   - sudo make install
   - cd ../..
+  - git clone https://github.com/knightos/scas
+  - cd scas
+  - mkdir build
+  - cmake ..
+  - make -j4
+  - sudo make install
+  - cd ../..
+  - git clone https://github.com/knightos/kcc
+  - cd kcc
+  - mkdir build
+  - cmake ..
+  - make -j4
+  - sudo make install
+  - cd ../..
 
 script:
   - mkdir build
