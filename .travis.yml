@@ -7,7 +7,7 @@ compiler:
 sudo: required
 
 install:
-  - sudo apt install libsfml-dev
+  - sudo apt install libsfml-dev libboost-dev
 # TODO: Set up Travis for liblib and just download the release
   - git clone https://github.com/pixelherodev/liblib.git
   - cd liblib
