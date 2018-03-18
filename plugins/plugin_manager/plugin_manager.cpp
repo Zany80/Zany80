@@ -340,6 +340,26 @@ liblib::Library *getDefaultRunner() {
 	}
 }
 
+liblib::Library *getPlugin(const char *signature) {
+	std::string sig = signature;
+	std::string category = sig.substr(0,sig.find('/'));
+	std::string id = sig.substr(sig.find('/')+1,sig.length());
+	for (auto pair : *plugins) {
+		liblib::Library *library = pair.second;
+		try {
+			if (((bool(*)(const char *))(*library)["isCategory"])(category.c_str())) {
+				if (id == "*" || ((bool(*)(const char *))(*library)["isType"])(id.c_str())) {
+					return library;
+				}
+			}
+		}
+		catch (...) {
+			
+		}
+	}
+	return nullptr;
+}
+
 liblib::Library *getCPU(const char *signature) {
 	if(getCPUs() != nullptr) {
 		for (liblib::Library *cpu : *CPUs) {
