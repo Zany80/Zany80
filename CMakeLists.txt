@@ -16,14 +16,14 @@ if(NOT DEFINED SFML_STATIC_LIBRARIES)
 	set(SFML_STATIC_LIBRARIES FALSE CACHE BOOL "Use static SFML libs" FORCE)
 endif()
 
-if(MINGW)
+project(Zany80 VERSION 0.1.0.0 LANGUAGES C CXX)
+
+if(WIN32)
   ENABLE_LANGUAGE(RC)
   set(CMAKE_RC_COMPILE_OBJECT
     "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc CACHE FILEPATH "Icon file" FORCE) 
-endif(MINGW)
-
-project(Zany80 VERSION 0.1.0.0 LANGUAGES C CXX)
+  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc) 
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
 
@@ -43,7 +43,7 @@ endif()
 
 add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
-add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp)
+add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
 
 target_include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
