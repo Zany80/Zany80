@@ -71,12 +71,7 @@ std::map <std::string, command_t> commands = {
 	
 	{"compile", {
 		.function = [](std::vector<std::string> args) {
-			args.push_back("-c -I");
-			args.push_back(true_folder + "/libc/include");
-			args.push_back("-Wp,-include -Wp,stdbool.h");
-			args.push_back("-Wp,-include -Wp,output.h");
-			args.push_back("-Wp,-include -Wp,input.h");
-			args.push_back("-Wp,-include -Wp,system.h");
+			args.push_back("-c");
 			((message_t)(*plugin_manager)["message"])({
 				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "CCompiler/z80");
