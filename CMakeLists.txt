@@ -25,7 +25,7 @@ endif(MINGW)
 
 project(Zany80 VERSION 0.1.0.0 LANGUAGES C CXX)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
 
 include(git_revision)
 
