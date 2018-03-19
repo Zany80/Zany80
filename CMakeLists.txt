@@ -74,6 +74,7 @@ add_custom_command(
 )
 
 if(WIN32)
+	set(CPACK_GENERATOR "NSIS")
 	if (NOT DEFINED LIBGCC_LIBRARY)
 		set(LIBGCC_LIBRARY "" CACHE FILEPATH "libgcc dll - needed for windows cross-compilation" FORCE)
 	endif()
@@ -89,6 +90,7 @@ if(WIN32)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
 	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION .)
 else()
+	set(CPACK_GENERATOR "TGZ;DEB")
 	install(
 		FILES font.png DESTINATION share/zany80
 	)
