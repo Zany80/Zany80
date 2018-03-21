@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 bool isCategory(const char *sig) {
 	return !strcmp(sig, "Hardware") || !strcmp(sig, "Cartridge");
@@ -30,11 +31,13 @@ void postMessage(PluginMessage m) {
 		plugin_manager = (liblib::Library*)m.context;
 	}
 	else if (!strcmp(m.data, "load_cart")) {
+		messageShell("Test");
 		int slot = m.priority;
 		if (slot >= 0 && slot <= 3) {
 			std::ifstream file(m.context, std::ios::ate | std::ios::binary);
 			if (file.is_open()) {
 				Cartridge *c = new Cartridge;
+				memset(c->raw_data, 0, 16 * 0x4000);
 				int size = file.tellg();
 				if (size > sizeof(Cartridge)) {
 					size = sizeof(Cartridge);
@@ -42,6 +45,16 @@ void postMessage(PluginMessage m) {
 				file.seekg(0);
 				if (size >= sizeof(c->metadata)) {
 					file.read((char*)c->raw_data, size);
+					// Cart loaded, verify it
+					// Magic value is equivalent to ASCII "ZANY"
+					if (c->metadata.zany == 0x594E415A && c->metadata.start < size
+						&& c->metadata.title < size) {
+						carts[slot] = c;
+						messageShell("Cart loaded successfully!");
+					}
+					else {
+						messageShell("Invalid ROM!");
+					}
 				}
 				else {
 					messageShell("Invalid ROM!");
@@ -64,4 +77,13 @@ void postMessage(PluginMessage m) {
 			}
 		}
 	}
+}
+
+extern "C"
+uint8_t presentCarts() {
+	uint8_t c = 0;
+	for (int i = 0; i < 4; i++)
+		if (carts[i] != nullptr)
+			c |= (1 << i);
+	return c;
 }

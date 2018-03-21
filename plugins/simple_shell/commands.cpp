@@ -48,7 +48,7 @@ std::map <std::string, command_t> commands = {
 			}
 			else if (args.size()) {
 				((message_t)(*plugin_manager)["message"])({
-					args[1][0] - '0', "load_cart", (int)strlen("load_cart"), "Runner/Shell", args[0].c_str()
+					0, "load_cart", (int)strlen("load_cart"), "Runner/Shell", args[0].c_str()
 				}, "Hardware/CartridgeManager");
 			}
 			else {

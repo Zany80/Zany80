@@ -11,6 +11,8 @@ extern "C" {
 	PluginType *getType();
 	void postMessage(PluginMessage m);
 	const char *neededPlugins();
+	bool isCategory(const char *sig);
+	bool isType(const char *sig);
 }
 
 PluginType *getType(){

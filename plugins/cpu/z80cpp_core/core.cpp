@@ -115,6 +115,6 @@ uint8_t in(uint16_t port) {
 		return val;
 	}
 	else if ((port & 0xFF) == 0x01) {
-		return 0;
+		return ((uint8_t(*)())(*((liblib::Library*(*)(const char *))(*plugin_manager)["getPlugin"])("Hardware/CartridgeManager"))["presentCarts"])();
 	}
 }

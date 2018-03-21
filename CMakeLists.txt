@@ -102,6 +102,8 @@ else()
 	)
 	file(GLOB BINARIES misc/linux/*)
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
+	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/plugins/binaries)
+	file(COPY ${BINARIES} DESTINATION ${CMAKE_BINARY_DIR}/plugins/binaries)
 	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom DESTINATION share/zany80/)
 endif()
 
