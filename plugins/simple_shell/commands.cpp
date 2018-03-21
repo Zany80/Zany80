@@ -29,11 +29,8 @@ std::map <std::string, command_t> commands = {
 	}},
 	{"run", {
 		.function = [](std::vector<std::string> args) {
-			if (args.size() == 0){
-				args.push_back("");
-			}
 			try {
-				if (((bool(*)(RunnerType r,const char *arg))((*plugin_manager)["activateRunner"]))(ROMRunner,args[0].c_str())) {
+				if (((bool(*)(RunnerType r,const char *arg))((*plugin_manager)["activateRunner"]))(ROMRunner,"")) {
 					// ROM run successfully
 					addToHistory("ROM running, control ceded.");
 				}
@@ -41,7 +38,7 @@ std::map <std::string, command_t> commands = {
 			catch (GenericException e) {
 				addToHistory(e.what());
 			}
-			catch (std::exception) {
+			catch (...) {
 				addToHistory("Unable to run ROM!");
 			}
 		},
