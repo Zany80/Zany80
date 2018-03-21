@@ -4,7 +4,7 @@ compiler:
 - gcc
 sudo: required
 install:
-- sudo apt install libboost-dev g++-mingw-w64-i686 nsis
+- sudo apt install libboost-dev g++-mingw-w64-i686 nsis libudev-dev
 - sudo apt build-dep libsfml-dev
 - git clone https://github.com/dlfcn-win32/dlfcn-win32
 - cd dlfcn-win32
