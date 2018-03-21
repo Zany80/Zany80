@@ -65,6 +65,7 @@ void postMessage(PluginMessage m) {
 			addToHistory("Zany80 Simple Shell...");
 			addToHistory("Hello! For help, contact me at pleasantatk@gmail.com");
 			addToHistory("You can scroll using CTRL+UP and CTRL+DOWN");
+			addToHistory("Also, for help, you can use `help`. It's an extremely helpful command ;)");
 		}
 		if (command_string == nullptr) {
 			command_string = new std::string;
@@ -115,17 +116,20 @@ void addToHistory(std::string line) {
 }
 
 void run() {
-	clear(sf::Color(0, 0, 100, 255));
+	sf::Color bg = sf::Color(30, 30, 30);
+	clear(bg);
 	int offset = 0;
-	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT);
+	sf::Color text_color = sf::Color(255, 255, 255) - bg;
+	text_color.a = 255;
+	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT, text_color);
 	offset = GLYPH_WIDTH * (workingDirectory + "$ ").size();
 	int y = LCD_HEIGHT - GLYPH_HEIGHT;
-	text(command_string->c_str(), offset, y);
+	text(command_string->c_str(), offset, y, text_color);
 	for (int i = history->size() -1; i > 0;i--) {
 		if ((y -= GLYPH_HEIGHT) - scroll_up > (LCD_HEIGHT - GLYPH_HEIGHT * 2))
 			continue;
 		std::string s = (*history)[i];
-		text(s.c_str(), 0, -scroll_up + y);
+		text(s.c_str(), 0, -scroll_up + y, text_color);
 		if (y - scroll_up < 0)
 			break;
 	}

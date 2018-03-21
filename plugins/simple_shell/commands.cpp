@@ -27,6 +27,41 @@ std::map <std::string, command_t> commands = {
 			.help = "Echoes all received arguments to the history buffer.\n",
 			.detailed_help = "Run `echo Hello there, self!` to see it in action."
 	}},
+
+	{"load", {
+		.function = [](std::vector<std::string> args) {
+			if (args.size() == 2) {
+				int target;
+				if (args[1].size() == 1) {
+					if (args[1][0] >= '0' && args[1][0] <= '9') {
+						((message_t)(*plugin_manager)["message"])({
+							args[1][0] - '0', "load_cart", (int)strlen("load_cart"), "Runner/Shell", args[0].c_str()
+						}, "Hardware/CartridgeManager");
+					}
+					else {
+						addToHistory(args[1] + " is not a valid number!");
+					}
+				}
+				else {
+					addToHistory(args[1] + " is not a 1-digit number!");
+				}
+			}
+			else if (args.size()) {
+				((message_t)(*plugin_manager)["message"])({
+					args[1][0] - '0', "load_cart", (int)strlen("load_cart"), "Runner/Shell", args[0].c_str()
+				}, "Hardware/CartridgeManager");
+			}
+			else {
+				addToHistory("Usage: `load file.rom [slot]`");
+			}
+		},
+		.help = "Loads a cartridge",
+		.detailed_help =
+		"With 1 argument, loads into slot 0. (e.g. `load a.rom`). "
+		"With 2 arguments, loads into the specified slot (e.g. `load a.rom 3). "
+		"In the second form, only 1-digit numbers are valid for argument 2."
+	}},
+	
 	{"run", {
 		.function = [](std::vector<std::string> args) {
 			try {
