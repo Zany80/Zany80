@@ -16,7 +16,7 @@ sudo: required
 install:
 - sudo apt update
 - sudo apt build-dep libsfml-dev
-- sudo apt install libboost-dev g++-mingw-w64-i686 nsis libudev-dev g++-6
+- sudo apt install libboost-dev g++-mingw-w64-i686 nsis libudev-dev
 - git clone https://github.com/dlfcn-win32/dlfcn-win32
 - cd dlfcn-win32
 - mkdir build
