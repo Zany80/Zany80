@@ -8,6 +8,9 @@ version:
 .block 0x10 - $
 
 vsync_handler:
+	exx
+	call call_renderer
+	exx
 	ei
 	reti
 
@@ -24,12 +27,25 @@ nmi_handler:
 	retn
 
 .block 0x100 - $
+.dw rmain
+; delay 90 frames to ensure prior screen is visible
 main:
 	ld b, 4
 	ld ix, version
 	ld hl, 0x4009
 	call inttostr
 	halt
+	call rmain
+	ld b, 90
+.delay:
+	halt
+	djnz .delay
+	in a, (1)
+	cp 0
+	jr z, no_cart
+	jr cart_detected
+
+rmain:
 	ld a, 0
 	ld b, 0
 	call 0x8000
@@ -53,20 +69,30 @@ main:
 	ld bc, 0x000A
 	ld e, 1
 	call 0x8000
-; delay 90 frames to ensure prior screen is visible
-	ld b, 90
-.delay:
-	halt
-	djnz .delay
-	in a, (1)
-	cp 0
-	jr z, no_cart
+	ret
 
 cart_detected:
+	ld hl, .render
+	ld (0x100), hl
 .l:
+	halt
 	jr .l
+.render:
+	ld a, 0
+	ld b, 0
+	call 0x8000
+	ret
 
 no_cart:
+	ld hl, .render
+	ld (0x100), hl
+.loop:
+	halt
+	in a, (1)
+	cp 0
+	jr z,.loop
+	jr cart_detected
+.render:
 	ld a, 0
 	ld b, 2
 	call 0x8000
@@ -75,12 +101,7 @@ no_cart:
 	ld e, 1
 	ld hl, 0x4019
 	call 0x8000
-.loop:
-	halt
-	in a, (1)
-	cp 0
-	jr z,.loop
-	jr cart_detected
+	ret
 
 ;inttostr
 ;B: digit count
@@ -97,4 +118,16 @@ inttostr:
 	djnz .loop
 	ld (hl), 0
 	pop af
+	ret
+
+call_renderer:
+	push hl
+	ld hl, (0x100)
+	call .call_hl
+.return:
+	pop hl
+	ret
+	
+.call_hl:
+	push hl
 	ret

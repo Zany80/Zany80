@@ -68,7 +68,7 @@ void event(sf::Event &e) {
 }
 
 bool activate(const char *arg) {
-	((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/BIOSLauncher;CPU/z80");
+	((textMessage_t)(*plugin_manager)["textMessage"])("unhalt","Runner/BIOSLauncher;CPU/z80");
 	return ROM != nullptr;
 }
 

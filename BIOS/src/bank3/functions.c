@@ -9,11 +9,10 @@ void cls() __naked {
 void text() __naked {
 	__asm
 	inc sp \ inc sp
-	pop hl
+	pop hl \ push hl
+	dec sp \ dec sp
 	ld a, 0
 	out (0), a
-	push hl
-	dec sp \ dec sp
 	ret
 	__endasm;
 }

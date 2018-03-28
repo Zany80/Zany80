@@ -80,6 +80,14 @@ std::map <std::string, command_t> commands = {
 		.help = "Launches the specified cart."
 	}},
 
+	{"reset", {
+		.function = [](std::vector<std::string> args) {
+			((textMessage_t)(*plugin_manager)["textMessage"])("reset", "Runner/Shell;CPU/z80");
+		},
+		.help = "Reset the CPU",
+		.detailed_help = "Resets the CPU. This restarts any game that is open."
+	}},
+
 	{"cd", {
 		.function = [](std::vector<std::string> args) {
 			if (args.size() != 1) {

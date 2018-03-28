@@ -38,8 +38,8 @@ void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
 		core = new z80cpp_core();
 		cpu = new Z80(core);
-		//for (int i = 0x8000; i < 0x8100;i++)
-			//cpu->setBreakpoint(i, true);
+		for (int i = 0x0000; i < 0x8100;i++)
+			cpu->setBreakpoint(i, true);
 		to_execute = 0;
 		plugin_manager = (liblib::Library*)m.context;
 	}
@@ -57,6 +57,9 @@ void postMessage(PluginMessage m) {
 	}
 	else if (!strcmp(m.data, "interrupt")) {
 		int_queue.push_back(*(uint8_t*)m.context);
+	}
+	else if (!strcmp(m.data, "unhalt")) {
+		cpu->setHalted(false);
 	}
 }
 
@@ -77,7 +80,6 @@ uint64_t getCycles() {
 }
 
 void out(uint16_t port, uint8_t value) {
-	//std::cout << (int)value << " written to "<<(int)port <<"\n";
 	//std::cout << (int)cpu->getRegA()<<' '<< (int)cpu->getRegB()<<' '<< (int)cpu->getRegC()<<' '<< (int)cpu->getRegD()<<' '<< (int)cpu->getRegE()<<' '<< (int)cpu->getRegH()<<' '<< (int)cpu->getRegL()<<"\n";
 	if ((port & 0xFF) == 0) {
 		if (value == 0) {
@@ -95,6 +97,22 @@ void out(uint16_t port, uint8_t value) {
 			clear(palette[cpu->getRegB()]);
 		}
 	}
+	else if ((port & 0xFF) == 1) {
+		static int state = 0;
+		switch (state) {
+		case 0:
+			switch (value) {
+			case 0:
+				state = 1;
+				break;
+			default:
+				std::cerr << "Unrecognized command "<<(int)value<<"!\n";
+			}
+			break;
+		}
+	}
+	else
+		std::cout << (int)value << " written to "<<(int)port <<"\n";
 }
 
 uint8_t in(uint16_t port) {
