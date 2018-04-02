@@ -311,7 +311,7 @@ if(SFML_STATIC_LIBRARIES)
 
         # find libraries
         find_sfml_dependency(FREETYPE_LIBRARY "FreeType" freetype)
-        find_sfml_dependency(JPEG_LIBRARY "libjpeg" jpeg)
+#        find_sfml_dependency(JPEG_LIBRARY "libjpeg" jpeg)
 
         # update the list
         set(SFML_GRAPHICS_DEPENDENCIES ${FREETYPE_LIBRARY} ${JPEG_LIBRARY})
