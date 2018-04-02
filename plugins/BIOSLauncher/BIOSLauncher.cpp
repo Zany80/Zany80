@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-#define SPEED 4 MHz
+#define SPEED 1 MHz
 
 RunnerType runner_type = ROMRunner;
 liblib::Library *z80, *ram;
@@ -17,6 +17,8 @@ void (*emulate)(uint64_t cycles);
 
 uint8_t *ROM = nullptr;
 uint8_t *stack = nullptr;
+
+uint8_t *original_ROM = nullptr;
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t banks[3][0x4000];
@@ -27,7 +29,6 @@ float time_passed;
 bool activated;
 
 const uint8_t vsync_reset = 0xD7;
-const uint8_t key_reset = 0xDF;
 
 void run() {
 	((message_t)(*plugin_manager)["message"])({
@@ -54,14 +55,14 @@ void event(sf::Event &e) {
 				case sf::Keyboard::Escape:
 					((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
 					break;
-				case sf::Keyboard::S:
-				case sf::Keyboard::A:
-				case sf::Keyboard::Z:
-				case sf::Keyboard::X:
-					((message_t)(*plugin_manager)["message"])({
-						0, "interrupt", (int)strlen("interrupt"), "Runner/BIOSLauncher", (char*)&key_reset
-					}, "CPU/z80");
-					break;
+				//case sf::Keyboard::S:
+				//case sf::Keyboard::A:
+				//case sf::Keyboard::Z:
+				//case sf::Keyboard::X:
+					//((message_t)(*plugin_manager)["message"])({
+						//0, "interrupt", (int)strlen("interrupt"), "Runner/BIOSLauncher", (char*)&key_reset
+					//}, "CPU/z80");
+					//break;
 			}
 			break;
 	}
@@ -74,7 +75,8 @@ bool activate(const char *arg) {
 
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "deactivate")) {
-		time_passed += precision.restart().asSeconds();
+		if (activated)
+			time_passed += precision.restart().asSeconds();
 		activated = false;
 	}
 	else if(!strcmp(m.data, "init")) {
@@ -102,12 +104,14 @@ void postMessage(PluginMessage m) {
 					size = sizeof(BIOS_ROM_t);
 				}
 				std::cout << sizeof(BIOS_ROM_t)<<'\n';
-				if (ROM != nullptr) {
-					delete[] ROM;
+				if (original_ROM != nullptr) {
+					delete[] original_ROM;
 				}
-				ROM = new uint8_t[size];
-				BIOS.read((char*)ROM, size);
+				original_ROM = new uint8_t[sizeof(BIOS_ROM_t)];
+				BIOS.read((char*)original_ROM, size);
 				BIOS.close();
+				ROM = new uint8_t[sizeof(BIOS_ROM_t)];
+				memcpy(ROM, original_ROM, sizeof(BIOS_ROM_t));
 				((message_t)(*plugin_manager)["message"])({
 					0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] BIOS loaded successfully!"
 				}, "Runner/Shell");
@@ -122,6 +126,10 @@ void postMessage(PluginMessage m) {
 					i, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
 				}, "Hardware/MMU");
 			}
+			stack = new uint8_t[0x4000];
+			((message_t)(*plugin_manager)["message"])({
+				3, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)stack
+			}, "Hardware/MMU");
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/BIOSLauncher;CPU/z80");
 		}
 		catch (liblib::SymbolLoadingException) {
@@ -133,6 +141,10 @@ void postMessage(PluginMessage m) {
 			delete[] ROM;
 			ROM = nullptr;
 		}
+		if (stack != nullptr) {
+			delete[] stack;
+			stack = nullptr;
+		}
 		if (activated) {
 			time_passed += precision.restart().asSeconds();
 		}
@@ -143,5 +155,19 @@ void postMessage(PluginMessage m) {
 			return;
 		std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
 		std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
+	}
+	else if (!strcmp(m.data, "reset")) {		
+		((message_t)(*plugin_manager)["message"])({
+			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Reflashing BIOS from cache..."
+		}, "Runner/Shell");
+		memcpy(ROM, original_ROM, sizeof(BIOS_ROM_t));
+		((message_t)(*plugin_manager)["message"])({
+			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] BIOS reloaded successfully!"
+		}, "Runner/Shell");
+	}
+	else if (!strcmp(m.data, "map_data")) {
+		((message_t)(*plugin_manager)["message"])({
+			1, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000
+		}, "Hardware/MMU");
 	}
 }

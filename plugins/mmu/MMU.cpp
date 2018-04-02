@@ -62,9 +62,6 @@ void postMessage(PluginMessage m) {
 			((message_t)(*plugin_manager)["message"])({
 				0, "history", (int)strlen("history"), "Hardware/MMU",
 					"[MMU] Invalid bank mapping attempt!\n"
-					"Warning: this could be an attempt by a malicious plugin to"
-					" take control. If in doubt, don't hesitate to contact me "
-					"for assistance."
 			}, "Runner/Shell");
 			((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
 		}

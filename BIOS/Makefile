@@ -9,7 +9,7 @@ bin/src/%.o:src/%.asm
 	mkdir $(dir $@) -p
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-bin/src/%.o:src/%.c
+bin/src/%.o:src/%.c include
 	mkdir $(dir $@) -p
 	$(CC) -S $< -o $(basename $@).asm $(CFLAGS)
 	$(AS) $(ASFLAGS) -c $(basename $@).asm -o $@
@@ -17,7 +17,7 @@ bin/src/%.o:src/%.c
 
 BANK1=$(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank1/*))))
 BANK2=$(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank2/*))))
-BANK3=$(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank3/*))))
+BANK3=bin/src/bank3/bios.o $(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank3/*))))
 OBJECTS=$(BANK1) $(BANK2) $(BANK3)
 
 BANKS = bin/bank1.rom bin/bank2.rom bin/bank3.rom

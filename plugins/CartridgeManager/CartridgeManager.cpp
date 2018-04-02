@@ -18,7 +18,8 @@ bool isType(const char *sig) {
 
 liblib::Library *plugin_manager;
 
-Cartridge *carts[4]{nullptr};
+#define CART_COUNT 2
+Cartridge *carts[CART_COUNT]{nullptr};
 
 void messageShell(std::string message) {
 	((message_t)(*plugin_manager)["message"])({
@@ -31,9 +32,8 @@ void postMessage(PluginMessage m) {
 		plugin_manager = (liblib::Library*)m.context;
 	}
 	else if (!strcmp(m.data, "load_cart")) {
-		messageShell("Test");
 		int slot = m.priority;
-		if (slot >= 0 && slot <= 3) {
+		if (slot >= 0 && slot <= CART_COUNT - 1) {
 			std::ifstream file(m.context, std::ios::ate | std::ios::binary);
 			if (file.is_open()) {
 				Cartridge *c = new Cartridge;
@@ -45,16 +45,10 @@ void postMessage(PluginMessage m) {
 				file.seekg(0);
 				if (size >= sizeof(c->metadata)) {
 					file.read((char*)c->raw_data, size);
-					// Cart loaded, verify it
-					// Magic value is equivalent to ASCII "ZANY"
-					if (c->metadata.zany == 0x594E415A && c->metadata.start < size
-						&& c->metadata.title < size) {
-						carts[slot] = c;
-						messageShell("Cart loaded successfully!");
-					}
-					else {
-						messageShell("Invalid ROM!");
-					}
+					// NO MORE VERIFYING! Uses file system now, and verification
+					// is the job of the BIOS anyways.
+					messageShell("Cart loaded successfully!");
+					carts[slot] = c;
 				}
 				else {
 					messageShell("Invalid ROM!");
@@ -70,19 +64,24 @@ void postMessage(PluginMessage m) {
 		}
 	}
 	else if (!strcmp(m.data, "cleanup")) {
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < CART_COUNT; i++) {
 			if (carts[i] != nullptr) {
 				delete carts[i];
 				carts[i] = nullptr;
 			}
 		}
 	}
+	else if (!strcmp(m.data, "map_disk")) {
+		((message_t)(*plugin_manager)["message"])({
+			m.priority, "map_bank", (int)strlen("map_bank"), "CPU/z80", (char*)carts[*(uint8_t*)m.context]->raw_data
+		}, "Hardware/MMU");
+	}
 }
 
 extern "C"
 uint8_t presentCarts() {
 	uint8_t c = 0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < CART_COUNT; i++)
 		if (carts[i] != nullptr)
 			c |= (1 << i);
 	return c;

@@ -83,6 +83,7 @@ std::map <std::string, command_t> commands = {
 	{"reset", {
 		.function = [](std::vector<std::string> args) {
 			((textMessage_t)(*plugin_manager)["textMessage"])("reset", "Runner/Shell;CPU/z80");
+			((textMessage_t)(*plugin_manager)["textMessage"])("reset", "Runner/Shell;Runner/ROM");
 		},
 		.help = "Reset the CPU",
 		.detailed_help = "Resets the CPU. This restarts any game that is open."

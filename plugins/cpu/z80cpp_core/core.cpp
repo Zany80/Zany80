@@ -38,7 +38,7 @@ void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
 		core = new z80cpp_core();
 		cpu = new Z80(core);
-		for (int i = 0x0000; i < 0x8100;i++)
+		for (int i = 0x0000; i < 0xFFFF;i++)
 			cpu->setBreakpoint(i, true);
 		to_execute = 0;
 		plugin_manager = (liblib::Library*)m.context;
@@ -109,10 +109,23 @@ void out(uint16_t port, uint8_t value) {
 				std::cerr << "Unrecognized command "<<(int)value<<"!\n";
 			}
 			break;
+		case 1:
+			if (value & 0x08) {
+				((textMessage_t)(*plugin_manager)["textMessage"])("map_data","CPU/z80;Runner/ROM");
+			}
+			else {
+				uint8_t disk = value & 0x01;
+				uint8_t bank = (value & 0x06) >> 2;
+				std::cout << "Mapping disk "<<(int)disk<<" to bank "<<(int)bank<<'\n';
+				((message_t)(*plugin_manager)["message"])({
+					bank, "map_disk", (int)strlen("map_disk"), "CPU/z80", (char *)&disk
+				}, "Hardware/CartridgeManager");
+				state = 0;
+			}
+			break;
 		}
 	}
-	else
-		std::cout << (int)value << " written to "<<(int)port <<"\n";
+		std::cout << (int)value << " written to "<<(int)(port&0xFF) <<"\n";
 }
 
 uint8_t in(uint16_t port) {
