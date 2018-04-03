@@ -22,7 +22,8 @@ if(WIN32)
   ENABLE_LANGUAGE(RC)
   set(CMAKE_RC_COMPILE_OBJECT
     "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc) 
+  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc)
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mwindows")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
@@ -66,9 +67,8 @@ add_custom_command(
 	COMMAND ${CMAKE_BINARY_DIR}/BIOSMerge
 	ARGS
 		${CMAKE_BINARY_DIR}/BIOS.rom
-		${CMAKE_SOURCE_DIR}/BIOS/bin/bank1.rom
-		${CMAKE_SOURCE_DIR}/BIOS/bin/bank2.rom
-		${CMAKE_SOURCE_DIR}/BIOS/bin/bank3.rom
+		${CMAKE_SOURCE_DIR}/BIOS/bin/os.rom
+		${CMAKE_SOURCE_DIR}/BIOS/bin/bios.rom
 	DEPENDS BIOSMerge
 	VERBATIM
 )

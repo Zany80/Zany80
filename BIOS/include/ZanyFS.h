@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <fs/malloc.h>
 
 typedef struct {
 	const char *data;
@@ -23,3 +25,12 @@ struct node_t {
 	};
 	node_t *parent;
 };
+
+typedef struct {
+	node_t root;
+	header_t *heap_begin;
+	header_t *heap_end;
+	header_t *free;
+} zanyfs_t;
+
+void *malloc(size_t size, zanyfs_t *file_system);

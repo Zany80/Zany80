@@ -32,14 +32,12 @@ zanyfs_gettitle:
 
 .globl zanyfs_getnode
 zanyfs_getnode:
-	 ;de contains name of node to find
+	 ;hl contains name of node to find
 	 ;bc contains parent node
-	push de
+	push hl
 	push bc
 	call _getNode
 	pop bc
 	; slightly faster to pop than to `inc sp` twice
 	pop de
-	; move the node address into de
-	ex hl, de
 	ret

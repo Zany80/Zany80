@@ -110,13 +110,13 @@ void out(uint16_t port, uint8_t value) {
 			}
 			break;
 		case 1:
-			if (value & 0x08) {
+			if (value & 0x04) {
 				((textMessage_t)(*plugin_manager)["textMessage"])("map_data","CPU/z80;Runner/ROM");
 			}
 			else {
-				uint8_t disk = value & 0x01;
-				uint8_t bank = (value & 0x06) >> 2;
-				std::cout << "Mapping disk "<<(int)disk<<" to bank "<<(int)bank<<'\n';
+				uint8_t bank = (value & 0x03);
+				uint8_t disk = 0;
+				//std::cout << "[CPU/Monitor] Mapping disk to bank "<<(int)bank<<'\n';
 				((message_t)(*plugin_manager)["message"])({
 					bank, "map_disk", (int)strlen("map_disk"), "CPU/z80", (char *)&disk
 				}, "Hardware/CartridgeManager");
@@ -125,7 +125,9 @@ void out(uint16_t port, uint8_t value) {
 			break;
 		}
 	}
+	else {
 		std::cout << (int)value << " written to "<<(int)(port&0xFF) <<"\n";
+	}
 }
 
 uint8_t in(uint16_t port) {

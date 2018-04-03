@@ -15,23 +15,17 @@ bin/src/%.o:src/%.c include
 	$(AS) $(ASFLAGS) -c $(basename $@).asm -o $@
 #	rm $(basename $@).asm
 
-BANK1=$(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank1/*))))
-BANK2=$(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank2/*))))
-BANK3=bin/src/bank3/bios.o $(addprefix bin/, $(addsuffix .o, $(basename $(wildcard src/bank3/*))))
-OBJECTS=$(BANK1) $(BANK2) $(BANK3)
+OS=$(addprefix bin/, $(addsuffix .o, $(basename src/os/crt0.asm $(wildcard src/os/*.c))))
+BIOS_SOURCES=src/bios/bios.asm $(wildcard src/bios/*.c) $(wildcard src/bios/*.asm) $(wildcard src/bios/fs/*.c)
+BIOS=$(addprefix bin/, $(addsuffix .o, $(basename $(BIOS_SOURCES))))
+OBJECTS=$(OS) $(BIOS)
 
-BANKS = bin/bank1.rom bin/bank2.rom bin/bank3.rom
+default:bin/os.rom bin/bios.rom
 
-default:$(BANKS)
-
-bin/bank1.rom: $(BANK1)
+bin/os.rom: $(OS)
 	$(LD) $(LDFLAGS) -forigin=0x0000 $^ -o $@
 
-bin/bank2.rom: $(BANK2)
-	$(LD) $(LDFLAGS) -forigin=0x4000 $^ -o $@
-
-bin/bank3.rom: $(BANK3)
-	echo $(BANK3)
+bin/bios.rom: $(BIOS)
 	$(LD) $(LDFLAGS) -forigin=0x8000 $^ -o $@
 
 clean:

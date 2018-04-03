@@ -18,7 +18,7 @@ bool isType(const char *sig) {
 
 liblib::Library *plugin_manager;
 
-#define CART_COUNT 2
+#define CART_COUNT 1
 Cartridge *carts[CART_COUNT]{nullptr};
 
 void messageShell(std::string message) {

@@ -15,9 +15,12 @@ bios_call:
 	ex hl, de
 	pop de
 	call call_hl
-	pop hl
+	inc sp \ inc sp
 	ret
 
 call_hl:
 	push hl
+	inc sp \ inc sp \ inc sp \ inc sp
+	pop hl \ push hl
+	dec sp \ dec sp \ dec sp \ dec sp
 	ret
