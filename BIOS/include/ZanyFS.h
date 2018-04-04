@@ -27,6 +27,7 @@ struct node_t {
 };
 
 typedef struct {
+	char zany[4];
 	node_t root;
 	header_t *heap_begin;
 	header_t *heap_end;

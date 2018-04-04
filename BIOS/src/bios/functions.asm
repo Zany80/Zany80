@@ -6,9 +6,6 @@ cls:
 
 .globl text
 text:
-	inc sp \ inc sp
-	pop hl \ push hl
-	dec sp \ dec sp
 	ld a, 0
 	out (0), a
 	ret

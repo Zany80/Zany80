@@ -1,3 +1,7 @@
+/**
+ * Hacked together, using the SDCC malloc function as a rough guide.
+ */
+
 #include <ZanyFS.h>
 
 //void malloc_init() {

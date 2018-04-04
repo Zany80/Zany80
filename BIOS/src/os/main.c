@@ -4,7 +4,7 @@
 #include <os/file_system.h>
 
 extern unsigned char version[4];
-char version_str[5];
+char version_str[5] = {0, 0, 0, 0, 0};
 
 void setRenderFunction(function new_render) {
 	__asm
@@ -56,8 +56,8 @@ void mapInFileSystem() {
 }
 
 void disk() {
-	node_t *file_system = (node_t*)0x4004;
-	node_t *child1 = getNode(file_system, "main.zad");
+	zanyfs_t *file_system = (zanyfs_t*)0x4000;
+	node_t *child1 = getNode(&file_system->root, "main.zad");
 	cls(4);
 	if (child1 != 0) {
 		if (child1->is_file) {
@@ -109,13 +109,12 @@ void main_nodisk() {
 }
 
 void main() {
-	// convert the version number to a string, storing it in the pre-allocated
-	// area in the data bank
+	// convert the version number to a string
 	unsigned char i;
 	for (i = 0; i < 4; i++) {
 		version_str[i] = version[i] + '0';
 	}
-	version_str[4] = i = 0;
+	i = 0;
 	setRenderFunction(startupScreen);
 	while (true) {
 		halt();
