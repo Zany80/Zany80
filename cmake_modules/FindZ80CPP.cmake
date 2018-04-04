@@ -1,7 +1,7 @@
 set(Z80CPP_PATHS
-	${Z80CPP_ROOT}
-	$ENV{Z80CPP_ROOT}
-	~/Library/Frameworks
+    ${Z80CPP_ROOT}
+    $ENV{Z80CPP_ROOT}
+    ~/Library/Frameworks
     /Library/Frameworks
     /usr/local
     /usr

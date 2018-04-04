@@ -1,7 +1,7 @@
 set(LIBLIB_PATHS
-	${LIBLIB_ROOT}
-	$ENV{LIBLIB_ROOT}
-	~/Library/Frameworks
+    ${LIBLIB_ROOT}
+    $ENV{LIBLIB_ROOT}
+    ~/Library/Frameworks
     /Library/Frameworks
     /usr/local
     /usr
@@ -16,7 +16,7 @@ find_path(LIBLIB_INCLUDE_DIR liblib/liblib.hpp
 	PATHS ${LIBLIB_PATHS}
 )
 find_library(LIBLIB_LIBRARY NAMES lib liblib
-	PATH_SUFFIXES include
+	PATH_SUFFIXES liblib
 	PATHS ${LIBLIB_PATHS}
 )
 
