@@ -33,7 +33,7 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
-		std::string command = true_folder + "/plugins/binaries/scas -fno-remove-unused-funcs ";
+		std::string command = "\"" + true_folder + "/plugins/binaries/scas\" -fno-remove-unused-funcs ";
 		if (m.priority) {
 			//command += true_folder + "/libc/libc.o ";
 		}
