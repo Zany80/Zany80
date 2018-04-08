@@ -9,7 +9,7 @@ void text(std::string string, int x, int y, sf::Color color) {
 	int length = string.length();
 	sf::Vertex *vertices = new sf::Vertex[length * 4];
 	for (int i = 0; i < length; i++) {
-		char c = string[i] - 32;
+		char c = string[i];
 		int cY = c / GLYPHS_PER_ROW, cX = c % GLYPHS_PER_ROW;
 		cX *= GLYPH_WIDTH; cY *= GLYPH_HEIGHT;
 		vertices[i * 4] = sf::Vertex(sf::Vector2f(x + i * GLYPH_WIDTH,y), color, sf::Vector2f(cX, cY));
