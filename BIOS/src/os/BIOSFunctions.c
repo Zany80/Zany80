@@ -11,7 +11,7 @@ void cls(char color) {
 	color;
 }
 
-void text(const char *string, int position, char color) {
+void _text(const char *string, int position, char color) {
 	string, position, color;
 	__asm
 	pop af
@@ -21,6 +21,10 @@ void text(const char *string, int position, char color) {
 	ld a, 1
 	call 0x8000
 	__endasm;
+}
+
+void text(const char *string, char x, char y, char color) {
+	_text(string, (x << 8) | y, color);
 }
 
 node_t *getNode(node_t *parent, char *name) __naked {
@@ -33,3 +37,18 @@ node_t *getNode(node_t *parent, char *name) __naked {
 	ret
 	__endasm;
 }
+
+unsigned char getKeys() __naked {
+	__asm
+	ld a, 2
+	call 0x8000
+	ld l, a
+	ret
+	__endasm;
+}
+
+//~ node_t *createFile(const zanyfs_t *const file_system, const char *const name, node_t *const parent) {
+	//~ __asm
+	
+	//~ __endasm;
+//~ }

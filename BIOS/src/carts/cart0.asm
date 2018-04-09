@@ -1,11 +1,7 @@
-;; This is a test image
-;;
-
-.org 0x4000
-.module TestROM_FS
+;~ .org 0x4000
 
 fs:			; zanyfs_t
-zany:
+zany:		; char[4]
 	.ascii "ZANY"
 root:		; node_t
 	.dw name@root ; char *name
@@ -21,6 +17,7 @@ root:		; node_t
 .dir:
 	;node_t **children
 	.dw main_zad
+	.dw metadata
 	.dw 0
 
 main_zad:
@@ -33,11 +30,34 @@ main_zad:
 	.asciiz "main.zad"
 
 .file:
-	.dw data@main_zad
-	.dw 0
+	.dw _main
+	.dw 1
 	.db 1
-.data:
-	ret
+
+metadata:
+	.dw name@metadata
+	.db 0
+	.dw dir@metadata
+	.dw root
+
+.name: .asciiz "metadata"
+.dir:
+	.dw file_name
+	.dw 0
+
+file_name:
+	.dw name@file_name
+	.db 1
+	.dw file@file_name
+	.dw metadata
+
+.name: .asciiz "rom_name"
+.file:
+	.dw _rom_name
+	.dw 10
+	.db 0
+
+.include <cart.asm>
 
 ; heap: the following area is used to allocate new files/folders
 init_heap_begin:

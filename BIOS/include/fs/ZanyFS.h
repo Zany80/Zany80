@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <fs/malloc.h>
 
 typedef struct {
@@ -34,4 +33,4 @@ typedef struct {
 	header_t *free;
 } zanyfs_t;
 
-void *malloc(size_t size, zanyfs_t *file_system);
+void *malloc(size_t size, const zanyfs_t *const file_system);

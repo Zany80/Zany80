@@ -20,14 +20,14 @@ function getRenderFunction() {
 
 void startupScreen() {
 	cls(4);
-	text("ZanyOS v", 0, 1);
-	text(version_str, (8 * GLYPH_WIDTH << 8) | 0, 1);
-	text("Booting...", 0 | GLYPH_HEIGHT, 1);
+	text("ZanyOS v", 0, 0, 1);
+	text(version_str, 8 * GLYPH_WIDTH, 0, 1);
+	text("Booting...", 0, GLYPH_HEIGHT, 1);
 }
 
 void invalidImage() {
 	cls(4);
-	text("Disk not recognized!", 0, 1);
+	text("Disk not recognized!", 0, 0, 1);
 }
 
 bool strnequal(const char *s1, const char *s2, int length) {
@@ -55,31 +55,34 @@ void mapInFileSystem() {
 	}
 }
 
+const node_t *main_zad;
+const char *name;
+const char *const default_name = "Disk name not specified";
+
 void disk() {
-	zanyfs_t *file_system = (zanyfs_t*)0x4000;
-	node_t *child1 = getNode(&file_system->root, "main.zad");
 	cls(4);
-	if (child1 != 0) {
-		if (child1->is_file) {
-			if (child1->file->executable) {
-				((function)child1->file->data)();
+	text("Disk inserted: ", 0, 0, 1);
+	text(name, 14 * GLYPH_WIDTH, 0, 1);
+	if (main_zad) {
+		if (main_zad->is_file) {
+			if (main_zad->file->executable) {
+				text("Do you wish to launch the application?", 0, GLYPH_HEIGHT, 1);
+				text("\x01 to launch, \x02 to power off.", 0, GLYPH_HEIGHT * 2, 1);
 			}
 			else {
-				text(child1->file->data, 0 | GLYPH_HEIGHT, 1);
+				text("Do you wish to view the data?", 0, GLYPH_HEIGHT, 1);
+				text("\x01 to view, \x02 to power off.", 0, GLYPH_HEIGHT * 2, 1);
 			}
 		}
-		else {
-			text("main.zad shouldn't be a folder!", GLYPH_HEIGHT, 2);
-		}
 	}
-	else
-		text("Error!", GLYPH_HEIGHT, 2);
-	text("Disk inserted!", 0, 1);
+	else {
+		text("No main.zad file found!", 0, GLYPH_HEIGHT, 1);
+	}
 }
 
 void noDisk() {
 	cls(4);
-	text("No disk inserted!", 0, 1);
+	text("No disk inserted!", 0, 0, 1);
 }
 
 char getDiskPresent() __naked {
@@ -90,11 +93,74 @@ char getDiskPresent() __naked {
 	__endasm;
 }
 
+void post_execute() {
+	cls(4);
+	text("Application finished! Press any button to power off.", 0, 0, 1);
+}
+
+bool released = false;
+
+void render_file() {
+	cls(4);
+	text("Press any button to power off.", 0, 0, 1);
+	text(main_zad->file->data, 0, GLYPH_HEIGHT * 2, 1);
+}
+
+void show_file() {
+	setRenderFunction(render_file);
+	while (true) {
+		halt();
+		if (released && getKeys())
+			shutdown();
+		if (!released && !getKeys())
+			released = true;
+	}
+}
+
+void null_function(){}
+
+void execute_application() {
+	setRenderFunction(null_function);
+	((function)main_zad->file->data)();
+	// after application exits, set render function to post_execute
+	setRenderFunction(post_execute);
+	while(true) {
+		halt();
+		if (released && getKeys())
+			shutdown();
+		if (!released && !getKeys())
+			released = true;
+	}
+}
+
 void main_disk() {
+	main_zad = 0;
 	mapInFileSystem();
+	main_zad = getNode(&((zanyfs_t*)0x4000)->root, "main.zad");
+	name = default_name;
+	{
+		node_t *metadata = getNode(&((zanyfs_t*)0x4000)->root, "metadata");
+		if (metadata && !metadata->is_file) {
+			metadata = getNode(metadata, "rom_name");
+			if (metadata && metadata->is_file) {
+				name = metadata->file->data;
+			}
+		}
+	}
 	setRenderFunction(disk);
 	while (true) {
 		halt();
+		switch (getKeys()) {
+			case 1:
+				if (main_zad->file->executable)
+					jumpWithoutStack(execute_application);
+				else
+					jumpWithoutStack(show_file);
+				break;
+			case 2:
+				shutdown();
+				break;
+		}
 	}
 }
 
@@ -102,6 +168,9 @@ void main_nodisk() {
 	setRenderFunction(noDisk);
 	while (true) {
 		halt();
+		// Do this only once per frame (ish - the halt will sync to
+		// vsync for the most part), but *outside* the interrupt so that
+		// the destruction of the stack doesn't cause a crash.
 		if (getDiskPresent() > 0) {
 			jumpWithoutStack(main_disk);
 		}
@@ -118,7 +187,7 @@ void main() {
 	setRenderFunction(startupScreen);
 	while (true) {
 		halt();
-		if (i++ > 3 seconds) {
+		if (i++ > 1 seconds) {
 			if (getDiskPresent() > 0) {
 				jumpWithoutStack(main_disk);
 			}
@@ -127,4 +196,24 @@ void main() {
 			}
 		}
 	}
+}
+
+void shutdown() {
+	__asm
+	ld a, 1
+	out (1), a
+	ld a, 0
+	out (1), a
+	__endasm;
+}
+
+void reset() {
+	__asm
+	ld a, 0
+	out (1), a
+	ld a, 4
+	out (1), a
+	__endasm;
+	setRenderFunction(startupScreen);	
+	jumpWithoutStack(main);
 }

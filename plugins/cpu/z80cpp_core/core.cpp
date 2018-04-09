@@ -103,7 +103,8 @@ void out(uint16_t port, uint8_t value) {
 		case 0:
 			switch (value) {
 			case 0:
-				state = 1;
+			case 1:
+				state = value + 1;
 				break;
 			default:
 				std::cerr << "Unrecognized command "<<(int)value<<"!\n";
@@ -121,6 +122,13 @@ void out(uint16_t port, uint8_t value) {
 					bank, "map_disk", (int)strlen("map_disk"), "CPU/z80", (char *)&disk
 				}, "Hardware/CartridgeManager");
 				state = 0;
+			}
+			break;
+		case 2:
+			if (value == 0) {
+				int_queue.clear();
+				cpu->reset();
+				((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
 			}
 			break;
 		}

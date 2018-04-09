@@ -2,7 +2,7 @@
  * Hacked together, using the SDCC malloc function as a rough guide.
  */
 
-#include <ZanyFS.h>
+#include <fs/ZanyFS.h>
 
 //void malloc_init() {
 	//fs_free = fs_root;
@@ -10,7 +10,7 @@
 	//fs_free->next_free = 0;
 //}
 
-void *malloc(size_t size, zanyfs_t *file_system) {
+void *malloc(size_t size, const zanyfs_t *const file_system) {
 	
 	header_t *h;
 	header_t **f;

@@ -14,3 +14,8 @@ typedef void(*function)();
 void jump(function f);
 // Seriously, don't use if you don't know what you're doing.
 void jumpWithoutStack(function f);
+
+char getKeys();
+
+void shutdown();
+void reset();

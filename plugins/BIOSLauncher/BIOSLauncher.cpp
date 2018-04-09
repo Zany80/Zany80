@@ -41,7 +41,7 @@ void run() {
 	}
 	catch (std::exception e) {
 		((message_t)(*plugin_manager)["message"])({
-			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[ROM Runner] Emulation Error!"
+			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Emulation Error!"
 		}, "Runner/Shell");
 		throw e;
 	}
@@ -153,8 +153,8 @@ void postMessage(PluginMessage m) {
 		z80 = nullptr;
 		if (cycles == 0)
 			return;
-		std::cout << "[Rom Runner] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
-		std::cout << "[ROM Runner] CCA: "<<100*(double)cycles/(double)target<< "%\n";
+		std::cout << "[BIOSLauncher] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
+		std::cout << "[BIOSLauncher] CCA: "<<100*(double)cycles/(double)target<< "%\n";
 	}
 	else if (!strcmp(m.data, "reset")) {		
 		((message_t)(*plugin_manager)["message"])({
@@ -166,6 +166,7 @@ void postMessage(PluginMessage m) {
 		}, "Runner/Shell");
 	}
 	else if (!strcmp(m.data, "map_data")) {
+		std::cout << "[BIOSLauncher] Reflashing data.\n";
 		((message_t)(*plugin_manager)["message"])({
 			1, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000
 		}, "Hardware/MMU");
