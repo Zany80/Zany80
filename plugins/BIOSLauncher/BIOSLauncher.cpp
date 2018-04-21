@@ -10,6 +10,11 @@
 
 #define SPEED 1 MHz
 
+bool isCategory(const char *cat) {
+	// drop all messages
+	return false;
+}
+
 RunnerType runner_type = ROMRunner;
 liblib::Library *z80, *ram;
 liblib::Library *plugin_manager;

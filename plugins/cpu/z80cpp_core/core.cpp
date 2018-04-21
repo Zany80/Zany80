@@ -17,6 +17,14 @@ const char *signature = "z80";
 z80cpp_core *core = nullptr;
 Z80 *cpu = nullptr;
 
+bool isCategory(const char *cat) {
+	return !strcmp(cat, "CPU");
+}
+
+bool isType(const char *cat) {
+	return !strcmp(cat, "z80");
+}
+
 int8_t to_execute;
 
 liblib::Library *plugin_manager, *_RAM;
@@ -125,6 +133,7 @@ void out(uint16_t port, uint8_t value) {
 			}
 			break;
 		case 2:
+			state = 0;
 			if (value == 0) {
 				int_queue.clear();
 				cpu->reset();
