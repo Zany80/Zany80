@@ -30,6 +30,8 @@ extern "C" {
 	HardwareType *getHardwareType();
 	void postMessage(PluginMessage m);
 	bool isSignatureCompatible(const char *sig);
+	bool isCategory(const char *cat);
+	bool isType(const char *type);
 	void init(liblib::Library *plugin_manager);
 	void cleanup();
 	const char *neededPlugins();

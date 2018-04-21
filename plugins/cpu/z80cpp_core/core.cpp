@@ -62,6 +62,7 @@ void postMessage(PluginMessage m) {
 	else if (!strcmp(m.data, "reset")) {
 		int_queue.clear();
 		cpu->reset();
+		to_execute = 0;
 	}
 	else if (!strcmp(m.data, "interrupt")) {
 		int_queue.push_back(*(uint8_t*)m.context);
@@ -135,9 +136,8 @@ void out(uint16_t port, uint8_t value) {
 		case 2:
 			state = 0;
 			if (value == 0) {
-				int_queue.clear();
-				cpu->reset();
 				((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
+				((textMessage_t)(*plugin_manager)["textMessage"])("reset","CPU/z80;Runner/ROM");
 			}
 			break;
 		}

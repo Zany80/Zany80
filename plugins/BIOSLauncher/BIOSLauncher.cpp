@@ -11,8 +11,11 @@
 #define SPEED 1 MHz
 
 bool isCategory(const char *cat) {
-	// drop all messages
-	return false;
+	return !strcmp(cat, "Runner");
+}
+
+bool isType(const char *type) {
+	return !strcmp(type, "BIOSLauncher");
 }
 
 RunnerType runner_type = ROMRunner;
@@ -161,14 +164,17 @@ void postMessage(PluginMessage m) {
 		std::cout << "[BIOSLauncher] After "<<time_passed<<" seconds: Cycles: "<<cycles<<"; Target: "<<target<<"\n";
 		std::cout << "[BIOSLauncher] CCA: "<<100*(double)cycles/(double)target<< "%\n";
 	}
-	else if (!strcmp(m.data, "reset")) {		
+	else if (!strcmp(m.data, "reset")) {
 		((message_t)(*plugin_manager)["message"])({
 			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Reflashing BIOS from cache..."
 		}, "Runner/Shell");
 		memcpy(ROM, original_ROM, sizeof(BIOS_ROM_t));
-		((message_t)(*plugin_manager)["message"])({
-			0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] BIOS reloaded successfully!"
-		}, "Runner/Shell");
+		for (int i = 0; i < 3; i++) {
+			((message_t)(*plugin_manager)["message"])({
+				i, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
+			}, "Hardware/MMU");
+		}
+		((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
 	}
 	else if (!strcmp(m.data, "map_data")) {
 		std::cout << "[BIOSLauncher] Reflashing data.\n";
