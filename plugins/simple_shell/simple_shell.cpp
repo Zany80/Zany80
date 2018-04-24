@@ -1,6 +1,6 @@
 #define NEEDED_PLUGINS ""
 
-#include <Zany80/Runner.hpp>
+#include <Zany80/Plugins/Runner.hpp>
 #include <Zany80/Drawing.hpp>
 #include <Zany80/Zany80.hpp>
 

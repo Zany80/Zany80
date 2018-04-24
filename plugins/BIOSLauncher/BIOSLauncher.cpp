@@ -1,5 +1,5 @@
 #define NEEDED_PLUGINS "CPU/z80;Hardware/MMU;Runner/Shell"
-#include <Zany80/Runner.hpp>
+#include <Zany80/Plugins/Runner.hpp>
 #include <Zany80/ClockSpeed.hpp>
 
 #include <SFML/System.hpp>
@@ -104,7 +104,7 @@ void postMessage(PluginMessage m) {
 			((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
 			emulate=(void(*)(uint64_t))((*z80)["emulate"]);
 			// Load in the BIOS
-			std::ifstream BIOS(true_folder + "/BIOS.rom", std::ios::binary | std::ios::ate);
+			std::ifstream BIOS(folder + "/BIOS.rom", std::ios::binary | std::ios::ate);
 			if (BIOS.is_open()) {
 				int size = BIOS.tellg();
 				BIOS.seekg(0);

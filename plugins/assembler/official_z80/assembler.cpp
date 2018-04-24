@@ -3,7 +3,7 @@
 
 #define NEEDED_PLUGINS ""
 
-#include <Zany80/Generic.hpp>
+#include <Zany80/Plugins/Generic.hpp>
 #include <Zany80/GenericException.hpp>
 
 #include <cstring>

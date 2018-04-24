@@ -1,5 +1,5 @@
 #define NEEDED_PLUGINS ""
-#include <Zany80/Generic.hpp>
+#include <Zany80/Plugins/Generic.hpp>
 #include <Zany80/Zany80.hpp>
 
 #include <cstring>
@@ -34,7 +34,7 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
-		std::string command = "\"" + true_folder + "\"/plugins/binaries/kcc ";
+		std::string command = "\"" + folder + "/plugins/binaries/kcc\" ";
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}

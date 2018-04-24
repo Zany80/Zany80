@@ -1,5 +1,3 @@
-;~ .org 0x4000
-
 fs:			; zanyfs_t
 zany:		; char[4]
 	.ascii "ZANY"
@@ -57,8 +55,6 @@ file_name:
 	.dw 10
 	.db 0
 
-.include <cart.asm>
-
 ; heap: the following area is used to allocate new files/folders
 init_heap_begin:
 
@@ -69,5 +65,5 @@ init_heap_begin:
 .dw 0				; header_t *next_free - no other free block
 
 
-.block 0x8000 - $
+.block 0x3000 - $
 init_heap_end:

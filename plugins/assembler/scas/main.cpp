@@ -1,5 +1,5 @@
 #define NEEDED_PLUGINS ""
-#include <Zany80/Generic.hpp>
+#include <Zany80/Plugins/Generic.hpp>
 #include <Zany80/Zany80.hpp>
 
 #include <cstring>
@@ -33,7 +33,7 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
-		std::string command = "\"" + true_folder + "/plugins/binaries/scas\" -fno-remove-unused-funcs ";
+		std::string command = "\"" + folder + "/plugins/binaries/scas\" -fno-remove-unused-funcs ";
 		if (m.priority) {
 			//command += true_folder + "/libc/libc.o ";
 		}

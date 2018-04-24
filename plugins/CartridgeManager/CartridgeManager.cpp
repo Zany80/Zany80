@@ -1,5 +1,5 @@
 #define NEEDED_PLUGINS ""
-#include <Zany80/Generic.hpp>
+#include <Zany80/Plugins/Generic.hpp>
 
 #include "Cartridge.hpp"
 

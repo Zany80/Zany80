@@ -2,7 +2,7 @@
 #define DATA_BUS_SIZE 8
 
 #define NEEDED_PLUGINS ""
-#include <Zany80/RAM.hpp>
+#include <Zany80/Plugins/RAM.hpp>
 
 #include <iostream>
 
@@ -55,7 +55,8 @@ void postMessage(PluginMessage m) {
 		banks[3] = stack;
 	}
 	else if (!strcmp(m.data, "cleanup")) {
-		
+		if (stack != nullptr)
+			delete[] stack;
 	}
 	else if (!strcmp(m.data, "map_bank")) {
 		if (m.priority < 0 || m.priority > 3) {

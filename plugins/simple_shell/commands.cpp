@@ -43,7 +43,7 @@ std::map <std::string, command_t> commands = {
 					}
 				}
 				else {
-					addToHistory(args[1] + " is not a 1-digit number!");
+					addToHistory(args[1] + " is not a valid number!");
 				}
 			}
 			else if (args.size()) {
@@ -113,6 +113,10 @@ std::map <std::string, command_t> commands = {
 	{"compile", {
 		.function = [](std::vector<std::string> args) {
 			args.push_back("-c");
+			args.push_back("-Wl,-include");
+			args.push_back("-Wl,Zany80/libc/system.h");
+			args.push_back("-Wl,-include");
+			args.push_back("-Wl,Zany80/libc/output.h");
 			((message_t)(*plugin_manager)["message"])({
 				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "CCompiler/z80");

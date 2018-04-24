@@ -28,19 +28,11 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=7
-FILE_NAME_0=286;Markdown;0;EUTF-8;1;1;0;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fdocs%2FIDEAS.md;0;4
-FILE_NAME_1=208;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fsrc%2FZany80.cpp;0;4
-FILE_NAME_2=331;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fplugin_manager%2FCMakeLists.txt;0;4
-FILE_NAME_3=4672;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FCMakeLists.txt;0;4
-FILE_NAME_4=313;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fcpu%2Fz80cpp_core%2Fz80cpp_core.hpp;0;4
-FILE_NAME_5=208;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2FBIOSLauncher%2FBIOSLauncher.cpp;0;4
-FILE_NAME_6=1399;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fmmu%2FMMU.cpp;0;4
-FILE_NAME_7=3987;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fcpu%2Fz80cpp_core%2Fcore.cpp;0;4
-FILE_NAME_8=1884;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fcpu%2Fz80cpp_core%2Fz80cpp_core.cpp;0;4
+current_page=0
+FILE_NAME_0=2793;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fsimple_shell%2Fcommands.cpp;0;4
 
 [VTE]
-last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/plugins/mmu
+last_dir=/home/noam
 
 [build-menu]
 EX_00_LB=_Execute
@@ -52,10 +44,16 @@ C++FT_00_WD=%p/build
 C++FT_01_LB=_Build
 C++FT_01_CM=make
 C++FT_01_WD=%p/build
-filetypes=C++;CMake;
+filetypes=C++;CMake;C;
 CMakeFT_00_LB=
 CMakeFT_00_CM=make
 CMakeFT_00_WD=%p/build
 CMakeFT_01_LB=
 CMakeFT_01_CM=make
 CMakeFT_01_WD=%p/build
+CFT_00_LB=_Compile
+CFT_00_CM=make
+CFT_00_WD=%p/build
+CFT_01_LB=_Build
+CFT_01_CM=make
+CFT_01_WD=%p/build

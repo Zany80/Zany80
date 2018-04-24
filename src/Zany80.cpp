@@ -15,6 +15,8 @@ std::string absolutize(std::string relativish) {
 	size_t pos;
 	// /usr/bin/../
 	while ((pos = relativish.find("../")) != std::string::npos) {
+		if (pos < 3)
+			break;
 		std::string parent = relativish.substr(0, pos - 3);
 		parent = parent.substr(0, parent.rfind("/") + 1);
 		std::string child = relativish.substr(pos + 3);
@@ -96,8 +98,9 @@ Zany80::Zany80(){
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
 	window->setFramerateLimit(60);
 	if (!font.loadFromFile(folder + "font.png")) {
-		// hack for development
-		if (!font.loadFromFile("font.png") && !font.loadFromFile("../font.png")) {
+		// tries a few different options for the path
+		if (!font.loadFromFile(absolutize(folder + "/../font.png")) && !font.loadFromFile(absolutize(folder + "../../font.png")) &&
+		!font.loadFromFile("font.png") && !font.loadFromFile("../font.png")) {
 			std::cerr << "Failed to load font!\n";
 			exit(1);
 		}

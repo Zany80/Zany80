@@ -1,5 +1,5 @@
 #define NEEDED_PLUGINS "CPU/z80;RAM/16_8"
-#include <Zany80/Runner.hpp>
+#include <Zany80/Plugins/Runner.hpp>
 
 #include <string>
 #include <cstring>

@@ -4,7 +4,7 @@
 #define DATA_BUS_SIZE 8
 #define NEEDED_PLUGINS "RAM/16_8"
 #define OVERRIDE_RAM
-#include <Zany80/CPU.hpp>
+#include <Zany80/Plugins/CPU.hpp>
 
 #include <Zany80/Drawing.hpp>
 

@@ -72,6 +72,8 @@ add_custom_command(
 	VERBATIM
 )
 
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+
 if(WIN32)
 	set(CPACK_GENERATOR "NSIS")
 	if (NOT DEFINED LIBGCC_LIBRARY)

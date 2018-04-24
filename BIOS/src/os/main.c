@@ -83,6 +83,7 @@ void disk() {
 void noDisk() {
 	cls(4);
 	text("No disk inserted!", 0, 0, 1);
+	text("Insert a disk, or press \x01 to shut down.", 0, GLYPH_HEIGHT, 1);
 }
 
 char getDiskPresent() __naked {
@@ -134,7 +135,6 @@ void execute_application() {
 }
 
 void main_disk() {
-	main_zad = 0;
 	mapInFileSystem();
 	main_zad = getNode(&((zanyfs_t*)0x4000)->root, "main.zad");
 	name = default_name;
@@ -174,6 +174,8 @@ void main_nodisk() {
 		if (getDiskPresent() > 0) {
 			jumpWithoutStack(main_disk);
 		}
+		if (getKeys() == 1)
+			shutdown();
 	}
 }
 

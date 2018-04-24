@@ -56,4 +56,4 @@ private:
 };
 
 extern Zany80 * zany;
-extern std::string folder, path, true_folder;
+extern std::string folder, path;
