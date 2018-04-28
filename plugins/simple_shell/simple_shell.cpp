@@ -27,9 +27,30 @@ bool isType(const char *sig) {
 	#define GetCurrentDir getcwd
 #endif
 
+#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH))
+
 int scroll_up;
 
-std::string workingDirectory;
+std::string workingDirectory, command_line;
+int command_lines;
+
+std::string *command_string = nullptr;
+std::vector<std::string> *history = nullptr;
+
+void updateCommandLine() {
+	command_line = workingDirectory + "$ " + *command_string;
+	int pcommand_lines = command_lines;
+	command_lines = command_line.size() / GLYPHS_PER_LINE;
+	if (command_line.size() % GLYPHS_PER_LINE == 0) {
+		command_lines--;
+	}
+	if (command_lines > pcommand_lines) {
+		scroll_up += GLYPH_HEIGHT;
+	}
+	else if (command_lines < pcommand_lines) {
+		scroll_up -= GLYPH_HEIGHT;
+	}
+}
 
 typedef struct {
 	void(*function)(std::vector<std::string>);
@@ -38,9 +59,6 @@ typedef struct {
 } command_t;
 
 RunnerType runner_type = Shell;
-
-std::vector<std::string> *history = nullptr;
-std::string *command_string = nullptr;
 
 void addToHistory(std::string);
 
@@ -93,14 +111,14 @@ void updateWorkingDirectory() {
 	else {
 		workingDirectory = "";
 	}
+	updateCommandLine();
 }
 
 bool activate(const char *arg) {
 	return true;
 }
-
+	
 void addToHistory(std::string line) {
-	#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH))
 	// First, make sure every line isn't too big
 	if (line.size() <= GLYPHS_PER_LINE) {
 		// It fits - most likely situation
@@ -115,21 +133,19 @@ void addToHistory(std::string line) {
 	}
 }
 
+const sf::Color bg(30, 30, 30);
+const sf::Color text_color(225, 225, 225);
+
 void run() {
-	sf::Color bg = sf::Color(30, 30, 30);
 	clear(bg);
-	int offset = 0;
-	sf::Color text_color = sf::Color(255, 255, 255) - bg;
-	text_color.a = 255;
-	text((workingDirectory + "$ ").c_str(), 0, LCD_HEIGHT - GLYPH_HEIGHT, text_color);
-	offset = GLYPH_WIDTH * (workingDirectory + "$ ").size();
-	int y = LCD_HEIGHT - GLYPH_HEIGHT;
-	text(command_string->c_str(), offset, y, text_color);
+	int y = LCD_HEIGHT - (command_lines + 2) * GLYPH_HEIGHT;
+	for (int i = 0; i <= command_lines; i++) {
+		text(command_line.substr(i * GLYPHS_PER_LINE, i * GLYPHS_PER_LINE + GLYPHS_PER_LINE), 0, y += GLYPH_HEIGHT, text_color);
+	}
 	for (int i = history->size() -1; i > 0;i--) {
 		if ((y -= GLYPH_HEIGHT) - scroll_up > (LCD_HEIGHT - GLYPH_HEIGHT * 2))
 			continue;
-		std::string s = (*history)[i];
-		text(s.c_str(), 0, -scroll_up + y, text_color);
+		text((*history)[i].c_str(), 0, y - scroll_up, text_color);
 		if (y - scroll_up < 0)
 			break;
 	}
@@ -153,7 +169,7 @@ void executeCommand(std::string c) {
 		}
 	}
 	try {
-		addToHistory((std::string)workingDirectory + "$ " + *command_string);
+		addToHistory(command_line);
 		command_t _command = commands.at(command);
 		try {
 			_command.function(args);
@@ -178,6 +194,7 @@ void event(sf::Event &e) {
 					break;
 				default:
 					*command_string += e.text.unicode;
+					updateCommandLine();
 					break;
 			}
 			break;
@@ -187,10 +204,13 @@ void event(sf::Event &e) {
 					executeCommand(*command_string);
 				}
 				command_string->clear();
+				updateCommandLine();
 			}
 			else if (e.key.code == sf::Keyboard::BackSpace) {
-				if (command_string->size() > 0)
+				if (command_string->size() > 0) {
 					command_string->pop_back();
+					updateCommandLine();
+				}
 			}
 			if (e.key.control && e.key.code == sf::Keyboard::Up) {
 				scroll_up += 5;

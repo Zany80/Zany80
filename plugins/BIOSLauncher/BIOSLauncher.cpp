@@ -111,7 +111,6 @@ void postMessage(PluginMessage m) {
 				if (size > sizeof(BIOS_ROM_t)) {
 					size = sizeof(BIOS_ROM_t);
 				}
-				std::cout << sizeof(BIOS_ROM_t)<<'\n';
 				if (original_ROM != nullptr) {
 					delete[] original_ROM;
 				}

@@ -103,6 +103,7 @@ std::map <std::string, command_t> commands = {
 
 	{"assemble", {
 		.function = [](std::vector<std::string> args) {
+			args.push_back("-c");
 			((message_t)(*plugin_manager)["message"])({
 				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "Assembler/z80");
@@ -113,10 +114,11 @@ std::map <std::string, command_t> commands = {
 	{"compile", {
 		.function = [](std::vector<std::string> args) {
 			args.push_back("-c");
-			args.push_back("-Wl,-include");
-			args.push_back("-Wl,Zany80/libc/system.h");
-			args.push_back("-Wl,-include");
-			args.push_back("-Wl,Zany80/libc/output.h");
+			args.push_back("-I");
+			args.push_back(folder + "/include/Zany80/libc/");
+			args.push_back("-Wp,-include -Wp,system.h");
+			args.push_back("-Wp,-include -Wp,output.h");
+			args.push_back("-Wp,-include -Wp,input.h");
 			((message_t)(*plugin_manager)["message"])({
 				0, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "CCompiler/z80");
@@ -126,6 +128,32 @@ std::map <std::string, command_t> commands = {
 	
 	{"link", {
 		.function = [](std::vector<std::string> args) {
+			// WARNING: The following two for loops should *not* be
+			// condensed. This is to ensure that the template.o file
+			// is added *before* the libc! (the libc is pushed to the
+			// front first, then the template is pushed to the front,
+			// resulting in proper linkage)
+			for (int i = 0; i < args.size(); i++) {
+				if (args[i] == "-c" || args[i] == "--link-crt") {
+					args.push_back("");
+					args.erase(args.begin() + i);
+					for (int i = args.size() - 1; i >= 0; i--) {
+						args[i+1] = args[i];
+					}
+					args[0] = folder + "/libc.o";
+				}
+			}
+			for (int i = 0; i < args.size(); i++) {
+				if (args[i] == "-e" || args[i] == "--embed") {
+					args.push_back("");
+					args.erase(args.begin() + i);
+					for (int i = args.size() - 1; i >= 0; i--) {
+						args[i+1] = args[i];
+					}
+					args[0] = folder + "/template.o";
+				}
+			}
+			args.push_back("-forigin=0x4000");
 			((message_t)(*plugin_manager)["message"])({
 				1, "invoke", (int)strlen("invoke"), "Runner/Shell", (char *)&args
 			}, "Linker/z80");

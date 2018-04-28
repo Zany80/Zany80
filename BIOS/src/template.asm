@@ -65,5 +65,5 @@ init_heap_begin:
 .dw 0				; header_t *next_free - no other free block
 
 
-.block 0x3000 - $
+.block 0x100 - $
 init_heap_end:

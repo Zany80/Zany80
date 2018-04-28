@@ -1,3 +1,5 @@
+#pragma once
+
 #define frames * 1
 #define seconds * 60 frames
 #define minutes * 60 seconds
@@ -8,3 +10,7 @@
 	.asciiz x                              \
 	__endasm;                              \
 }
+
+#include <stdbool.h>
+
+void halt();
