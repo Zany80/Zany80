@@ -25,7 +25,8 @@ std::map <std::string, command_t> commands = {
 				addToHistory(all_args);
 			},
 			.help = "Echoes all received arguments to the history buffer.\n",
-			.detailed_help = "Run `echo Hello there, self!` to see it in action."
+			.detailed_help = "Echoes all received arguments to the history buffer.\n"
+							 "Run `echo Hello there, self!` to see it in action."
 	}},
 
 	{"load", {

@@ -10,6 +10,9 @@
 #include <string>
 #include <cstring>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 bool isCategory(const char *sig) {
 	return !strcmp(sig, "Runner") || !strcmp(sig, "Shell");
 }
@@ -58,13 +61,37 @@ typedef struct {
 	std::string detailed_help;
 } command_t;
 
-RunnerType runner_type = Shell;
-
 void addToHistory(std::string);
 
 liblib::Library *plugin_manager;
 
 #include "commands.cpp"
+
+std::map<std::string, std::string(*)(std::string)> autocompletion_map = {
+	{"help", [](std::string last_word) {
+		std::vector<std::string> possible_commands;
+		for (auto pair : commands) {
+			if (pair.first.compare(0, last_word.size(), last_word) == 0
+					&& pair.second.detailed_help.size()) {
+				possible_commands.push_back(pair.first);
+			}
+		}
+		if (possible_commands.size() == 1) {
+			return possible_commands[0] + ' ';
+		}
+		if (possible_commands.size()) {
+			std::string c;
+			for (std::string s : possible_commands) {
+				c += s + " ";
+			}
+			c = c.substr(0, c.size() - 1);
+			addToHistory(c);
+		}
+		return last_word;
+	}}
+};
+
+RunnerType runner_type = Shell;
 
 void postMessage(PluginMessage m) {
 	if (strcmp(m.data, "history") == 0) {
@@ -184,15 +211,33 @@ void executeCommand(std::string c) {
 	}
 }
 
+std::string default_autocompleter(std::string word) {
+	std::vector<std::string> files;
+	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
+		std::string path = entry.path();
+		path = path.substr(path.find_last_of('/') + 1);
+		if (path.compare(0, word.size(), word) == 0) {
+			files.push_back(path);
+		}
+	}
+	if (files.size() == 1) {
+		return files[0] + ' ';
+	}
+	else if (files.size()) {
+		std::string s;
+		for (std::string f : files) {
+			s += f + ' ';
+		}
+		addToHistory(s.substr(0, s.size() - 1));
+	}
+	return word;
+}
+
 void autocomplete() {
 	std::string current_command = *command_string;
 	// Strip beginning whitespace
 	while (isspace(current_command[0])) {
 		current_command = current_command.substr(1, current_command.size() - 1);
-	}
-	// Strip trailing whitespace
-	while (isspace(current_command[current_command.size() - 1])) {
-		current_command = current_command.substr(0, current_command.size() - 1);
 	}
 	// Find end of first word
 	uint i;
@@ -207,7 +252,7 @@ void autocomplete() {
 			}
 		}
 		if (possible_commands.size() == 1) {
-			*command_string = possible_commands[0];
+			*command_string = possible_commands[0] + ' ';
 		}
 		else if (possible_commands.size()) {
 			std::string c;
@@ -219,8 +264,26 @@ void autocomplete() {
 		}
 	}
 	else {
-		// Autocompleting last argument
-		
+		// Get last argument
+		std::string last_word = " ";
+		for (i = current_command.size(); i > 0; i--) {
+			if (isspace(current_command[i])) {
+				last_word = current_command.substr(i + 1, current_command.size() - i);
+				break;
+			}
+		}
+		std::string(*autocompleter)(std::string) = default_autocompleter;
+		try {
+			autocompleter = autocompletion_map.at(first_word);
+			if (autocompleter == nullptr)
+				autocompleter = default_autocompleter;
+		}
+		catch (std::exception &e) {
+			autocompleter = default_autocompleter;
+		}
+		// autocomplete last word
+		for (i = command_string->size(); i > 0 && !isspace((*command_string)[i]); i--);
+		*command_string = command_string->substr(0, i + 1) + autocompleter(last_word);
 	}
 	updateCommandLine();
 }
