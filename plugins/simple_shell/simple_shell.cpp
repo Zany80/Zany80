@@ -184,6 +184,47 @@ void executeCommand(std::string c) {
 	}
 }
 
+void autocomplete() {
+	std::string current_command = *command_string;
+	// Strip beginning whitespace
+	while (isspace(current_command[0])) {
+		current_command = current_command.substr(1, current_command.size() - 1);
+	}
+	// Strip trailing whitespace
+	while (isspace(current_command[current_command.size() - 1])) {
+		current_command = current_command.substr(0, current_command.size() - 1);
+	}
+	// Find end of first word
+	uint i;
+	for (i = 0; i < current_command.size() && !isspace(current_command[i]); i++);
+	std::string first_word = current_command.substr(0, i);
+	if (i == current_command.size()) {
+		// Only one word, treat it as a command
+		std::vector<std::string> possible_commands;
+		for (auto pair : commands) {
+			if (pair.first.compare(0, first_word.size(), first_word) == 0) {
+				possible_commands.push_back(pair.first);
+			}
+		}
+		if (possible_commands.size() == 1) {
+			*command_string = possible_commands[0];
+		}
+		else if (possible_commands.size()) {
+			std::string c;
+			for (std::string s : possible_commands) {
+				c += s + " ";
+			}
+			c = c.substr(0, c.size() - 1);
+			addToHistory(c);
+		}
+	}
+	else {
+		// Autocompleting last argument
+		
+	}
+	updateCommandLine();
+}
+
 void event(sf::Event &e) {
 	switch (e.type) {
 		case sf::Event::TextEntered:
@@ -206,11 +247,14 @@ void event(sf::Event &e) {
 				command_string->clear();
 				updateCommandLine();
 			}
-			else if (e.key.code == sf::Keyboard::BackSpace) {
+			if (e.key.code == sf::Keyboard::BackSpace) {
 				if (command_string->size() > 0) {
 					command_string->pop_back();
 					updateCommandLine();
 				}
+			}
+			if (e.key.code == sf::Keyboard::Tab) {
+				autocomplete();
 			}
 			if (e.key.control && e.key.code == sf::Keyboard::Up) {
 				scroll_up += 5;
