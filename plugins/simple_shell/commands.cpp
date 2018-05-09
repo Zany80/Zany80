@@ -200,6 +200,20 @@ std::map <std::string, command_t> commands = {
 		.help = "Prints out information on commands. For more information, run `help help`",
 		.detailed_help = "Prints out information on commands. With no arguments, gives general help. "
 		"If run with the name of a command (e.g. `help run`), gives more detailed information."
+	}},
+
+	{"ls", {
+		.function = [](std::vector<std::string> args) {
+			std::string s;
+			for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
+				std::string path = entry.path();
+				path = path.substr(path.find_last_of('/') + 1);
+				s += path + ' ';
+			}
+			addToHistory(s);
+		},
+		.help = "Prints out a list of files in the current folder.",
+		.detailed_help = "Prints out a list of files in the current folder."
 	}}
 	
 };
