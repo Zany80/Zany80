@@ -2,10 +2,13 @@
 
 #include <SFML/Graphics.hpp>
 #include <liblib/liblib.hpp>
+#include <Zany80/LuaPlugin.hpp>
 
 #include <vector>
 #include <string>
 #include <map>
+
+#include <lua.hpp>
 
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 320
@@ -40,15 +43,12 @@ extern std::string folder, path;
 extern sf::RenderWindow window;
 extern sf::Texture font;
 extern sf::Color background;
-
-typedef struct {
-	std::string name;
-	std::string description;
-	std::string path;
-} PluginDescriptor;
+extern lua_State *L;
 
 void close(std::string message);
 std::string absolutize(std::string relative_path);
 void initializePlugins();
-std::vector<PluginDescriptor> gatherPlugins();
+std::vector<Plugin*> gatherPlugins();
+class LuaPlugin;
+std::vector<LuaPlugin*> gatherLuaPlugins();
 std::string hex(long num, int length = 8);

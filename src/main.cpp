@@ -1,5 +1,6 @@
 #include <Zany80/Zany80.hpp>
 #include <Zany80/Drawing.hpp>
+#include <Zany80/LuaPlugin.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -38,7 +39,7 @@ lua_State *L;
 static void close_state(lua_State **state) {
 	std::cout << "[Cleanup] Closing Lua instance 0x" << hex((long)*state) << "...\n";
 	lua_close(*state);
-	L = *state = nullptr;
+	*state = nullptr;
 }
 
 #define autocl __attribute__((cleanup(close_state)))
@@ -53,9 +54,8 @@ int main(int argc, const char **argv) {
 	window.create(sf::VideoMode(LCD_WIDTH, LCD_HEIGHT), "Zany80");
 	window.setFramerateLimit(60);
 	autocl lua_State *lua_state = luaL_newstate();
-	if (!lua_state) {
+	if (!lua_state)
 		close("Error loading Lua!");
-	}
 	L = lua_state;
 	if (!font.loadFromFile(folder + "font.png")) {
 		// tries a few different options for the path
@@ -161,8 +161,11 @@ void invalid_conf(int i) {
 }
 
 void initializePlugins() {
-	std::vector<PluginDescriptor> plugins = gatherPlugins();
-	
+	std::vector<Plugin*> plugins = gatherPlugins();
+	for (Plugin* p : plugins) {
+		std::cout << "Initializing plugin: "<<p->getName()<<'\n';
+		p->loadIntoRuntime();
+	}
 }
 
 std::string hex(long a, int length){
@@ -189,29 +192,16 @@ void default_config(std::string config_file) {
 	default_conf.close();
 }
 
-std::string fix_path(std::string value) {
-	size_t var;
-	while ((var = value.find("$ZANY")) != std::string::npos) {
-		std::string first_part = value.substr(0, var);
-		std::string end_part = value.substr(var + 5, value.size() - var - 5);
-		value = first_part + folder.substr(0, folder.size() - 1) + end_part;
+std::vector<Plugin*> gatherPlugins() {
+	std::vector<Plugin*> plugins;
+	for (LuaPlugin *l : gatherLuaPlugins()) {
+		plugins.push_back(l);
 	}
-	return value;
+	return plugins;
 }
 
-std::string getField(lua_State *L, const char *field) {
-	lua_getfield(L, -1, field);
-	if (!lua_isstring(L, -1))
-		invalid_conf(2);
-	std::string value = lua_tostring(L, -1);
-	lua_remove(L, -1);
-	if (field == "path")
-		value = fix_path(value);
-	return value;
-}
-
-std::vector<PluginDescriptor> gatherPlugins() {
-	std::vector<PluginDescriptor> plugins;
+std::vector<LuaPlugin*> gatherLuaPlugins() {
+	std::vector<LuaPlugin*> plugins;
 	autocl lua_State *conf_lua = luaL_newstate();
 	if (!conf_lua)
 		close("Error opening Lua instance for configuration parsing!");
@@ -227,12 +217,12 @@ std::vector<PluginDescriptor> gatherPlugins() {
 	if (!lua_istable(conf_lua, -1))
 		invalid_conf(0);
 	for (int i = 1; i <= lua_objlen(conf_lua, -1); i++) {
-		lua_pushnumber(conf_lua, i);
-		lua_gettable(conf_lua, -2);
-		if (!lua_istable(conf_lua, -1))
-			invalid_conf(1);
-		plugins.push_back({.name = getField(conf_lua, "name"), .description = getField(conf_lua, "description"), .path = getField(conf_lua, "path")});
-		lua_remove(conf_lua, -1);
+		try {
+			plugins.push_back(new LuaPlugin(conf_lua, i));
+		}
+		catch (std::exception &e) {
+			std::cerr << "Error initializing plugin #"<<i<<'\n';
+		}
 	}
 	return plugins;
 }

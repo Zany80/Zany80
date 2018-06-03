@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 # Enable use of VERSION in project() command
 cmake_policy(SET CMP0048 NEW)
@@ -57,7 +57,7 @@ target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDEN
 target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} ${LUA_LIBRARIES})
 link_libraries(zany)
 
-add_subdirectory(plugins)
+#add_subdirectory(plugins)
 
 add_executable(BIOSMerge ${CMAKE_SOURCE_DIR}/tools/BIOSMerge.cpp)
 

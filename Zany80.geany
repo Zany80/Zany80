@@ -28,13 +28,19 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=859;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
-FILE_NAME_1=1506;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FZany80.cpp;0;4
-FILE_NAME_2=156;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
+current_page=8
+FILE_NAME_0=87;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
+FILE_NAME_1=1994;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
+FILE_NAME_2=1267;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
+FILE_NAME_3=681;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FZany80.cpp;0;4
+FILE_NAME_4=239;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
+FILE_NAME_5=116;Markdown;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FERRORS.md;0;4
+FILE_NAME_6=239;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FPlugin.hpp;0;4
+FILE_NAME_7=176;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
+FILE_NAME_8=0;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
 
 [VTE]
-last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80
+last_dir=/media/noam
 
 [build-menu]
 EX_00_LB=_Execute

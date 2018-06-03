@@ -10,9 +10,6 @@
 #include <string>
 #include <cstring>
 
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-
 bool isCategory(const char *sig) {
 	return !strcmp(sig, "Runner") || !strcmp(sig, "Shell");
 }
@@ -212,24 +209,25 @@ void executeCommand(std::string c) {
 }
 
 std::string default_autocompleter(std::string word) {
-	std::vector<std::string> files;
-	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
-		std::string path = std::string(entry.path());
-		path = path.substr(path.find_last_of('/') + 1);
-		if (path.compare(0, word.size(), word) == 0) {
-			files.push_back(path);
-		}
-	}
-	if (files.size() == 1) {
-		return files[0] + ' ';
-	}
-	else if (files.size()) {
-		std::string s;
-		for (std::string f : files) {
-			s += f + ' ';
-		}
-		addToHistory(s.substr(0, s.size() - 1));
-	}
+	addToHistory("Error: filesystem support is absent!");
+	//std::vector<std::string> files;
+	//for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
+		//std::string path = std::string(entry.path());
+		//path = path.substr(path.find_last_of('/') + 1);
+		//if (path.compare(0, word.size(), word) == 0) {
+			//files.push_back(path);
+		//}
+	//}
+	//if (files.size() == 1) {
+		//return files[0] + ' ';
+	//}
+	//else if (files.size()) {
+		//std::string s;
+		//for (std::string f : files) {
+			//s += f + ' ';
+		//}
+		//addToHistory(s.substr(0, s.size() - 1));
+	//}
 	return word;
 }
 

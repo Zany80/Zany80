@@ -6,7 +6,7 @@ plugins = {
 	},
 	{
 		name = "Simple Shell",
-		path = "/home/noam/Documents/Zany80/plugins/SimpleShell/",
+		path = "/home/noam/Documents/Zany80/plugins/SimpleShell",
 		description = "A simple shell."
 	}
 }
