@@ -438,7 +438,7 @@ bool activateRunner(RunnerType type, const char *arg) {
 			continue;
 		none_found = false;
 		if (((bool(*)(const char *))((*l)["activate"]))(arg)) {
-			zany->setRunner(l);
+			//~ zany->setRunner(l);
 			return true;
 		}
 	}

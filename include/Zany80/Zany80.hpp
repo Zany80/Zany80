@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <liblib/liblib.hpp>
 
+#include <vector>
 #include <string>
 #include <map>
 
@@ -35,25 +36,19 @@ typedef void (*message_t)(PluginMessage,const char *);
 typedef void (*textMessage_t)(const char *,const char *);
 typedef void (*broadcast_t)(PluginMessage);
 
-class Zany80 {
-
-public:
-	Zany80();
-	~Zany80();
-	void run();
-	void frame();
-	void close();
-	void close(std::string message);
-	sf::RenderWindow *window;
-	sf::Texture font;
-	void setRunner(liblib::Library *runner);
-	
-private:
-	void replaceRunner();
-	liblib::Library *runner = nullptr, *plugin_manager = nullptr;
-	bool attemptLoad(std::string name, liblib::Library ** library);
-	
-};
-
-extern Zany80 * zany;
 extern std::string folder, path;
+extern sf::RenderWindow window;
+extern sf::Texture font;
+extern sf::Color background;
+
+typedef struct {
+	std::string name;
+	std::string description;
+	std::string path;
+} PluginDescriptor;
+
+void close(std::string message);
+std::string absolutize(std::string relative_path);
+void initializePlugins();
+std::vector<PluginDescriptor> gatherPlugins();
+std::string hex(long num, int length = 8);

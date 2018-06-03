@@ -19,7 +19,7 @@ indent_mode=2
 
 [project]
 name=Zany80
-base_path=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80
+base_path=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80
 description=
 file_patterns=
 
@@ -28,25 +28,13 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=14
-FILE_NAME_0=3357;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fsimple_shell%2Fcommands.cpp;0;4
-FILE_NAME_1=3310;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FCMakeLists.txt;0;4
-FILE_NAME_2=277;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fbuild%2Ft%2Fusr%2Flocal%2Fshare%2Fzany80%2Finclude%2FZany80%2Flibc%2Fsystem.h;0;4
-FILE_NAME_3=265;C;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fbuild%2Fa.c;0;4
-FILE_NAME_4=3687;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fsimple_shell%2Fsimple_shell.cpp;0;4
-FILE_NAME_5=0;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FBIOS%2Finclude%2Ffs%2FZanyFS.h;0;4
-FILE_NAME_6=14;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Finclude%2FZany80%2Flibc%2Foutput.h;0;4
-FILE_NAME_7=312;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Finclude%2FZany80%2Flibc%2Fsystem.h;0;4
-FILE_NAME_8=89;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Finclude%2FZany80%2Flibc%2Finput.h;0;4
-FILE_NAME_9=352;C;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FBIOS%2Fsrc%2Flibc%2Foutput.c;0;4
-FILE_NAME_10=53;C;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FBIOS%2Fsrc%2Flibc%2Finput.c;0;4
-FILE_NAME_11=0;ASM;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FBIOS%2Fsrc%2Fbios%2Ffunction_table.asm;0;4
-FILE_NAME_12=103;ASM;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FBIOS%2Fsrc%2Fbios%2Ffunctions.asm;0;4
-FILE_NAME_13=3625;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Fplugins%2Fcpu%2Fz80cpp_core%2Fcore.cpp;0;4
-FILE_NAME_14=44;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2Finclude%2FZany80%2Flibc%2Fstdbool.h;0;4
+current_page=1
+FILE_NAME_0=859;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
+FILE_NAME_1=1506;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FZany80.cpp;0;4
+FILE_NAME_2=156;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
 
 [VTE]
-last_dir=/media/noam
+last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80
 
 [build-menu]
 EX_00_LB=_Execute
@@ -71,3 +59,11 @@ CFT_00_WD=%p/build
 CFT_01_LB=_Build
 CFT_01_CM=make
 CFT_01_WD=%p/build
+
+[prjorg]
+source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
+header_patterns=*.h;*.H;*.hpp;*.hxx;*.h++;*.hh;
+ignored_dirs_patterns=.*;CVS;
+ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;
+generate_tag_prefs=0
+external_dirs=

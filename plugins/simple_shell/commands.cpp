@@ -5,7 +5,6 @@
 #include <string>
 
 #ifdef _WIN32
-//int _chdir(const char *);
 #define chdir _chdir;
 #else
 int chdir(const char *);

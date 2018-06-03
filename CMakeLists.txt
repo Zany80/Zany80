@@ -35,6 +35,8 @@ configure_file(
   "${PROJECT_BINARY_DIR}/config.h"
   )
 
+configure_file("${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_BINARY_DIR}/default_config.lua" COPYONLY)
+
 find_package(LIBLIB 0.1 REQUIRED)
 
 find_package(SFML 2 REQUIRED graphics window system )
@@ -42,15 +44,17 @@ if(SFML_NOTFOUND)
 	message(FATAL_ERROR "SFML not found!")
 endif()
 
+find_package(LuaJIT REQUIRED)
+
 add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
 add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
 
-include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
 target_include_directories(zany PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
 target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)
-target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} ${LUA_LIBRARIES})
 link_libraries(zany)
 
 add_subdirectory(plugins)

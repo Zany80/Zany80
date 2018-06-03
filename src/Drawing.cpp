@@ -17,10 +17,6 @@ void text(std::string string, int x, int y, sf::Color color) {
 		vertices[i * 4 + 2] = sf::Vertex(sf::Vector2f(x + (i + 1) * GLYPH_WIDTH,y + GLYPH_HEIGHT), color, sf::Vector2f(cX + GLYPH_WIDTH, cY + GLYPH_HEIGHT));
 		vertices[i * 4 + 3] = sf::Vertex(sf::Vector2f(x + i * GLYPH_WIDTH,y + GLYPH_HEIGHT), color, sf::Vector2f(cX, cY + GLYPH_HEIGHT));
 	}
-	zany->window->draw(vertices, length * 4, sf::Quads, &zany->font);
+	window.draw(vertices, length * 4, sf::Quads, &font);
 	delete[] vertices;
-}
-
-void clear(sf::Color color) {
-	zany->window->clear(color);
 }

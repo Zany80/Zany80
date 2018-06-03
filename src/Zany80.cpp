@@ -11,67 +11,6 @@
 	#define GetCurrentDir getcwd
 #endif
 
-std::string absolutize(std::string relativish) {
-	size_t pos;
-	// /usr/bin/../
-	while ((pos = relativish.find("../")) != std::string::npos) {
-		if (pos < 3)
-			break;
-		std::string parent = relativish.substr(0, pos - 3);
-		parent = parent.substr(0, parent.rfind("/") + 1);
-		std::string child = relativish.substr(pos + 3);
-		relativish = parent + child;
-	}
-	return relativish;
-}
-
-void Zany80::replaceRunner(){
-	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
-	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
-	if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
-		close("Unable to find suitable runner.\n");
-	}
-	else {
-		try {
-			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
-				0, "activate", (int)strlen("activate"), "Zany80", nullptr
-			});
-		}
-		catch (std::exception &e) {}
-	}
-}
-
-void Zany80::close(std::string message) {
-	std::cerr << "[Crash Handler] "<<message<<
-		"[Crash Handler] Notifying user and shutting down...\n";
-	sf::Clock c;
-	while (c.getElapsedTime().asSeconds() < 5 && window->isOpen()) {
-		window->clear(sf::Color(255,0,0));
-		// TODO: Render error message
-		sf::Event e;
-		while (window->pollEvent(e)) {
-			switch (e.type) {
-				case sf::Event::Closed:
-					window->close();
-					break;
-				default:
-					break;
-			}
-		}
-		
-		window->display();
-	}
-	delete this;
-	exit(0);
-}
-
-void Zany80::close() {
-	delete this;
-	exit(0);
-}
-
-std::string path,folder,true_folder;
-
 typedef void (*init_t)(liblib::Library *);
 
 bool Zany80::attemptLoad(std::string name, liblib::Library **library) {

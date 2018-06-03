@@ -214,7 +214,7 @@ void executeCommand(std::string c) {
 std::string default_autocompleter(std::string word) {
 	std::vector<std::string> files;
 	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
-		std::string path = entry.path();
+		std::string path = std::string(entry.path());
 		path = path.substr(path.find_last_of('/') + 1);
 		if (path.compare(0, word.size(), word) == 0) {
 			files.push_back(path);
@@ -240,7 +240,7 @@ void autocomplete() {
 		current_command = current_command.substr(1, current_command.size() - 1);
 	}
 	// Find end of first word
-	uint i;
+	unsigned int i;
 	for (i = 0; i < current_command.size() && !isspace(current_command[i]); i++);
 	std::string first_word = current_command.substr(0, i);
 	if (i == current_command.size()) {
