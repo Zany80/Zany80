@@ -204,6 +204,7 @@ std::map <std::string, command_t> commands = {
 
 	{"ls", {
 		.function = [](std::vector<std::string> args) {
+			#ifndef _WIN32
 			std::string s;
 			for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
 				std::string path = entry.path();
@@ -211,6 +212,9 @@ std::map <std::string, command_t> commands = {
 				s += path + ' ';
 			}
 			addToHistory(s);
+			#else
+			addToHistory("ls not supported on Windows. Sorry!");
+			#endif
 		},
 		.help = "Prints out a list of files in the current folder.",
 		.detailed_help = "Prints out a list of files in the current folder."

@@ -10,8 +10,10 @@
 #include <string>
 #include <cstring>
 
+#ifndef _WIN32
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
+#endif
 
 bool isCategory(const char *sig) {
 	return !strcmp(sig, "Runner") || !strcmp(sig, "Shell");
@@ -212,6 +214,7 @@ void executeCommand(std::string c) {
 }
 
 std::string default_autocompleter(std::string word) {
+	#ifndef _WIN32
 	std::vector<std::string> files;
 	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
 		std::string path = entry.path();
@@ -230,6 +233,9 @@ std::string default_autocompleter(std::string word) {
 		}
 		addToHistory(s.substr(0, s.size() - 1));
 	}
+	#else
+	addToHistory("file autocompletion is not supported on Windows!");
+	#endif
 	return word;
 }
 
