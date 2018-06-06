@@ -49,6 +49,9 @@ void close(std::string message);
 std::string absolutize(std::string relative_path);
 void initializePlugins();
 std::vector<Plugin*> gatherPlugins();
+std::string hex(long num, int length = 8);
 class LuaPlugin;
 std::vector<LuaPlugin*> gatherLuaPlugins();
-std::string hex(long num, int length = 8);
+
+void close_state(lua_State **state);
+#define autocl __attribute__((cleanup(close_state)))

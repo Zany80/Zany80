@@ -36,13 +36,13 @@ sf::Color background;
 
 lua_State *L;
 
-static void close_state(lua_State **state) {
+std::vector<Plugin*> plugins;
+
+void close_state(lua_State **state) {
 	std::cout << "[Cleanup] Closing Lua instance 0x" << hex((long)*state) << "...\n";
 	lua_close(*state);
 	*state = nullptr;
 }
-
-#define autocl __attribute__((cleanup(close_state)))
 
 int main(int argc, const char **argv) {
 	path = absolutize(argv[0]);
@@ -57,6 +57,8 @@ int main(int argc, const char **argv) {
 	if (!lua_state)
 		close("Error loading Lua!");
 	L = lua_state;
+	std::cerr << "Loading the font - as there are multiple locations to search,"
+	" you may see messages \"Failed to load image\", these messages are harmless.\n";
 	if (!font.loadFromFile(folder + "font.png")) {
 		// tries a few different options for the path
 		if (!font.loadFromFile(absolutize(folder + "../font.png")) && !font.loadFromFile(absolutize(folder + "../../font.png")) &&
@@ -73,6 +75,16 @@ int main(int argc, const char **argv) {
 		}
 	}
 	background = sf::Color::White;
+	// Load core Lua libs
+	lua_pushcfunction(L, luaopen_base);
+	lua_pushstring(L,"");
+	lua_call(L, 1, 0);
+	lua_pushcfunction(L, luaopen_table);
+	lua_pushstring(L, LUA_TABLIBNAME);
+	lua_call(L, 1, 0);
+	if (luaL_dofile(L, (folder + "global_rt/global_initialization.lua").c_str())) {
+		close(lua_tostring(L, -1));
+	}
 	initializePlugins();
 	while (window.isOpen()) {
 		sf::Event event;
@@ -112,6 +124,8 @@ std::string absolutize(std::string relativish) {
 	return relativish;
 }
 
+#define GLYPHS_PER_LINE (LCD_WIDTH / (GLYPH_WIDTH))
+
 void close(std::string message) {
 	std::cerr << "[Crash Handler] " << message << "\n"
 				 "[Crash Handler] Notifying user...\n";
@@ -127,7 +141,17 @@ void close(std::string message) {
 			}
 		}
 		window.clear(sf::Color(255,0,0));
-		text(message, 0, 0, sf::Color(0, 255, 255));
+		if (message.size() <= GLYPHS_PER_LINE)
+			text(message, 0, 0, sf::Color(0, 255, 255));
+		else {
+			std::string msg = message;
+			int y = - GLYPH_HEIGHT;
+			while (msg.size() > GLYPHS_PER_LINE) {
+				text(msg.substr(0, GLYPHS_PER_LINE), 0, y += (GLYPH_HEIGHT + 2), sf::Color(0, 255, 255));
+				msg = msg.substr(GLYPHS_PER_LINE);
+			}
+			text(msg, 0, y += (GLYPH_HEIGHT + 2), sf::Color(0, 255, 255));
+		}
 		window.display();
 	}
 	exit(0);
@@ -161,10 +185,17 @@ void invalid_conf(int i) {
 }
 
 void initializePlugins() {
-	std::vector<Plugin*> plugins = gatherPlugins();
-	for (Plugin* p : plugins) {
-		std::cout << "Initializing plugin: "<<p->getName()<<'\n';
-		p->loadIntoRuntime();
+	std::vector<Plugin*> uninitialized_plugins = gatherPlugins();
+	for (Plugin* p : uninitialized_plugins) {
+		std::cout << "[PluginLoader] Initializing plugin: "<<p->getName()<<'\n';
+		if (p->loadIntoRuntime()) {
+			std::cout << "\t[PluginLoader] Loaded successfully!\n";
+			plugins.push_back(p);
+		}
+		else {
+			std::cerr << "\t[PluginLoader] Error: "<<p->getDescription()<<'\n';
+			delete p;	
+		}
 	}
 }
 

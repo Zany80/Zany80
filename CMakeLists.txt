@@ -36,6 +36,7 @@ configure_file(
   )
 
 configure_file("${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_BINARY_DIR}/default_config.lua" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/src/init_plugins.lua" "${PROJECT_BINARY_DIR}/init_plugins.lua" COPYONLY)
 
 find_package(LIBLIB 0.1 REQUIRED)
 
@@ -47,17 +48,13 @@ endif()
 find_package(LuaJIT REQUIRED)
 
 add_subdirectory(src)
-add_library(zany SHARED ${SOURCES})
-add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
+add_executable(zany80 ${SOURCES} ${ICON_SOURCE})
 
 include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR} ${LUA_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
-target_include_directories(zany PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
-target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)
-target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} ${LUA_LIBRARIES})
-link_libraries(zany)
+target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} ${LUA_LIBRARIES})
 
-#add_subdirectory(plugins)
+add_subdirectory(plugins)
 
 add_executable(BIOSMerge ${CMAKE_SOURCE_DIR}/tools/BIOSMerge.cpp)
 
@@ -86,10 +83,9 @@ if(WIN32)
 	if (NOT DEFINED LIBSTDCPLUSPLUS_LIBRARY)
 		set(LIBSTDCPLUSPLUS_LIBRARY "" CACHE FILEPATH "libstdc++ dll - needed for windows cross-compilation" FORCE)
 	endif()
-	install(FILES ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
-	install (TARGETS zany80 zany
-		RUNTIME DESTINATION .
-		LIBRARY DESTINATION .
+	install(FILES "${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_SOURCE_DIR}/src/init_plugins.lua" ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
+	install (TARGETS zany80
+		DESTINATION .
 	)
 	file(GLOB BINARIES misc/win32/*)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
@@ -101,7 +97,7 @@ else()
 	)
 	install (FILES misc/zany80.desktop DESTINATION share/applications)
 	install (FILES misc/zany80.png DESTINATION share/pixmaps)
-	install (TARGETS zany80 zany
+	install (TARGETS zany80
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 	)
@@ -109,7 +105,7 @@ else()
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
 	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/plugins/binaries)
 	file(COPY ${BINARIES} DESTINATION ${CMAKE_BINARY_DIR}/plugins/binaries)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION share/zany80/)
+	install(FILES "${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_SOURCE_DIR}/src/init_plugins.lua" ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION share/zany80/)
 	install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION share/zany80/include)
 endif()
 

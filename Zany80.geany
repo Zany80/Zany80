@@ -28,19 +28,26 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=8
-FILE_NAME_0=87;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
-FILE_NAME_1=1994;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
-FILE_NAME_2=1267;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
-FILE_NAME_3=681;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FZany80.cpp;0;4
-FILE_NAME_4=239;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
-FILE_NAME_5=116;Markdown;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FERRORS.md;0;4
-FILE_NAME_6=239;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FPlugin.hpp;0;4
-FILE_NAME_7=176;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
-FILE_NAME_8=0;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
+current_page=7
+FILE_NAME_0=7476;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
+FILE_NAME_1=1331;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
+FILE_NAME_2=1513;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
+FILE_NAME_3=122;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
+FILE_NAME_4=116;Markdown;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FERRORS.md;0;4
+FILE_NAME_5=344;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FPlugin.hpp;0;4
+FILE_NAME_6=683;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
+FILE_NAME_7=4555;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
+FILE_NAME_8=732;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FZ80%2Fmain.lua;0;4
+FILE_NAME_9=303;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2FCMakeLists.txt;0;4
+FILE_NAME_10=314;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FCMakeLists.txt;0;4
+FILE_NAME_11=108;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Finit_plugins.lua;0;4
+FILE_NAME_12=188;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
+FILE_NAME_13=586;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FShell%2Fmain.lua;0;4
+FILE_NAME_14=232;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Flua%2FCMakeLists.txt;0;4
+FILE_NAME_15=0;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fglobal_initialization.lua;0;4
 
 [VTE]
-last_dir=/media/noam
+last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80/build
 
 [build-menu]
 EX_00_LB=_Execute
@@ -52,7 +59,7 @@ C++FT_00_WD=%p/build
 C++FT_01_LB=_Build
 C++FT_01_CM=make
 C++FT_01_WD=%p/build
-filetypes=C++;CMake;C;
+filetypes=C++;CMake;C;Lua;
 CMakeFT_00_LB=
 CMakeFT_00_CM=make
 CMakeFT_00_WD=%p/build
@@ -65,6 +72,12 @@ CFT_00_WD=%p/build
 CFT_01_LB=_Build
 CFT_01_CM=make
 CFT_01_WD=%p/build
+LuaFT_00_LB=
+LuaFT_00_CM=make
+LuaFT_00_WD=%p/build
+LuaFT_01_LB=
+LuaFT_01_CM=make
+LuaFT_01_WD=%p/build
 
 [prjorg]
 source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;

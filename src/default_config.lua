@@ -2,11 +2,13 @@ plugins = {
 	{
 		name = "Zilog Z80 Core",
 		path = "$ZANY/Z80",
-		description =  "Emulation core for the Zilog Z80"
+		description = "Emulation core for the Zilog Z80."
 	},
 	{
 		name = "Simple Shell",
-		path = "/home/noam/Documents/Zany80/plugins/SimpleShell",
-		description = "A simple shell."
+		path = "$ZANY/Shell",
+		description = "The title is pretty self explanatory. Enter commands and such."
 	}
 }
+
+default_runner = "SimpleShell"

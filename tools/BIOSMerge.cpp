@@ -10,7 +10,7 @@
 int main(int argc, const char **argv) {
 	std::ofstream out(argv[1]);
 	for (int i = 2; i < 4; i++) {
-		std::cerr << "Attempting opening file "<<i - 1<<": \""<<argv[i]<<"\"\n";
+//		std::cerr << "Attempting opening file "<<i - 1<<": \""<<argv[i]<<"\"\n";
 		std::ifstream in(argv[i], std::ios::ate | std::ios::binary);
 		if (in.is_open()) {
 			char buffer[0x8000]{0};
