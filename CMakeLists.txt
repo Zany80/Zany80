@@ -33,10 +33,7 @@ include(git_revision)
 configure_file(
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
-  )
-
-configure_file("${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_BINARY_DIR}/default_config.lua" COPYONLY)
-configure_file("${PROJECT_SOURCE_DIR}/src/init_plugins.lua" "${PROJECT_BINARY_DIR}/init_plugins.lua" COPYONLY)
+)
 
 find_package(LIBLIB 0.1 REQUIRED)
 
@@ -83,13 +80,25 @@ if(WIN32)
 	if (NOT DEFINED LIBSTDCPLUSPLUS_LIBRARY)
 		set(LIBSTDCPLUSPLUS_LIBRARY "" CACHE FILEPATH "libstdc++ dll - needed for windows cross-compilation" FORCE)
 	endif()
-	install(FILES "${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_SOURCE_DIR}/src/init_plugins.lua" ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
+	install(
+		FILES
+			${LIBLIB_LIBRARY}
+			font.png
+			${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY}
+		DESTINATION .
+	)
 	install (TARGETS zany80
 		DESTINATION .
 	)
 	file(GLOB BINARIES misc/win32/*)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION .)
+	install(
+		FILES
+			${CMAKE_BINARY_DIR}/BIOS.rom
+			${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o
+			${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o
+		DESTINATION .
+	)
 else()
 	set(CPACK_GENERATOR "TGZ;DEB")
 	install(
@@ -105,8 +114,17 @@ else()
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
 	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/plugins/binaries)
 	file(COPY ${BINARIES} DESTINATION ${CMAKE_BINARY_DIR}/plugins/binaries)
-	install(FILES "${PROJECT_SOURCE_DIR}/src/default_config.lua" "${PROJECT_SOURCE_DIR}/src/init_plugins.lua" ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION share/zany80/)
-	install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION share/zany80/include)
+	install(
+		FILES
+			${CMAKE_BINARY_DIR}/BIOS.rom
+			${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o
+			${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o
+		DESTINATION share/zany80/
+	)
+	install(
+		DIRECTORY ${CMAKE_SOURCE_DIR}/include/ 
+		DESTINATION share/zany80/include
+	)
 endif()
 
 include(InstallRequiredSystemLibraries)
@@ -123,7 +141,7 @@ IF(WIN32 AND NOT UNIX)
   # sure there is at least one set of four (4) backlasshes.
   SET(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}\\\\misc/zany80.bmp")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\zany80.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Fantasy Computer")
+  SET(CPACK_NSIS_DISPLAY_NAME "Zany80 Fantasy Computer")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\zany80.github.io")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\zany80.github.io")
   SET(CPACK_NSIS_CONTACT "pleasantatk@gmail.com")

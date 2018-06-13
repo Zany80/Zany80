@@ -5,7 +5,6 @@
 
 std::string getField(lua_State *L, std::string field);
 static int addCapability(lua_State *L);
-static int registerCPU(lua_State *L);
 
 class LuaPlugin : public Plugin {
 public:
@@ -20,9 +19,10 @@ public:
 	virtual bool loadIntoRuntime();
 	virtual bool provides(std::string cap);
 	virtual std::string notify(Plugin *source, std::string message);
+	bool validateState(lua_State *state) {return state == pluginState;}
 private:
-	void setupLua();
 	lua_State *pluginState;
+	void setupLua();
 	std::string name, url, desc, path;
 	std::vector<std::string> capabilities;
 };

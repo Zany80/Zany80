@@ -1,11 +1,11 @@
 [editor]
 line_wrapping=true
-line_break_column=72
+line_break_column=80
 auto_continue_multiline=true
 
 [file_prefs]
 final_new_line=true
-ensure_convert_new_lines=false
+ensure_convert_new_lines=true
 strip_trailing_spaces=false
 replace_tabs=false
 
@@ -24,32 +24,43 @@ description=
 file_patterns=
 
 [long line marker]
-long_line_behaviour=1
-long_line_column=72
+long_line_behaviour=2
+long_line_column=80
 
 [files]
-current_page=7
-FILE_NAME_0=7476;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
-FILE_NAME_1=1331;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
-FILE_NAME_2=1513;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
-FILE_NAME_3=122;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
-FILE_NAME_4=116;Markdown;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FERRORS.md;0;4
-FILE_NAME_5=344;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FPlugin.hpp;0;4
-FILE_NAME_6=683;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
-FILE_NAME_7=4555;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
-FILE_NAME_8=732;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FZ80%2Fmain.lua;0;4
-FILE_NAME_9=303;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2FCMakeLists.txt;0;4
-FILE_NAME_10=314;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FCMakeLists.txt;0;4
-FILE_NAME_11=108;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Finit_plugins.lua;0;4
-FILE_NAME_12=188;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
-FILE_NAME_13=586;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FShell%2Fmain.lua;0;4
-FILE_NAME_14=232;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Flua%2FCMakeLists.txt;0;4
-FILE_NAME_15=0;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fglobal_initialization.lua;0;4
+current_page=10
+FILE_NAME_0=117;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FShell%2Fmain.lua;0;4
+FILE_NAME_1=8011;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
+FILE_NAME_2=802;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
+FILE_NAME_3=271;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
+FILE_NAME_4=405;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
+FILE_NAME_5=3671;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaAPI.cpp;0;4
+FILE_NAME_6=1147;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaAPI.hpp;0;4
+FILE_NAME_7=144;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2FCMakeLists.txt;0;4
+FILE_NAME_8=0;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
+FILE_NAME_9=540;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
+FILE_NAME_10=197;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fmain.lua;0;4
+FILE_NAME_11=544;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
+FILE_NAME_12=0;C++;0;EUTF-8;1;1;1;%2Fusr%2Finclude%2Fluajit-2.0%2Flualib.h;0;4
+FILE_NAME_13=784;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FZ80%2Fmain.lua;0;4
+FILE_NAME_14=183;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fglobal_initialization.lua;0;4
 
 [VTE]
-last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80/build
+last_dir=/run/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80/build
 
 [build-menu]
+NF_00_LB=_Make
+NF_00_CM=make
+NF_00_WD=%p/build
+NF_01_LB=Make Custom _Target...
+NF_01_CM=make 
+NF_01_WD=%p/build
+NF_02_LB=Make _Object
+NF_02_CM=make %e.o
+NF_02_WD=%p/build
+NF_03_LB=
+NF_03_CM=
+NF_03_WD=
 EX_00_LB=_Execute
 EX_00_CM=./zany80
 EX_00_WD=%p/build
@@ -59,19 +70,16 @@ C++FT_00_WD=%p/build
 C++FT_01_LB=_Build
 C++FT_01_CM=make
 C++FT_01_WD=%p/build
-filetypes=C++;CMake;C;Lua;
+C++FT_02_LB=_Lint
+C++FT_02_CM=cppcheck --language=c++ --enable=warning,style --template=gcc "%f"
+C++FT_02_WD=
+filetypes=C++;CMake;Lua;
 CMakeFT_00_LB=
 CMakeFT_00_CM=make
 CMakeFT_00_WD=%p/build
 CMakeFT_01_LB=
 CMakeFT_01_CM=make
 CMakeFT_01_WD=%p/build
-CFT_00_LB=_Compile
-CFT_00_CM=make
-CFT_00_WD=%p/build
-CFT_01_LB=_Build
-CFT_01_CM=make
-CFT_01_WD=%p/build
 LuaFT_00_LB=
 LuaFT_00_CM=make
 LuaFT_00_WD=%p/build
@@ -80,7 +88,7 @@ LuaFT_01_CM=make
 LuaFT_01_WD=%p/build
 
 [prjorg]
-source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
+source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;*.lua;
 header_patterns=*.h;*.H;*.hpp;*.hxx;*.h++;*.hh;
 ignored_dirs_patterns=.*;CVS;
 ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;

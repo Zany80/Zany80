@@ -1,6 +1,6 @@
+#include <Zany80/LuaAPI.hpp>
 #include <Zany80/LuaPlugin.hpp>
 #include <Zany80/Zany80.hpp>
-#include <chrono>
 #include <exception>
 #include <iostream>
 
@@ -35,12 +35,39 @@ LuaPlugin::LuaPlugin(lua_State *L, int index) {
 }
 
 LuaPlugin::~LuaPlugin() {
+	lua_getglobal(pluginState, "cleanup");
+	if (lua_isfunction(pluginState, -1)) {
+		if (lua_pcall(pluginState, 0, 0, 0)) {
+			// Try using the plugin's log function
+			std::string error = lua_tostring(pluginState, -1);
+			if (error.find(".lua:") != std::string::npos) {
+				std::string file_name = error.substr(0, error.find(".lua:"));
+				// Get second to last forward slash
+				int last_slash = file_name.find_last_of("/");
+				if (last_slash != std::string::npos) {
+					int target_slash = file_name.substr(0, last_slash - 1)
+						.find_last_of("/");
+					if (target_slash != std::string::npos) {
+						error = "\u001b[31mError: " + error.substr(target_slash + 1)
+							+ "\u001b[0m";
+					}
+				}
+			}
+			lua_getglobal(pluginState, "log");
+			if (lua_isfunction(pluginState, -1)) {
+				lua_pushstring(pluginState, error.c_str());
+				if (lua_pcall(pluginState, 1, 0, 0)) {
+					// Failed to use plugin's logger!
+					std::cerr << "Error: "<<error<<'\n';
+				}
+			}
+			else {
+				// Plugin has no logger!
+				std::cerr << "Error: "<<error<<'\n';
+			}
+		}
+	}
 	close_state(&pluginState);
-}
-
-static int millis(lua_State *L) {
-	lua_pushnumber(L, std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1));
-	return 1;
 }
 
 void LuaPlugin::setupLua() {
@@ -48,16 +75,40 @@ void LuaPlugin::setupLua() {
 	lua_pushcfunction(pluginState, luaopen_base);
 	lua_pushstring(pluginState, "");
 	lua_call(pluginState, 1, 0);
-	lua_pushlightuserdata(pluginState, this);
-	lua_pushcclosure(pluginState, addCapability, 1);
-	lua_setglobal(pluginState, "registerCapability");
-	lua_pushcfunction(pluginState, registerCPU);
-	lua_setglobal(pluginState, "registerCPU");
+	lua_pushcfunction(pluginState, luaopen_string);
+	lua_pushstring(pluginState, LUA_STRLIBNAME);
+	lua_call(pluginState, 1, 0);
 	lua_pushcfunction(pluginState, luaopen_math);
 	lua_pushstring(pluginState, LUA_MATHLIBNAME);
 	lua_call(pluginState, 1, 0);
-	lua_pushcfunction(pluginState, millis);
-	lua_setglobal(pluginState, "millis");
+	for (auto pair : LuaAPI) {
+		lua_pushcfunction(pluginState, pair.second);
+		lua_setglobal(pluginState, pair.first.c_str());
+	}
+	lua_pushlightuserdata(pluginState, L);
+	lua_pushcclosure(pluginState, [](lua_State *state) -> int {
+		lua_State *L = (lua_State*) lua_touserdata(state, lua_upvalueindex(1));
+		if (lua_gettop(state) == 1) {
+			if (lua_isnumber(state, 1)) {
+				lua_pushnumber(L, lua_tonumber(state, 1));
+				lua_setglobal(L, "depth");
+				return 0;
+			}
+			else {
+				lua_pushstring(state, "\u001b[31mDepth must be a number!\u001b[00m");
+				lua_error(state);
+			}
+		}
+		else {
+			lua_getglobal(L, "depth");
+			lua_pushnumber(state, lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			return 1;
+		}
+	}, 1);
+	lua_setglobal(pluginState, "depth");
+	lua_pushlightuserdata(pluginState, this);
+	lua_setfield(pluginState, LUA_REGISTRYINDEX, "plugin");
 }
 
 std::string LuaPlugin::getName() {
@@ -131,53 +182,4 @@ std::string LuaPlugin::notify(Plugin *source, std::string message) {
 	if (!msg)
 		return "";
 	return msg;
-}
-
-// TODO: is this really needed? It doesn't seem to be...
-static int addCapability(lua_State *L) {
-	LuaPlugin *plugin = (LuaPlugin*)lua_touserdata(L, lua_upvalueindex(1));
-	if (!lua_gettop(L)) {
-		lua_pushstring(L, "At least one argument required!");
-		lua_error(L);
-	}
-	for (int i = 1; i <= lua_gettop(L); i++) {
-		if (!lua_isstring(L, i)) {
-			lua_pushstring(L,"Only strings allowed!");
-			lua_error(L);
-		}
-		plugin->capabilities.push_back(lua_tostring(L, i));
-		//std::cout << "Capability "<<lua_tostring(L, i) << " provided by plugin "<<plugin->getName()<<'\n';
-	}
-	return 0;
-}
-
-static int registerCPU(lua_State *state) {
-	if (lua_gettop(state) != 1) {
-		lua_pushboolean(state, false);
-		lua_error(state);
-	}
-	if (!lua_istable(state, 1)) {
-		lua_pushstring(state, "CPU argument must be a table!");
-		lua_error(state);
-	}
-	lua_getglobal(L, "cpus");
-	if (!lua_istable(L, -1)) {
-		if (lua_isnil(L, -1)) {
-			lua_pop(L, 1);
-			lua_newtable(L);
-			lua_setglobal(L, "cpus");
-			lua_getglobal(L, "cpus");
-		}
-		else {
-			close("cpus must be a table!");
-		}
-	}
-	// cpu arg is at 1 in state, target table is at -1 in L
-	
-	lua_pushboolean(state, true);
-	return 1;
-}
-
-static int registerRunner(lua_State *state) {
-	
 }

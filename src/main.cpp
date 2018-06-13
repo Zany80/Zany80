@@ -1,6 +1,7 @@
 #include <Zany80/Zany80.hpp>
 #include <Zany80/Drawing.hpp>
 #include <Zany80/LuaPlugin.hpp>
+#include <Zany80/LuaAPI.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -32,7 +33,7 @@ constexpr struct rlimit limit = { 1024 * 1024 * 768, 1024 * 1024 * 768 };
 std::string path,folder;
 sf::RenderWindow window;
 sf::Texture font;
-sf::Color background;
+sf::Color background_color;
 
 lua_State *L;
 
@@ -67,25 +68,19 @@ int main(int argc, const char **argv) {
 			exit(1);
 		}
 		else {
-			// If the font is in this folder, everything else should be as well
-			// Note: this only happens when the font is here AND ALSO NOT where it should be
-			std::cout << "[Zany80] " << folder << " setup invalid, falling back to ";
+// If the font is in this folder, everything else should be as well
+// Note: this only happens when the font is here AND ALSO NOT where it should be
+			std::cout << "[Zany80] " + folder + " setup invalid, falling back to ";
 			folder = absolutize(path.substr(0,path.find_last_of("/")+1));
 			std::cout << folder << "\n";
 		}
 	}
-	background = sf::Color::White;
-	// Load core Lua libs
-	lua_pushcfunction(L, luaopen_base);
-	lua_pushstring(L,"");
-	lua_call(L, 1, 0);
-	lua_pushcfunction(L, luaopen_table);
-	lua_pushstring(L, LUA_TABLIBNAME);
-	lua_call(L, 1, 0);
-	if (luaL_dofile(L, (folder + "global_rt/global_initialization.lua").c_str())) {
+	background_color = sf::Color::White;
+	initializeGlobalLua();
+	initializePlugins();
+	if (luaL_dofile(L, (folder + "global_rt/main.lua").c_str())) {
 		close(lua_tostring(L, -1));
 	}
-	initializePlugins();
 	while (window.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -95,9 +90,11 @@ int main(int argc, const char **argv) {
 					break;
 			}
 		}
-		window.clear(background);
+		window.clear(background_color);
+		
 		window.display();
 	}
+	cleanupPlugins();
 	return 0;
 }
 
@@ -256,4 +253,61 @@ std::vector<LuaPlugin*> gatherLuaPlugins() {
 		}
 	}
 	return plugins;
+}
+
+void cleanupPlugins() {
+	for (int i = 0; i < plugins.size(); i++)
+		delete plugins[i];
+	plugins.clear();
+}
+
+int validatePlugins(lua_State *L) {
+	// First, validate CPUs
+	lua_getglobal(L, "cpus");
+	int cpus = lua_gettop(L);
+	lua_pushnil(L);
+	while(lua_next(L, cpus)) {
+		if (!lua_istable(L, -1)) {
+			lua_pop(L, 1);
+			continue;
+		}
+		lua_getfield(L, -1, "plugin");
+		if (lua_isuserdata(L, -1)) {
+			bool found = false;
+			Plugin *plugin = (Plugin*)lua_touserdata(L, -1);
+			for (Plugin *p : plugins) {
+				if (plugin == p) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				std::cerr << "Warning: CPU plugin \""<<lua_tostring(L, -3)<<"\" crashed!\n";
+				lua_pushnil(L);
+				lua_setfield(L, cpus, lua_tostring(L, -4));
+			}
+		}
+		else {
+			std::cerr << "Warning: no plugin associated with CPU "<<lua_tostring(L, -3)<<'\n';
+		}
+		lua_pop(L, 2);
+	}
+	return 0;
+}
+
+void initializeGlobalLua() {
+	lua_pushcfunction(L, luaopen_base);
+	lua_pushstring(L,"");
+	lua_call(L, 1, 0);
+	lua_pushcfunction(L, luaopen_table);
+	lua_pushstring(L, LUA_TABLIBNAME);
+	lua_call(L, 1, 0);
+	for (auto pair : LuaAPI) {
+		lua_pushcfunction(L, pair.second);
+		lua_setglobal(L, pair.first.c_str());
+	}
+	if (luaL_dofile(L, (folder + "global_rt/global_initialization.lua").c_str())) {
+		close(lua_tostring(L, -1));
+	}
+	
 }

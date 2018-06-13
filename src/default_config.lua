@@ -11,4 +11,5 @@ plugins = {
 	}
 }
 
-default_runner = "SimpleShell"
+-- Set to 1 to use the main loop from $ZANY/global_rt/main.lua
+main_loop_mode = 1
