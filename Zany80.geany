@@ -1,6 +1,6 @@
 [editor]
 line_wrapping=true
-line_break_column=80
+line_break_column=100
 auto_continue_multiline=true
 
 [file_prefs]
@@ -25,28 +25,32 @@ file_patterns=
 
 [long line marker]
 long_line_behaviour=2
-long_line_column=80
+long_line_column=100
 
 [files]
-current_page=10
-FILE_NAME_0=117;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FShell%2Fmain.lua;0;4
-FILE_NAME_1=8011;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
-FILE_NAME_2=802;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
-FILE_NAME_3=271;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
+current_page=0
+FILE_NAME_0=3434;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FShell%2Fmain.lua;0;4
+FILE_NAME_1=2906;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fmain.cpp;0;4
+FILE_NAME_2=2316;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaPlugin.cpp;0;4
+FILE_NAME_3=812;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaPlugin.hpp;0;4
 FILE_NAME_4=405;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FCMakeLists.txt;0;4
-FILE_NAME_5=3671;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaAPI.cpp;0;4
-FILE_NAME_6=1147;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaAPI.hpp;0;4
-FILE_NAME_7=144;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2FCMakeLists.txt;0;4
-FILE_NAME_8=0;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
+FILE_NAME_5=8871;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FLuaAPI.cpp;0;4
+FILE_NAME_6=1188;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FLuaAPI.hpp;0;4
+FILE_NAME_7=506;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2FCMakeLists.txt;0;4
+FILE_NAME_8=348;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fdefault_config.lua;0;4
 FILE_NAME_9=540;CMake;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2FCMakeLists.txt;0;4
-FILE_NAME_10=197;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fmain.lua;0;4
-FILE_NAME_11=544;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
-FILE_NAME_12=0;C++;0;EUTF-8;1;1;1;%2Fusr%2Finclude%2Fluajit-2.0%2Flualib.h;0;4
-FILE_NAME_13=784;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FZ80%2Fmain.lua;0;4
-FILE_NAME_14=183;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fglobal_initialization.lua;0;4
+FILE_NAME_10=1252;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fmain.lua;0;4
+FILE_NAME_11=1034;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FZany80.hpp;0;4
+FILE_NAME_12=891;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Flua%2FZ80%2Fmain.lua;0;4
+FILE_NAME_13=360;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fglobal_initialization.lua;0;4
+FILE_NAME_14=1012;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FDrawing.cpp;0;4
+FILE_NAME_15=156;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Finclude%2FZany80%2FDrawing.hpp;0;4
+FILE_NAME_16=307;Lua;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2Fglobal_rt%2Fbasic_functions.lua;0;4
+FILE_NAME_17=564;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fsrc%2FSFMLLuaBinding.cpp;0;4
+FILE_NAME_18=3922;C++;0;EUTF-8;1;1;1;%2Fmedia%2Fnoam%2F92d74418-b907-40f3-a660-645b7e41b51c%2FZany80%2FZany80%2Fplugins%2Fsimple_shell%2Fsimple_shell.cpp;0;4
 
 [VTE]
-last_dir=/run/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80/build
+last_dir=/media/noam/92d74418-b907-40f3-a660-645b7e41b51c/Zany80/Zany80/build
 
 [build-menu]
 NF_00_LB=_Make

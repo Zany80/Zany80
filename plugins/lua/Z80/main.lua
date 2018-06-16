@@ -36,7 +36,7 @@ Z80.cleanupPlugin = cleanup
 log("Registering CPU class...")
 registerCPU("Z80", Z80)
 -- the above line will error out on failure, so if we reached this point, no error
-depth(depth()+1)
+depth(depth() + 1)
 log("Registered successfully!")
 depth(depth() - 2)
 

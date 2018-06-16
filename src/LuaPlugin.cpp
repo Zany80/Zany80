@@ -78,9 +78,29 @@ void LuaPlugin::setupLua() {
 	lua_pushcfunction(pluginState, luaopen_string);
 	lua_pushstring(pluginState, LUA_STRLIBNAME);
 	lua_call(pluginState, 1, 0);
+	lua_pushcfunction(pluginState, luaopen_table);
+	lua_pushstring(pluginState, LUA_TABLIBNAME);
+	lua_call(pluginState, 1, 0);
 	lua_pushcfunction(pluginState, luaopen_math);
 	lua_pushstring(pluginState, LUA_MATHLIBNAME);
 	lua_call(pluginState, 1, 0);
+	if (luaL_dofile(pluginState, (folder + "/init_plugins.lua").c_str()))
+		close(lua_tostring(pluginState, -1));
+	lua_getglobal(pluginState, "bind");
+	if (lua_isfunction(pluginState, -1)) {
+		// if bind function exists, create a metatable with it
+		lua_newtable(pluginState);
+		// __index table
+		lua_newtable(pluginState);
+		// bind function
+		lua_pushvalue(pluginState, -3);
+		lua_setfield(pluginState, -2, "bind");
+		// table at -1 is __index, -2 is metatable, -3 is bind function
+		lua_setfield(pluginState, -2, "__index");
+		// -1 is metatable, -2 is bind
+		lua_setmetatable(pluginState, -2);
+	}
+	lua_pop(pluginState, 1);
 	for (auto pair : LuaAPI) {
 		lua_pushcfunction(pluginState, pair.second);
 		lua_setglobal(pluginState, pair.first.c_str());
@@ -109,6 +129,14 @@ void LuaPlugin::setupLua() {
 	lua_setglobal(pluginState, "depth");
 	lua_pushlightuserdata(pluginState, this);
 	lua_setfield(pluginState, LUA_REGISTRYINDEX, "plugin");
+	lua_pushnumber(pluginState, LCD_WIDTH);
+	lua_setglobal(pluginState, "LCD_WIDTH");
+	lua_pushnumber(pluginState, LCD_HEIGHT);
+	lua_setglobal(pluginState, "LCD_HEIGHT");
+	lua_pushnumber(pluginState, GLYPH_WIDTH);
+	lua_setglobal(pluginState, "GLYPH_WIDTH");
+	lua_pushnumber(pluginState, GLYPH_HEIGHT);
+	lua_setglobal(pluginState, "GLYPH_HEIGHT");
 }
 
 std::string LuaPlugin::getName() {
@@ -128,8 +156,6 @@ std::string LuaPlugin::getPath() {
 }
 
 bool LuaPlugin::loadIntoRuntime() {
-	if (luaL_dofile(pluginState, (folder + "/init_plugins.lua").c_str()))
-		close(lua_tostring(pluginState, -1));
 	if (luaL_dofile(pluginState, (this->path + "/main.lua").c_str())) {
 		desc = lua_tostring(pluginState, -1);
 		return false;

@@ -39,6 +39,8 @@ lua_State *L;
 
 std::vector<Plugin*> plugins;
 
+bool lua_loop;
+
 void close_state(lua_State **state) {
 	std::cout << "[Cleanup] Closing Lua instance 0x" << hex((long)*state) << "...\n";
 	lua_close(*state);
@@ -78,6 +80,7 @@ int main(int argc, const char **argv) {
 	background_color = sf::Color::White;
 	initializeGlobalLua();
 	initializePlugins();
+	lua_loop = true;
 	if (luaL_dofile(L, (folder + "global_rt/main.lua").c_str())) {
 		close(lua_tostring(L, -1));
 	}
@@ -88,10 +91,21 @@ int main(int argc, const char **argv) {
 				case sf::Event::Closed:
 					window.close();
 					break;
+				default:
+					lua_getglobal(L, "processEvent");
+					pushEventToLua(L, event);
+					lua_pcall(L, 1, 0, 0);
+					break;
 			}
 		}
 		window.clear(background_color);
-		
+		if (lua_loop) {
+			lua_getglobal(L, "loop");
+			if (lua_pcall(L, 0, 0, 0)) {
+				std::cerr << "Warning: error caught! "<<lua_tostring(L, -1)<<'\n';
+				lua_settop(L, 0);
+			}
+		}
 		window.display();
 	}
 	cleanupPlugins();
@@ -230,17 +244,7 @@ std::vector<Plugin*> gatherPlugins() {
 
 std::vector<LuaPlugin*> gatherLuaPlugins() {
 	std::vector<LuaPlugin*> plugins;
-	autocl lua_State *conf_lua = luaL_newstate();
-	if (!conf_lua)
-		close("Error opening Lua instance for configuration parsing!");
-	std::string config_file = getConfigDirectory() + "/config.lua";
-	std::ifstream conf_file(config_file);
-	if (conf_file.is_open())
-		conf_file.close();
-	else
-		default_config(config_file);
-	if (luaL_loadfile(conf_lua, config_file.c_str()) || lua_pcall(conf_lua, 0, 0, 0))
-		close("Error gathering configuration!");
+	autocl lua_State *conf_lua = get_configuration();
 	lua_getglobal(conf_lua, "plugins");
 	if (!lua_istable(conf_lua, -1))
 		invalid_conf(0);
@@ -309,5 +313,34 @@ void initializeGlobalLua() {
 	if (luaL_dofile(L, (folder + "global_rt/global_initialization.lua").c_str())) {
 		close(lua_tostring(L, -1));
 	}
-	
+	lua_getglobal(L, "bind");
+	if (lua_isfunction(L, -1)) {
+		// if bind function exists, create a metatable with it
+		lua_newtable(L);
+		// __index table
+		lua_newtable(L);
+		// bind function
+		lua_pushvalue(L, -3);
+		lua_setfield(L, -2, "bind");
+		// table at -1 is __index, -2 is metatable, -3 is bind function
+		lua_setfield(L, -2, "__index");
+		// -1 is metatable, -2 is bind
+		lua_setmetatable(L, -2);
+	}
+	lua_pop(L, 1);
+}
+
+lua_State *get_configuration() {
+	lua_State *conf_lua = luaL_newstate();
+	if (!conf_lua)
+		close("Error opening Lua instance for configuration parsing!");
+	std::string config_file = getConfigDirectory() + "/config.lua";
+	std::ifstream conf_file(config_file);
+	if (conf_file.is_open())
+		conf_file.close();
+	else
+		default_config(config_file);
+	if (luaL_loadfile(conf_lua, config_file.c_str()) || lua_pcall(conf_lua, 0, 0, 0))
+		close("Error gathering configuration!");
+	return conf_lua;
 }

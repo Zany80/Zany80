@@ -164,7 +164,7 @@ void run() {
 	clear(bg);
 	int y = LCD_HEIGHT - (command_lines + 2) * GLYPH_HEIGHT;
 	for (int i = 0; i <= command_lines; i++) {
-		text(command_line.substr(i * GLYPHS_PER_LINE, i * GLYPHS_PER_LINE + GLYPHS_PER_LINE), 0, y += GLYPH_HEIGHT, text_color);
+		text(command_line.substr(i * GLYPHS_PER_LINE, (i + 1) * GLYPHS_PER_LINE), 0, y += GLYPH_HEIGHT, text_color);
 	}
 	for (int i = history->size() -1; i > 0;i--) {
 		if ((y -= GLYPH_HEIGHT) - scroll_up > (LCD_HEIGHT - GLYPH_HEIGHT * 2))

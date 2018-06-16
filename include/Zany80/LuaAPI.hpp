@@ -3,11 +3,16 @@
 #include <lua.hpp>
 #include <map>
 #include <string>
+#include <SFML/Window.hpp>
+#include <ostream>
 
 // Name of the table of anonymous functions
 #define ANON_FUNCS "AnonymousFunctions"
 
+void serialize(lua_State *state, std::ostream &stream);
+
 int registerCPU(lua_State *state);
+int registerExecutable(lua_State *state);
 // Source and target are specified globals
 void deepCopy(lua_State *source, lua_State *target, const char *table_name_source, const char *table_name_target);
 // Source and target at top of stack
@@ -26,10 +31,14 @@ int pushAnonymousFunction(lua_State *source, lua_State *target, int index);
  * Functions use pushAnonymousFunction, duplicating the function within
  * the source and creating a C closure in the target that calls it.
  */
-void copyBetweenStacks(lua_State *source, lua_State *target, int index);
+bool copyBetweenStacks(lua_State *source, lua_State *target, int index);
+
+void pushEventToLua(lua_State *state, sf::Event &event);
 
 int background(lua_State *state);
 int text(lua_State *state);
 int millis(lua_State *state);
+
+int btn(lua_State *state);
 
 extern std::map<std::string, lua_CFunction> LuaAPI;
