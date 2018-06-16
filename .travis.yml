@@ -16,15 +16,16 @@ sudo: required
 install:
 - sudo apt update
 - sudo apt build-dep libsfml-dev
-- sudo apt install libboost-dev g++-mingw-w64-i686 nsis libudev-dev
-- git clone https://github.com/dlfcn-win32/dlfcn-win32
-- cd dlfcn-win32
-- mkdir build
-- cd build
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DBUILD_SHARED_LIBS=false
-- make -j4
-- sudo make install
-- cd ../..
+- sudo apt install libboost-dev libudev-dev 
+#g++-mingw-w64-i686 nsis
+#- git clone https://github.com/dlfcn-win32/dlfcn-win32
+#- cd dlfcn-win32
+#- mkdir build
+#- cd build
+#- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DBUILD_SHARED_LIBS=false
+#- make -j4
+#- sudo make install
+#- cd ../..
 - git clone https://github.com/pixelherodev/liblib.git
 - cd liblib
 - mkdir build
@@ -33,12 +34,12 @@ install:
 - make -j4
 - sudo make install
 - cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
-- make -j4
-- sudo make install
-- cd ../..
+#- mkdir win32
+#- cd win32
+#- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
+#- make -j4
+#- sudo make install
+#- cd ../..
 - git clone https://github.com/pixelherodev/z80cpp
 - cd z80cpp
 - git checkout interrupt
@@ -49,12 +50,12 @@ install:
 - make -j4
 - sudo make install
 - cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
-- make -j4
-- sudo make install
-- cd ../..
+#- mkdir win32
+#- cd win32
+#- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
+#- make -j4
+#- sudo make install
+#- cd ../..
 - git clone https://github.com/knightos/scas
 - cd scas
 - mkdir build
@@ -78,12 +79,12 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
-- cd ..
-- mkdir build-win32
-- cd build-win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DSFML_USE_STATIC_STD_LIBS=true -DBUILD_SHARED_LIBS=false -DCMAKE_C_FLAGS="-I`readlink -f ../../misc/win32`" -DCMAKE_CXX_FLAGS="-I`readlink -f ../../misc/win32`"
-- make -j4
-- sudo make install
+#- cd ..
+#- mkdir build-win32
+#- cd build-win32
+#- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DSFML_USE_STATIC_STD_LIBS=true -DBUILD_SHARED_LIBS=false -DCMAKE_C_FLAGS="-I`readlink -f ../../misc/win32`" -DCMAKE_CXX_FLAGS="-I`readlink -f ../../misc/win32`"
+#- make -j4
+#- sudo make install
 - cd ../..
 script:
 - mkdir build
@@ -92,13 +93,13 @@ script:
 - make -kj4
 - cpack
 - cd ..
-- mkdir buildwin32
-- cd buildwin32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DLIBGCC_LIBRARY="`readlink -f ../misc/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=true 
-- cp ../build/BIOSMerge .
-- make -kj4
-- cpack
-- cd ..
+#- mkdir buildwin32
+#- cd buildwin32
+#- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DLIBGCC_LIBRARY="`readlink -f ../misc/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=true 
+#- cp ../build/BIOSMerge .
+#- make -kj4
+#- cpack
+#- cd ..
 before_deploy:
 # Set up git user name and tag this commit
 - git config --local user.name "Noam Preil"
@@ -111,7 +112,7 @@ deploy:
   file_glob: true
   file:
   - build/Zany80*
-  - buildwin32/Zany80*
+ # - buildwin32/Zany80*
   skip_cleanup: true
   on:
     repo: Zany80/Zany80
