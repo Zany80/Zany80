@@ -118,3 +118,4 @@ deploy:
 branches:
   only:
   - master
+  - lua
