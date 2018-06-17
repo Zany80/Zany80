@@ -33,13 +33,13 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
-- cd ..
+# cd ..
 #- mkdir win32
 #- cd win32
 #- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
 #- make -j4
 #- sudo make install
-#- cd ../..
+- cd ../..
 - git clone https://github.com/pixelherodev/z80cpp
 - cd z80cpp
 - git checkout interrupt
@@ -49,13 +49,13 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
-- cd ..
+#- cd ..
 #- mkdir win32
 #- cd win32
 #- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
 #- make -j4
 #- sudo make install
-#- cd ../..
+- cd ../..
 - git clone https://github.com/knightos/scas
 - cd scas
 - mkdir build

@@ -35,6 +35,9 @@ bool copyBetweenStacks(lua_State *source, lua_State *target, int index);
 
 void pushEventToLua(lua_State *state, sf::Event &event);
 
+int readFile(lua_State *state);
+int writeFile(lua_State *state);
+
 int background(lua_State *state);
 int text(lua_State *state);
 int millis(lua_State *state);

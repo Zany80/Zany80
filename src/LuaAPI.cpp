@@ -2,6 +2,7 @@
 #include <Zany80/LuaAPI.hpp>
 #include <Zany80/Zany80.hpp>
 #include <iostream>
+#include <fstream>
 #include <chrono>
 
 int registerTable(lua_State *state, const char *table) {
@@ -290,11 +291,13 @@ void serializeTable(lua_State *state, std::ostream &stream, int index, int depth
 		if (lua_isnumber(state, -2))
 			stream << '[' << lua_tonumber(state, -2) << "] = ";
 		else
-			stream << lua_tostring(state, -2) << " = ";
+			stream << "[\"" << lua_tostring(state, -2) << "\"] = ";
 		if (lua_isnumber(state, -1))
 			stream << lua_tonumber(state, -1);
 		else if (lua_isstring(state, -1))
 			stream << '"'<<lua_tostring(state, -1)<<'"';
+		else if (lua_isboolean(state, -1))
+			stream << (lua_toboolean(state, -1) ? "true" : "false");
 		else if (lua_istable(state, -1))
 			serializeTable(state, stream, lua_gettop(state), depth + 1);
 		stream << ", \n";
@@ -314,12 +317,190 @@ void serialize(lua_State *state, std::ostream &stream) {
 			stream << lua_tonumber(state, -1) << '\n';
 		else if (lua_isstring(state, -1))
 			stream << '"'<<lua_tostring(state, -1) << "\"\n";
+		else if (lua_isboolean(state, -1))
+			stream << (lua_toboolean(state, -1) ? "true" : "false") << '\n';
 		else if (lua_istable(state, -1)) {
 			serializeTable(state, stream, lua_gettop(state), 1, lua_tostring(state, -2));
 			stream << '\n';
 		}
 		lua_pop(state, 1);
 	}
+}
+
+void setFilePerm(lua_State *configuration, int key, const char *permission, bool value, const char *file) {
+	lua_getglobal(configuration, "plugins");
+	lua_rawgeti(configuration, -1, key);
+	lua_getfield(configuration, -1, "permissions");
+	if (!lua_istable(configuration, -1)) {
+		lua_pop(configuration, 1);
+		lua_newtable(configuration);
+		lua_setfield(configuration, -2, "permissions");
+		lua_getfield(configuration, -1, "permissions");
+	}
+	lua_getfield(configuration, -1, permission);
+	if (!lua_istable(configuration, -1)) {
+		lua_pop(configuration, 1);
+		lua_newtable(configuration);
+		lua_setfield(configuration, -2, permission);
+		lua_getfield(configuration, -1, permission);
+	}
+	lua_pushboolean(configuration, value);
+	lua_setfield(configuration, -2, file);
+	lua_pop(configuration, 4);
+}
+
+int readFile(lua_State *state) {
+	if (!lua_isstring(state, 1))
+		luaL_error(state, "readFile argument must be a string!");
+	autocl lua_State *configuration = get_configuration();
+	// First, figure out which Plugin the state belongs to
+	bool found = false;
+	LuaPlugin *plugin;
+	for (Plugin *p : plugins) {
+		if (LuaPlugin *l = dynamic_cast<LuaPlugin*>(p)) {
+			if (l->validateState(state)) {
+				found = true;
+				plugin = l;
+				break;
+			}
+		}
+	}
+	if (!found)
+		luaL_error(state, "Unable to identify plugin!");
+	lua_getglobal(configuration, "plugins");
+	int index = lua_gettop(configuration);
+	found = false;
+	lua_pushnil(configuration);
+	while(lua_next(configuration, index)) {
+		if (lua_istable(configuration, -1)) {
+			lua_getfield(configuration, -1, "name");
+			if (lua_isstring(configuration, -1)) {
+				if (plugin->getName() == lua_tostring(configuration, -1)) {
+					lua_pop(configuration, 2);
+					found = true;
+					break;
+				}
+			}
+			lua_pop(configuration, 1);
+		}
+		lua_pop(configuration, 1);
+	}
+	if (!found)
+		luaL_error(state, "Key not found");
+	if (!lua_isstring(configuration, -1))
+		luaL_error(state, "Configuration is invalid?!");
+	if (!lua_isnumber(configuration, -1))
+		luaL_error(state, "Plugin key isn't a number!");
+	int key = lua_tonumber(configuration, -1);
+	std::string file = lua_tostring(state, 1);
+	lua_settop(state, 0);
+	// Check if permission is granted within configuration
+	int permission_granted = -1;
+	lua_rawgeti(configuration, index, key);
+	lua_getfield(configuration, -1, "permissions");
+	if (lua_istable(configuration, -1)) {
+		lua_getfield(configuration, -1, "read");
+		if (lua_istable(configuration, -1)) {
+			lua_getfield(configuration, -1, file.c_str());
+			if (lua_isboolean(configuration, -1)) {
+				permission_granted = lua_toboolean(configuration, -1);
+			}
+			lua_pop(configuration, 1);
+		}
+		lua_pop(configuration, 1);
+	}
+	lua_pop(configuration, 1);
+	switch(permission_granted) {
+		case -1:
+			// No permanent decision made. Need to request approval.
+			while (true) {
+				sf::Event event;
+				while(window.pollEvent(event)) {
+					if (event.type == sf::Event::Closed) {
+						window.close();
+						exit(0);
+					}
+					else if (event.type == sf::Event::KeyPressed) {
+						switch(event.key.code) {
+							case sf::Keyboard::A:
+								// Allow permanently. Store the configuration, then do the same as Z
+								setFilePerm(configuration, key, "read", true, file.c_str());
+								{
+									std::ofstream config_file(getConfigDirectory() + "/config.lua", std::ios::trunc);
+									serialize(configuration, config_file);
+									config_file.close();
+								}
+							case sf::Keyboard::Z:
+								// Allow just this once.
+								// clear event queue
+								sf::Event e;
+								while(window.pollEvent(e));
+								{
+									std::ifstream file_stream(file, std::ios::ate);
+									if (file_stream.is_open()) {
+										int size = file_stream.tellg();
+										file_stream.seekg(0, std::ios::beg);
+										char *buffer = new char[size];
+										file_stream.read(buffer, size);
+										file_stream.close();
+										lua_pushstring(state, buffer);
+										delete[] buffer;
+										return 1;
+									}
+									else {
+										return luaL_error(state, "Error opening file!");
+									}
+								}
+							case sf::Keyboard::S:
+								setFilePerm(configuration, key, "read", false, file.c_str());
+								{
+									std::ofstream config_file(getConfigDirectory() + "/config.lua", std::ios::trunc);
+									serialize(configuration, config_file);
+									config_file.close();
+								}
+							case sf::Keyboard::X:
+								{
+									sf::Event e;
+									while(window.pollEvent(e));
+								}
+								return luaL_error(state, "Permission denied.");
+						}
+					}
+				}
+				window.clear(sf::Color::Black);
+				text("Permission requested: ", 0, 0, sf::Color::White);
+				text("Plugin " + plugin->getName() + " requests read access to \"" + file + '"', 0, GLYPH_HEIGHT * 2.4, sf::Color::White);
+				text("Press Z to allow.", 0, GLYPH_HEIGHT * 4, sf::Color::White);
+				text("Press X to deny.", 0, GLYPH_HEIGHT * 5, sf::Color::White);
+				text("Press A to permanently allow.", 0, GLYPH_HEIGHT * 6, sf::Color::White);
+				text("This will allow this plugin to read this file without asking in the future.", GLYPH_WIDTH * 4, GLYPH_HEIGHT * 7, sf::Color::White);
+				text("Press S to permanently deny.", 0, GLYPH_HEIGHT * 8, sf::Color::White);
+				text("This will automatically deny all future requests to access this file.", GLYPH_WIDTH * 4, GLYPH_HEIGHT * 9, sf::Color::White);
+				window.display();
+			}
+			break;
+		case 0:
+			// Permission explicitly denied.
+			return luaL_error(state, "Permission denied.");
+		case 1:
+			// Permission granted!
+			std::ifstream file_stream(file, std::ios::ate);
+			if (file_stream.is_open()) {
+				int size = file_stream.tellg();
+				file_stream.seekg(0, std::ios::beg);
+				char *buffer = new char[size];
+				file_stream.read(buffer, size);
+				file_stream.close();
+				lua_pushstring(state, buffer);
+				delete[] buffer;
+				return 1;
+			}
+			else {
+				return luaL_error(state, "Error opening file!");
+			}
+			break;
+	}
+	return 0;
 }
 
 std::map<std::string, lua_CFunction> LuaAPI = {
@@ -330,4 +511,5 @@ std::map<std::string, lua_CFunction> LuaAPI = {
 	{"registerCPU", registerCPU},
 	{"registerExecutable", registerExecutable},
 	{"btn", btn},
+	{"readFile", readFile}
 };

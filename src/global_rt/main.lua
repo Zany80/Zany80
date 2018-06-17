@@ -27,7 +27,7 @@ function chooseExecutable()
 	if btnp(2) then selected_executable = selected_executable + 1 end
 	if selected_executable < 1 then selected_executable = 1 end
 	if selected_executable > #executables then selected_executable = #executables end
-	if btnp(5) then executable = executables[selected_executable] end
+	if btnp(5) then executable = executables[selected_executable] clearEventQueue() end
 end
 
 function loop()

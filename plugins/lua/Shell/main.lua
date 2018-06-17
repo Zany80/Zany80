@@ -76,6 +76,12 @@ commands = {
 				history:add("Error: "..results[2], false)
 			end
 		end
+	},
+	cat = {
+		execute = function(x)
+			msg = readFile(type(x[1]) == "string" and x[1] or "")
+			if msg then history:add(msg) end
+		end
 	}
 }
 
@@ -142,7 +148,13 @@ function executeCommand(command)
 	local command = words[1]
 	table.remove(words, 1)
 	if commands[command] ~= nil then
-		commands[command].execute(words)
+		success, message = pcall(commands[command].execute:bind(words))
+		if not success then
+			log("Error executing command.")
+			command = ""
+			command_lines = 1
+			history:add(""..message)
+		end
 	else
 		history:add("Command `"..command.."` doesn't exist!", false)
 	end

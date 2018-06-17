@@ -43,4 +43,5 @@ int validatePlugins(lua_State *L);
 void close_state(lua_State **state);
 #define autocl __attribute__((cleanup(close_state)))
 
+std::string getConfigDirectory();
 lua_State *get_configuration();

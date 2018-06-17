@@ -306,6 +306,14 @@ void initializeGlobalLua() {
 	lua_pushcfunction(L, luaopen_table);
 	lua_pushstring(L, LUA_TABLIBNAME);
 	lua_call(L, 1, 0);
+	lua_pushlightuserdata(L, &window);
+	lua_pushcclosure(L, [](lua_State *state) -> int {
+		sf::RenderWindow *window = (sf::RenderWindow*)lua_touserdata(state, lua_upvalueindex(1));
+		sf::Event e;
+		while(window->pollEvent(e));
+		return 0;
+	}, 1);
+	lua_setglobal(L, "clearEventQueue");
 	for (auto pair : LuaAPI) {
 		lua_pushcfunction(L, pair.second);
 		lua_setglobal(L, pair.first.c_str());
