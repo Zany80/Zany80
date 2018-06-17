@@ -384,6 +384,10 @@ int readFile(lua_State *state) {
 			lua_pop(configuration, 1);
 		}
 		lua_pop(configuration, 1);
+		if (lua_isnumber(configuration, -1))
+			std::cout << "Key: " << lua_tonumber(configuration, -1) <<'\n';
+		else
+			std::cout << "Key: " << lua_tostring(configuration, -1) <<'\n';
 	}
 	if (!found)
 		luaL_error(state, "Key not found");
@@ -443,7 +447,7 @@ int readFile(lua_State *state) {
 										char *buffer = new char[size];
 										file_stream.read(buffer, size);
 										file_stream.close();
-										lua_pushstring(state, buffer);
+										lua_pushlstring(state, buffer, size);
 										delete[] buffer;
 										return 1;
 									}
