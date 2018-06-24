@@ -42,6 +42,8 @@ sf::Color palette[] = {
 
 std::vector<uint8_t> int_queue;
 
+sf::Texture *sprites[256] {nullptr};
+
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
 		core = new z80cpp_core();
@@ -57,6 +59,12 @@ void postMessage(PluginMessage m) {
 			delete cpu;
 			core = nullptr;
 			cpu = nullptr;
+		}
+		for (int i = 0; i < 256; i++) {
+			if (sprites[i] != nullptr) {
+				delete sprites[i];
+				sprites[i] = nullptr;
+			}
 		}
 	}
 	else if (!strcmp(m.data, "reset")) {
@@ -92,7 +100,7 @@ void out(uint16_t port, uint8_t value) {
 	//std::cout << (int)cpu->getRegA()<<' '<< (int)cpu->getRegB()<<' '<< (int)cpu->getRegC()<<' '<< (int)cpu->getRegD()<<' '<< (int)cpu->getRegE()<<' '<< (int)cpu->getRegH()<<' '<< (int)cpu->getRegL()<<"\n";
 	if ((port & 0xFF) == 0) {
 		if (value == 0) {
-			// b, c, e - x, y, color
+			// hl, b, c, e - string address, x, y, color
 			std::string string = "";
 			for (int i = 0; ;i++) {
 				char c = readRAM(i + cpu->getRegHL());
@@ -103,7 +111,52 @@ void out(uint16_t port, uint8_t value) {
 			text(string, cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
 		}
 		else if (value == 1) {
+			// cls(color). Color is in register B.
 			clear(palette[cpu->getRegB()]);
+		}
+		else if (value == 2) {
+			// Upload sprite - address in hl, index in bc
+			uint16_t start_address = cpu->getRegHL();
+			uint16_t index = cpu->getRegBC();
+			if (index > 255) {
+				cpu->setRegA(0);
+				return;
+			}
+			sf::Image image;
+			image.create(8, 8);
+			for (int i = 0; i < 32; i++) {
+				// x and y are two consecutive pixels, NOT 2d coordinates.
+				int x = i * 2, y = x + 1;
+				int pixels = readRAM(start_address + i);
+				image.setPixel(x % 8, x / 8, palette[(pixels & 0xF0) >> 4]);
+				image.setPixel(y % 8, y / 8, palette[pixels & 0x0F]);
+			}
+			if (sprites[index] != nullptr) {
+				delete sprites[index];
+			}
+			sprites[index] = new sf::Texture;
+			if (sprites[index]->loadFromImage(image)) {
+				cpu->setRegA(1);
+			}
+			else {
+				cpu->setRegA(0);
+			}
+			}
+		else if (value == 3) {
+			// Draw sprite - index in hl, position in bc
+			uint16_t index = cpu->getRegHL();
+			if (index > 255) {
+				cpu->setRegA(0);
+				return;
+			}
+			if (sprites[index] == nullptr) {
+				cpu->setRegA(0);
+				return;
+			}
+			sf::Sprite s(*sprites[index]);
+			s.setPosition(cpu->getRegB(), cpu->getRegC());
+			zany->window->draw(s);
+			cpu->setRegA(1);
 		}
 	}
 	else if ((port & 0xFF) == 1) {

@@ -65,5 +65,6 @@ init_heap_begin:
 .dw 0				; header_t *next_free - no other free block
 
 
-.block 0x100 - $
 init_heap_end:
+; prevent the label from being automatically removed
+.db 0
