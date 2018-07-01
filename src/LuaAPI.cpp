@@ -507,6 +507,11 @@ int readFile(lua_State *state) {
 	return 0;
 }
 
+int getFolder(lua_State *state) {
+	lua_pushstring(state, folder.c_str());
+	return 1;
+}
+
 std::map<std::string, lua_CFunction> LuaAPI = {
 	{"validatePlugins", validatePlugins},
 	{"background", background},
@@ -515,5 +520,6 @@ std::map<std::string, lua_CFunction> LuaAPI = {
 	{"registerCPU", registerCPU},
 	{"registerExecutable", registerExecutable},
 	{"btn", btn},
-	{"readFile", readFile}
+	{"readFile", readFile},
+	{"folder", getFolder}
 };

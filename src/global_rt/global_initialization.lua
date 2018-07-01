@@ -23,4 +23,4 @@ function bind(func, ...)
 	end
 end
 
-dofile("global_rt/basic_functions.lua")
+dofile(folder() .. "global_rt/basic_functions.lua")

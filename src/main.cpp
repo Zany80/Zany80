@@ -47,12 +47,58 @@ void close_state(lua_State **state) {
 	*state = nullptr;
 }
 
+#if defined(_WIN32)
+  static size_t getExecutablePathName(char* pathName, size_t pathNameCapacity)
+  {
+    return GetModuleFileNameA(NULL, pathName, (DWORD)pathNameCapacity);
+  }
+#elif defined(__linux__) /* elif of: #if defined(_WIN32) */
+  #include <unistd.h>
+  static size_t getExecutablePathName(char* pathName, size_t pathNameCapacity)
+  {
+    size_t pathNameSize = readlink("/proc/self/exe", pathName, pathNameCapacity - 1);
+    pathName[pathNameSize] = '\0';
+    return pathNameSize;
+  }
+#elif defined(__APPLE__) /* elif of: #elif defined(__linux__) */
+  #include <mach-o/dyld.h>
+  static size_t getExecutablePathName(char* pathName, size_t pathNameCapacity)
+  {
+    uint32_t pathNameSize = 0;
+
+    _NSGetExecutablePath(NULL, &pathNameSize);
+
+    if (pathNameSize > pathNameCapacity)
+      pathNameSize = pathNameCapacity;
+
+    if (!_NSGetExecutablePath(pathName, &pathNameSize))
+    {
+      char real[PATH_MAX];
+
+      if (realpath(pathName, real) != NULL)
+      {
+        pathNameSize = strlen(real);
+        strncpy(pathName, real, pathNameSize);
+      }
+
+      return pathNameSize;
+    }
+
+    return 0;
+  }
+#else /* else of: #elif defined(__APPLE__) */
+  #error provide your own implementation
+#endif /* end of: #if defined(_WIN32) */
+
 int main(int argc, const char **argv) {
-	path = absolutize(argv[0]);
+	char *path_name = new char[256];
+	getExecutablePathName(path_name, 256);
+	path = path_name;
+	delete[] path_name;
 	folder = absolutize(path.substr(0,path.find_last_of("/")+1));
 	#ifdef linux
-	setrlimit(RLIMIT_STACK, &limit);
 	folder = absolutize(folder + "../share/zany80/");
+	setrlimit(RLIMIT_STACK, &limit);
 	#endif
 	window.create(sf::VideoMode(LCD_WIDTH, LCD_HEIGHT), "Zany80");
 	window.setFramerateLimit(60);
@@ -74,9 +120,10 @@ int main(int argc, const char **argv) {
 // Note: this only happens when the font is here AND ALSO NOT where it should be
 			std::cout << "[Zany80] " + folder + " setup invalid, falling back to ";
 			folder = absolutize(path.substr(0,path.find_last_of("/")+1));
-			std::cout << folder << "\n";
+			std::cout << folder << '\n';
 		}
 	}
+	std::cout << "Folder: "<<folder<<'\n';
 	background_color = sf::Color::White;
 	initializeGlobalLua();
 	initializePlugins();

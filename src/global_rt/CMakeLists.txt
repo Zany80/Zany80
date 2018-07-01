@@ -16,10 +16,20 @@ configure_file(
 	COPYONLY
 )
 
-install(
-	FILES
-		"${CMAKE_CURRENT_SOURCE_DIR}/global_initialization.lua"
-		"${CMAKE_CURRENT_SOURCE_DIR}/main.lua"
-		"${CMAKE_CURRENT_SOURCE_DIR}/basic_functions.lua"
-	DESTINATION global_rt
-)
+if(WIN32)
+	install(
+		FILES
+			"${CMAKE_CURRENT_SOURCE_DIR}/global_initialization.lua"
+			"${CMAKE_CURRENT_SOURCE_DIR}/main.lua"
+			"${CMAKE_CURRENT_SOURCE_DIR}/basic_functions.lua"
+		DESTINATION global_rt
+	)
+else()
+	install(
+		FILES
+			"${CMAKE_CURRENT_SOURCE_DIR}/global_initialization.lua"
+			"${CMAKE_CURRENT_SOURCE_DIR}/main.lua"
+			"${CMAKE_CURRENT_SOURCE_DIR}/basic_functions.lua"
+		DESTINATION share/zany80/global_rt
+	)
+endif()

@@ -21,11 +21,20 @@ configure_file(
 	COPYONLY
 )
 
-install(
-	FILES 
-		"${CMAKE_CURRENT_SOURCE_DIR}/default_config.lua" 
-		"${CMAKE_CURRENT_SOURCE_DIR}/init_plugins.lua"
-	DESTINATION .
-)
+if(WIN32)
+	install(
+		FILES 
+			"${CMAKE_CURRENT_SOURCE_DIR}/default_config.lua" 
+			"${CMAKE_CURRENT_SOURCE_DIR}/init_plugins.lua"
+		DESTINATION .
+	)
+else()
+	install(
+		FILES 
+			"${CMAKE_CURRENT_SOURCE_DIR}/default_config.lua" 
+			"${CMAKE_CURRENT_SOURCE_DIR}/init_plugins.lua"
+		DESTINATION share/zany80/
+	)
+endif()
 
 add_subdirectory(global_rt)
