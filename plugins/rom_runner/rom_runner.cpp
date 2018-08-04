@@ -50,22 +50,17 @@ void init(liblib::Library *pm) {
 	activated = false;
 	time_passed = 0;
 	std::cout << "[ROM Runner] Retrieving z80 plugin...\n";
-	try {
-		z80 = ((liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]))("z80");
-		if (z80 == nullptr) {
-			throw std::exception();
-		}
-		ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
-		if (ram == nullptr) {
-			throw std::exception();
-		}
-		((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
-		((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
-		emulate=(void(*)(uint64_t))((*z80)["emulate"]);
-	}
-	catch (liblib::SymbolLoadingException) {
+	z80 = ((liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]))("z80");
+	if (z80 == nullptr) {
 		throw std::exception();
 	}
+	ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
+	if (ram == nullptr) {
+		throw std::exception();
+	}
+	((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
+	((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/ROM;CPU/z80");
+	emulate=(void(*)(uint64_t))((*z80)["emulate"]);
 }
 
 bool loadROM(const char *path) {

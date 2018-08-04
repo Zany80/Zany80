@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-#define SPEED 1 MHz
+#define SPEED 3 MHz
 
 bool isCategory(const char *cat) {
 	return !strcmp(cat, "Runner");
@@ -16,6 +16,10 @@ bool isCategory(const char *cat) {
 
 bool isType(const char *type) {
 	return !strcmp(type, "BIOSLauncher");
+}
+
+const char *getName() {
+	return "ZanyOS";
 }
 
 RunnerType runner_type = ROMRunner;
@@ -61,8 +65,9 @@ void event(sf::Event &e) {
 		case sf::Event::KeyPressed:
 			switch (e.key.code){
 				case sf::Keyboard::Escape:
-					((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
+					zany->pushRunner((liblib::Library*)(*plugin_manager)["getDefaultRunner"]());
 					break;
+					
 				//case sf::Keyboard::S:
 				//case sf::Keyboard::A:
 				//case sf::Keyboard::Z:
@@ -77,6 +82,13 @@ void event(sf::Event &e) {
 }
 
 bool activate(const char *arg) {
+	std::cout << "BIOSLauncher activated...\n";
+	if (ROM != nullptr) {
+		std::cout << "BIOS loaded, launching...\n";
+		activated = true;
+	}
+	else
+		std::cout << "BIOS not loaded!\n";
 	((textMessage_t)(*plugin_manager)["textMessage"])("unhalt","Runner/BIOSLauncher;CPU/z80");
 	return ROM != nullptr;
 }
@@ -91,57 +103,52 @@ void postMessage(PluginMessage m) {
 		plugin_manager = (liblib::Library*)m.context;
 		activated = false;
 		time_passed = 0;
-		try {
-			liblib::Library*(*getCPU)(const char *) = (liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]);
-			z80 = getCPU("z80");
-			if (z80 == nullptr) {
-				throw std::exception();
-			}
-			ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
-			if (ram == nullptr) {
-				throw std::exception();
-			}
-			((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
-			emulate=(void(*)(uint64_t))((*z80)["emulate"]);
-			// Load in the BIOS
-			std::ifstream BIOS(folder + "/BIOS.rom", std::ios::binary | std::ios::ate);
-			if (BIOS.is_open()) {
-				int size = BIOS.tellg();
-				BIOS.seekg(0);
-				if (size > sizeof(BIOS_ROM_t)) {
-					size = sizeof(BIOS_ROM_t);
-				}
-				if (original_ROM != nullptr) {
-					delete[] original_ROM;
-				}
-				original_ROM = new uint8_t[sizeof(BIOS_ROM_t)];
-				BIOS.read((char*)original_ROM, size);
-				BIOS.close();
-				ROM = new uint8_t[sizeof(BIOS_ROM_t)];
-				memcpy(ROM, original_ROM, sizeof(BIOS_ROM_t));
-				((message_t)(*plugin_manager)["message"])({
-					0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] BIOS loaded successfully!"
-				}, "Runner/Shell");
-			}
-			else {
-				((message_t)(*plugin_manager)["message"])({
-					0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Error loading BIOS!"
-				}, "Runner/Shell");
-			}
-			for (int i = 0; i < 3; i++) {
-				((message_t)(*plugin_manager)["message"])({
-					i, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
-				}, "Hardware/MMU");
-			}
-			stack = new uint8_t[0x4000];
-			((message_t)(*plugin_manager)["message"])({
-				3, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)stack
-			}, "Hardware/MMU");
-			((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/BIOSLauncher;CPU/z80");
-		}
-		catch (liblib::SymbolLoadingException) {
+		liblib::Library*(*getCPU)(const char *) = (liblib::Library*(*)(const char *))((*plugin_manager)["getCPU"]);
+		z80 = getCPU("z80");
+		if (z80 == nullptr) {
 			throw std::exception();
 		}
+		ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
+		if (ram == nullptr) {
+			throw std::exception();
+		}
+		((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
+		emulate=(void(*)(uint64_t))((*z80)["emulate"]);
+		// Load in the BIOS
+		std::ifstream BIOS(folder + "/bios.rom", std::ios::binary | std::ios::ate);
+		if (BIOS.is_open()) {
+			int size = BIOS.tellg();
+			BIOS.seekg(0);
+			if (size > sizeof(BIOS_ROM_t)) {
+				size = sizeof(BIOS_ROM_t);
+			}
+			if (original_ROM != nullptr) {
+				delete[] original_ROM;
+			}
+			original_ROM = new uint8_t[sizeof(BIOS_ROM_t)];
+			BIOS.read((char*)original_ROM, size);
+			BIOS.close();
+			ROM = new uint8_t[sizeof(BIOS_ROM_t)];
+			memcpy(ROM, original_ROM, sizeof(BIOS_ROM_t));
+			((message_t)(*plugin_manager)["message"])({
+				0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] BIOS loaded successfully!"
+			}, "Runner/Shell");
+		}
+		else {
+			((message_t)(*plugin_manager)["message"])({
+				0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Error loading BIOS!"
+			}, "Runner/Shell");
+		}
+		for (int i = 0; i < 3; i++) {
+			((message_t)(*plugin_manager)["message"])({
+				i, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)ROM + 0x4000 * i
+			}, "Hardware/MMU");
+		}
+		stack = new uint8_t[0x4000];
+		((message_t)(*plugin_manager)["message"])({
+			3, "map_bank", (int)strlen("map_bank"), "Runner/BIOSLauncher", (char*)stack
+		}, "Hardware/MMU");
+		((textMessage_t)(*plugin_manager)["textMessage"])("reset","Runner/BIOSLauncher;CPU/z80");
 	}
 	else if(!strcmp(m.data, "cleanup")) {
 		if (ROM != nullptr) {

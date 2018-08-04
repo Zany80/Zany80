@@ -14,19 +14,27 @@ int chdir(const char *);
 extern void updateWorkingDirectory();
 
 std::map <std::string, command_t> commands = {
+
+	{"exit", {
+		.function = [](std::vector<std::string> args) {
+			zany->popRunner();
+		},
+		.help = "Exits the shell.",
+		.detailed_help = "Exits the shell. The most recent application will be displayed; if none are open, this returns to the menu."
+	}},
 	
 	{"echo", {
-			.function = [](std::vector<std::string> args){
-				std::string all_args;
-				for (std::string s: args) {
-					all_args += s + " ";
-				}
-				all_args.pop_back();
-				addToHistory(all_args);
-			},
-			.help = "Echoes all received arguments to the history buffer.\n",
-			.detailed_help = "Echoes all received arguments to the history buffer.\n"
-							 "Run `echo Hello there, self!` to see it in action."
+		.function = [](std::vector<std::string> args){
+			std::string all_args;
+			for (std::string s: args) {
+				all_args += s + " ";
+			}
+			all_args.pop_back();
+			addToHistory(all_args);
+		},
+		.help = "Echoes all received arguments to the history buffer.\n",
+		.detailed_help = "Echoes all received arguments to the history buffer.\n"
+						 "Run `echo Hello there, self!` to see it in action."
 	}},
 
 	{"load", {

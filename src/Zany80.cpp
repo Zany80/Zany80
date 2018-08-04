@@ -1,4 +1,5 @@
 #include <Zany80/Zany80.hpp>
+
 #include <iostream>
 #include <cstring>
 
@@ -10,6 +11,8 @@
 	#include <unistd.h>
 	#define GetCurrentDir getcwd
 #endif
+
+std::vector<liblib::Library*> runner_stack;
 
 std::string absolutize(std::string relativish) {
 	size_t pos;
@@ -26,9 +29,16 @@ std::string absolutize(std::string relativish) {
 }
 
 void Zany80::replaceRunner(){
-	std::cerr << "[Zany80] Invalid runner, requesting replacement from plugin manager...\n";
+	std::cerr << "[Zany80] Invalid runner, attempting recovery...\n";
 	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
-	if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
+	if (runner_stack.size()) {
+		runner = runner_stack.back();
+		runner_stack.pop_back();
+		((void(*)(PluginMessage))(*this->runner)["postMessage"])({
+			0, "activate", (int)strlen("activate"), "Zany80", nullptr
+		});
+	}
+	else if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
 		close("Unable to find suitable runner.\n");
 	}
 	else {
@@ -127,7 +137,7 @@ Zany80::Zany80(){
 			close("No plugins found! This is probably a problem with the installation.\n");
 		}
 	}
-	catch (liblib::SymbolLoadingException &e) {
+	catch (std::exception &e) {
 		close("Error detecting plugins!\n");
 	}
 	// At this point, all detected plugins have been validated. In addition, there is at minimum one plugin.
@@ -159,6 +169,29 @@ void Zany80::run(){
 	}
 }
 
+void Zany80::popRunner() {
+	// Deactivate the current runner
+	if (this->runner != nullptr) {
+		try {
+			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
+				0, "deactivate", (int)strlen("deactivate"), "Zany80", nullptr
+			});
+		}
+		catch (...){}
+		this->runner = nullptr;
+	}
+	// Pop a runner from the stack. If no runners remain, GET one!
+	if (runner_stack.size()) {
+		// This won't add anything to the stack, as this->runner is already nullptr
+		this->pushRunner(runner_stack.back());
+		runner_stack.pop_back();
+	}
+	else {
+		// This won't add anything to the stack, as this->runner is already nullptr
+		this->pushRunner((liblib::Library *)(*plugin_manager)["getDefaultRunner"]());
+	}
+}
+
 void Zany80::frame(){
 	sf::Event e;
 	while (window->pollEvent(e)) {
@@ -166,6 +199,12 @@ void Zany80::frame(){
 			case sf::Event::Closed:
 				close();
 				break;
+			case sf::Event::KeyPressed:
+				if (e.key.code == sf::Keyboard::Escape
+						&& e.key.control) {
+					this->pushRunner((liblib::Library *)(*plugin_manager)["getDefaultRunner"]());
+					return;
+				}
 			default:
 				try {
 					((void(*)(sf::Event&))((*runner)["event"]))(e);
@@ -185,16 +224,22 @@ void Zany80::frame(){
 	window->display();
 }
 
-void Zany80::setRunner(liblib::Library *runner) {
-	if (this->runner !=nullptr) {
+void Zany80::pushRunner(liblib::Library *runner) {
+	if (this->runner != nullptr) {
 		try {
 			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
 				0, "deactivate", (int)strlen("deactivate"), "Zany80", nullptr
 			});
 		}
 		catch (...){}
+		runner_stack.push_back(this->runner);
 	}
-	this->runner = runner;
+	if (runner != nullptr) {
+		this->runner = runner;
+		((void(*)(PluginMessage))(*this->runner)["postMessage"])({
+			0, "activate", (int)strlen("activate"), "Zany80", nullptr
+		});
+	}
 }
 
 Zany80 *zany;

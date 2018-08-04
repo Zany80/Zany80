@@ -55,23 +55,6 @@ link_libraries(zany)
 
 add_subdirectory(plugins)
 
-add_executable(BIOSMerge ${CMAKE_SOURCE_DIR}/tools/BIOSMerge.cpp)
-
-add_custom_target(ZanyBIOS COMMAND make WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/BIOS DEPENDS BIOSMerge)
-add_dependencies(zany80 ZanyBIOS)
-
-add_custom_command(
-	TARGET ZanyBIOS
-	POST_BUILD
-	COMMAND ${CMAKE_BINARY_DIR}/BIOSMerge
-	ARGS
-		${CMAKE_BINARY_DIR}/BIOS.rom
-		${CMAKE_SOURCE_DIR}/BIOS/bin/os.rom
-		${CMAKE_SOURCE_DIR}/BIOS/bin/bios.rom
-	DEPENDS BIOSMerge
-	VERBATIM
-)
-
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
 
 if(WIN32)
@@ -89,7 +72,6 @@ if(WIN32)
 	)
 	file(GLOB BINARIES misc/win32/*)
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION .)
 else()
 	set(CPACK_GENERATOR "TGZ;DEB")
 	install(
@@ -105,7 +87,6 @@ else()
 	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
 	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/plugins/binaries)
 	file(COPY ${BINARIES} DESTINATION ${CMAKE_BINARY_DIR}/plugins/binaries)
-	install(FILES ${CMAKE_BINARY_DIR}/BIOS.rom ${CMAKE_SOURCE_DIR}/BIOS/bin/libc.o ${CMAKE_SOURCE_DIR}/BIOS/bin/src/template.o DESTINATION share/zany80/)
 	install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION share/zany80/include)
 endif()
 

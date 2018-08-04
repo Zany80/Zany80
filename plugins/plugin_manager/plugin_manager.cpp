@@ -9,6 +9,8 @@
 #include <plugin_manager.hpp>
 #include <iostream>
 #include <Zany80/Plugins.hpp>
+#include <Zany80/Zany80.hpp>
+#include <Zany80/Drawing.hpp>
 #include <Zany80/GenericException.hpp>
 #include <cstring>
 
@@ -322,23 +324,53 @@ std::vector<liblib::Library*> *getCPUs() {
 }
 
 liblib::Library *getDefaultRunner() {
-	getRunners();
-	if (runners->empty()) {
+	if (getRunners() == nullptr)
 		return nullptr;
-	}
-	for (liblib::Library *library : *runners) {
-		if (*(RunnerType*)((*library)["getRunnerType"]()) == Shell) {
-			if (((bool(*)(const char *))(*library)["activate"])("")) {
-				return library;
+	int selected = 1;
+	while (zany->window->isOpen()) {
+		zany->window->clear(sf::Color::Black);
+		sf::Event e;
+		while (zany->window->pollEvent(e)) {
+			switch (e.type) {
+				case sf::Event::Closed:
+					zany->window->close();
+					break;
+				case sf::Event::KeyPressed:
+					if (e.key.code == sf::Keyboard::Down) {
+						if (++selected > getRunners()->size()) {
+							selected = getRunners()->size();
+						}
+					}
+					else if (e.key.code == sf::Keyboard::Up) {
+						if (--selected < 1) {
+							selected = 1;
+						}
+					}
+					else if (e.key.code == sf::Keyboard::Return) {
+						liblib::Library *runner = (*runners)[selected - 1];
+						try {
+							if (((bool(*)())(*runner)["activate"])())
+								return runner;
+						}
+						catch (std::exception &e) {
+							std::cerr << e.what() << '\n';
+						}
+					}
+					break;
 			}
 		}
-	}
-	// No usable shell, but there *are* other runners. Just go with the first valid one.
-	for (liblib::Library *library : *runners) {
-		if (((bool(*)(const char *))(*library)["activate"])("")) {
-			return library;
+		text("Select program: ", 0, 0);
+		int i = 0;
+		for (liblib::Library *runner : *getRunners()) {
+			i++;
+			text((const char *)((*runner)["getName"]()), GLYPH_WIDTH * 2, (i + 1) * GLYPH_HEIGHT);
+			if (i == selected) {
+				text("*", 0, (i+1) * GLYPH_HEIGHT);
+			}
 		}
+		zany->window->display();
 	}
+	return nullptr;
 }
 
 liblib::Library *getPlugin(const char *signature) {
@@ -438,7 +470,7 @@ bool activateRunner(RunnerType type, const char *arg) {
 			continue;
 		none_found = false;
 		if (((bool(*)(const char *))((*l)["activate"]))(arg)) {
-			zany->setRunner(l);
+			zany->pushRunner(l);
 			return true;
 		}
 	}
@@ -537,9 +569,6 @@ void message(PluginMessage m, const char *_target) {
 							((post_t)(*library)["postMessage"])(m);
 						}
 					}
-				}
-				catch (liblib::SymbolLoadingException &e) {
-					//std::cerr << "[Plugin Manager] Error querying "<<pair.first << " for messaging: "<<e.what()<<"\n";
 				}
 				catch (std::exception &e) {
 					std::cerr << "[Plugin Manager] Plugin "<<pair.first<<" threw an exception after receiving a message! Error: "<<e.what()<<"\n";

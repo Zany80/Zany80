@@ -35,6 +35,7 @@ typedef void (*message_t)(PluginMessage,const char *);
 typedef void (*textMessage_t)(const char *,const char *);
 typedef void (*broadcast_t)(PluginMessage);
 
+//TODO: get rid of this purposeless singleton
 class Zany80 {
 
 public:
@@ -46,7 +47,8 @@ public:
 	void close(std::string message);
 	sf::RenderWindow *window;
 	sf::Texture font;
-	void setRunner(liblib::Library *runner);
+	void pushRunner(liblib::Library *runner);
+	void popRunner();
 	
 private:
 	void replaceRunner();

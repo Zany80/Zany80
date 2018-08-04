@@ -158,6 +158,9 @@ void out(uint16_t port, uint8_t value) {
 			zany->window->draw(s);
 			cpu->setRegA(1);
 		}
+		else if (value == 4) {
+			palette[cpu->getRegB() % 16] = sf::Color(cpu->getRegC(), cpu->getRegH(), cpu->getRegL());
+		}
 	}
 	else if ((port & 0xFF) == 1) {
 		static int state = 0;
@@ -189,8 +192,8 @@ void out(uint16_t port, uint8_t value) {
 		case 2:
 			state = 0;
 			if (value == 0) {
-				((void(*)(RunnerType,const char *))(*plugin_manager)["activateRunner"])(Shell,"");
 				((textMessage_t)(*plugin_manager)["textMessage"])("reset","CPU/z80;Runner/ROM");
+				zany->popRunner();
 			}
 			break;
 		}

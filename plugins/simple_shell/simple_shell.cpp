@@ -23,6 +23,10 @@ bool isType(const char *sig) {
 	return !strcmp(sig, "Shell");
 }
 
+const char *getName() {
+	return "SimpleShell";
+}
+
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef _WIN32
 	#include <direct.h>

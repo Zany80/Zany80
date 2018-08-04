@@ -18,6 +18,7 @@ extern "C" {
 	bool isType(const char *sig);
 	RunnerType *getRunnerType();
 	const char *neededPlugins();
+	const char *getName();
 	void run();
 	bool activate(const char *arg);
 	void event(sf::Event &e);
