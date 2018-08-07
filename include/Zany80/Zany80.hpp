@@ -51,7 +51,6 @@ public:
 	void popRunner();
 	
 private:
-	void replaceRunner();
 	liblib::Library *runner = nullptr, *plugin_manager = nullptr;
 	bool attemptLoad(std::string name, liblib::Library ** library);
 	

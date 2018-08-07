@@ -28,29 +28,6 @@ std::string absolutize(std::string relativish) {
 	return relativish;
 }
 
-void Zany80::replaceRunner(){
-	std::cerr << "[Zany80] Invalid runner, attempting recovery...\n";
-	((void(*)(liblib::Library*))((*plugin_manager)["removePlugin"]))(runner);
-	if (runner_stack.size()) {
-		runner = runner_stack.back();
-		runner_stack.pop_back();
-		((void(*)(PluginMessage))(*this->runner)["postMessage"])({
-			0, "activate", (int)strlen("activate"), "Zany80", nullptr
-		});
-	}
-	else if ((runner = (liblib::Library*)(*plugin_manager)["getDefaultRunner"]()) == nullptr) {
-		close("Unable to find suitable runner.\n");
-	}
-	else {
-		try {
-			((void(*)(PluginMessage))(*this->runner)["postMessage"])({
-				0, "activate", (int)strlen("activate"), "Zany80", nullptr
-			});
-		}
-		catch (std::exception &e) {}
-	}
-}
-
 void Zany80::close(std::string message) {
 	std::cerr << "[Crash Handler] "<<message<<
 		"[Crash Handler] Notifying user and shutting down...\n";
@@ -210,7 +187,7 @@ void Zany80::frame(){
 					((void(*)(sf::Event&))((*runner)["event"]))(e);
 				}
 				catch (std::exception) {
-					replaceRunner();
+					popRunner();
 				}
 				break;
 		}
@@ -219,7 +196,7 @@ void Zany80::frame(){
 		(*runner)["run"]();
 	}
 	catch (std::exception) {
-		replaceRunner();
+		popRunner();
 	}
 	window->display();
 }
