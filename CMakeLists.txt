@@ -11,7 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-# Default to static libs
+# Default to shared libs
 if(NOT DEFINED SFML_STATIC_LIBRARIES)
 	set(SFML_STATIC_LIBRARIES FALSE CACHE BOOL "Use static SFML libs" FORCE)
 endif()
@@ -46,10 +46,10 @@ add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
 add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
 
-include_directories(zany80 PRIVATE ${SFML_INCLUDE_DIR} ${LIBLIB_INCLUDE_DIR})
+target_include_directories(zany80 PRIVATE ${LIBLIB_INCLUDE_DIR})
 target_include_directories(zany80 PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
 target_include_directories(zany PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
-target_link_libraries(zany80 ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} zany)
+target_link_libraries(zany80 ${LIBLIB_LIBRARY} zany sfml-graphics sfml-window sfml-system)
 target_link_libraries(zany ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 link_libraries(zany)
 
