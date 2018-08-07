@@ -97,13 +97,13 @@ script:
 - cd ..
 - mkdir build
 - cd build
-- cmake .. -DEXTRA_INSTALL_DIRECTORY="`readlink -f ../extra_install/linux`"
+- cmake .. -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/linux`"
 - make -kj4
 - cpack
 - cd ..
 - mkdir buildwin32
 - cd buildwin32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIRECTORY="`readlink -f ../extra_install/win32`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win32`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include
 - make -kj4
 - cpack
 - cd ..
