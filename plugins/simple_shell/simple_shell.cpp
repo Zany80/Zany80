@@ -250,7 +250,7 @@ void autocomplete() {
 		current_command = current_command.substr(1, current_command.size() - 1);
 	}
 	// Find end of first word
-	uint i;
+	unsigned int i;
 	for (i = 0; i < current_command.size() && !isspace(current_command[i]); i++);
 	std::string first_word = current_command.substr(0, i);
 	if (i == current_command.size()) {
