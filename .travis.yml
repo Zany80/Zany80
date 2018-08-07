@@ -55,6 +55,7 @@ install:
 - cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
 - make -j4
 - sudo make install
+- sudo cp libz80cpp.dll /usr/i686-w64-mingw32/lib/
 - cd ../..
 - git clone https://github.com/knightos/scas
 - cd scas
