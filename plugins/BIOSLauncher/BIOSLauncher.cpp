@@ -115,7 +115,7 @@ void postMessage(PluginMessage m) {
 		((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
 		emulate=(void(*)(uint64_t))((*z80)["emulate"]);
 		// Load in the BIOS
-		std::ifstream BIOS(folder + "/bios.rom", std::ios::binary | std::ios::ate);
+		std::ifstream BIOS(true_folder + "/bios.rom", std::ios::binary | std::ios::ate);
 		if (BIOS.is_open()) {
 			int size = BIOS.tellg();
 			BIOS.seekg(0);
@@ -136,7 +136,7 @@ void postMessage(PluginMessage m) {
 		}
 		else {
 			((message_t)(*plugin_manager)["message"])({
-				0, "history", (int)strlen("history"), "Runner/BIOSLauncher", "[BIOSLauncher] Error loading BIOS!"
+				0, "history", (int)strlen("history"), "Runner/BIOSLauncher", ("[BIOSLauncher] Error loading BIOS! File: " + true_folder + "/bios.rom").c_str()
 			}, "Runner/Shell");
 		}
 		for (int i = 0; i < 3; i++) {
