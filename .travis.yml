@@ -67,6 +67,8 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
+- sudo mkdir -p ../../extra_install/linux/plugins/binaries/
+- sudo cp scas ../../extra_install/linux/plugins/binaries/
 - cd ../..
 - git clone https://github.com/knightos/kcc
 - cd kcc
@@ -75,6 +77,7 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
+- sudo cp kcc ../../extra_install/linux/plugins/binaries/
 - cd ../..
 - git clone https://github.com/sfml/sfml
 - cd sfml
