@@ -102,6 +102,7 @@ Zany80::Zany80(){
 	char *working_directory = new char[FILENAME_MAX];
 	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
 		true_folder = absolutize(working_directory + (std::string)"/" + folder);
+		folder = true_folder;
 	}
 	else {
 		exit(1);
