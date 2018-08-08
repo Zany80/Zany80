@@ -51,6 +51,7 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
+- sudo cp libz80cpp.so ../../extra_install/linux/lib/
 - cd ..
 - mkdir win32
 - cd win32
