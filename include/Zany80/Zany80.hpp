@@ -58,3 +58,5 @@ private:
 
 extern Zany80 * zany;
 extern std::string folder, path, true_folder;
+
+std::string getHomeFolder();

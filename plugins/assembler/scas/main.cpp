@@ -37,12 +37,12 @@ void postMessage(PluginMessage m) {
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}
-		command += "2>scas_error.log";
+		command += "2>" + getHomeFolder() + "/scas_error.log";
 		if (system(command.c_str()) == 0) {
 			messageShell("Assembled successfully!");
 		}
 		else {
-			std::ifstream error("scas_error.log");
+			std::ifstream error(getHomeFolder() + "/scas_error.log");
 			if (error.is_open()) {
 				std::string buf;
 				while (std::getline(error, buf)) {

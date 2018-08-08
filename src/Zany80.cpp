@@ -5,10 +5,12 @@
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef _WIN32
+	#include <shlobj.h>
 	#include <direct.h>
 	#define GetCurrentDir _getcwd
 #else
 	#include <unistd.h>
+	#include <pwd.h>
 	#define GetCurrentDir getcwd
 #endif
 
@@ -218,6 +220,23 @@ void Zany80::pushRunner(liblib::Library *runner) {
 			0, "activate", (int)strlen("activate"), "Zany80", nullptr
 		});
 	}
+}
+
+std::string getHomeFolder() {
+	#ifdef _WIN32
+	char buffer[MAX_PATH];
+	if (SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, buffer) != S_OK) {
+		zany->close("Error retrieving home folder! Please file a bug report:\n\nhttps://github.com/Zany80/Zany80/issues/new");
+	}
+	std::string path(buffer);
+	#else
+	const char *homedir;
+	if ((homedir = getenv("HOME")) == NULL) {
+		homedir = getpwuid(geteuid())->pw_dir;
+	}
+	std::string path(homedir);
+	#endif
+	return path;
 }
 
 Zany80 *zany;

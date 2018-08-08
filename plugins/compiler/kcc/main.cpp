@@ -38,13 +38,13 @@ void postMessage(PluginMessage m) {
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}
-		command += "2>kcc_error.log";
+		command += "2>" + getHomeFolder() + "/kcc_error.log";
 		std::cout << '\n' << command << '\n';
 		if (system(command.c_str()) == 0) {
 			messageShell("Compiled successfully!");
 		}
 		else {
-			std::ifstream error("kcc_error.log");
+			std::ifstream error(getHomeFolder() + "/kcc_error.log");
 			if (error.is_open()) {
 				std::string buf;
 				while (std::getline(error, buf)) {
