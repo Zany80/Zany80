@@ -33,7 +33,8 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
-- sudo cp liblib.so ../../extra_install/linux
+- mkdir -p ../../extra_install/linux/lib/
+- sudo cp liblib.so ../../extra_install/linux/lib/
 - cd ..
 - mkdir win32
 - cd win32
