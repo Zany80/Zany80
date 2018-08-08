@@ -124,7 +124,7 @@ std::map <std::string, command_t> commands = {
 		.function = [](std::vector<std::string> args) {
 			args.push_back("-c");
 			args.push_back("-I");
-			args.push_back(folder + "/include/Zany80/libc/");
+			args.push_back("\"" + folder + "/include/Zany80/libc/\"");
 			args.push_back("-Wp,-include -Wp,system.h");
 			args.push_back("-Wp,-include -Wp,output.h");
 			args.push_back("-Wp,-include -Wp,input.h");
@@ -149,7 +149,7 @@ std::map <std::string, command_t> commands = {
 					for (int i = args.size() - 1; i >= 0; i--) {
 						args[i+1] = args[i];
 					}
-					args[0] = folder + "/libc.o";
+					args[0] = "\"" + folder + "/libc.o\"";
 				}
 			}
 			for (int i = 0; i < args.size(); i++) {
@@ -159,7 +159,7 @@ std::map <std::string, command_t> commands = {
 					for (int i = args.size() - 1; i >= 0; i--) {
 						args[i+1] = args[i];
 					}
-					args[0] = folder + "/template.o";
+					args[0] = "\"" + folder + "/template.o\"";
 				}
 			}
 			args.push_back("-forigin=0x4000");
