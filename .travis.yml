@@ -100,7 +100,7 @@ script:
 - cd BIOS
 - make -j4
 - make install DESTDIR=../extra_install/win32
-- make install DESTDIR=../extra_install/linux
+- make install DESTDIR=../extra_install/linux/share/zany80
 - cd ..
 - mkdir build
 - cd build
