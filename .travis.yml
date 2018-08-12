@@ -86,6 +86,8 @@ install:
 - cmake ..
 - make -j4
 - sudo make install
+- mkdir -p ../../extra_install/linux/lib
+- cp lib/* ../../extra_install/linux/lib
 - cd ..
 - mkdir build-win32
 - cd build-win32
