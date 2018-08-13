@@ -6,6 +6,7 @@
 
 #ifdef _WIN32
 //int _chdir(const char *);
+#include <windows.h>
 #define chdir _chdir;
 #else
 int chdir(const char *);
@@ -212,17 +213,24 @@ std::map <std::string, command_t> commands = {
 
 	{"ls", {
 		.function = [](std::vector<std::string> args) {
-			#ifndef _WIN32
 			std::string s;
+			#ifndef _WIN32
 			for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
 				std::string path = entry.path();
 				path = path.substr(path.find_last_of('/') + 1);
 				s += path + ' ';
 			}
-			addToHistory(s);
 			#else
-			addToHistory("ls not supported on Windows. Sorry!");
+			WIN32_FIND_DATA data;
+			HANDLE hFind = FindFirstFile((workingDirectory + "\\*").c_str(), &data);      // DIRECTORY
+			if (hFind != INVALID_HANDLE_VALUE) {
+				do {
+					s += data.cFileName + ' ';
+				} while(FindNextFile(hFind, &data));
+				FindClose(hFind);
+			}
 			#endif
+			addToHistory(s);
 		},
 		.help = "Prints out a list of files in the current folder.",
 		.detailed_help = "Prints out a list of files in the current folder."
