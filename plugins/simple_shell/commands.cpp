@@ -225,7 +225,7 @@ std::map <std::string, command_t> commands = {
 			HANDLE hFind = FindFirstFile((workingDirectory + "\\*").c_str(), &data);      // DIRECTORY
 			if (hFind != INVALID_HANDLE_VALUE) {
 				do {
-					s += data.cFileName + ' ';
+					s += std::string(data.cFileName) + ' ';
 				} while(FindNextFile(hFind, &data));
 				FindClose(hFind);
 			}
