@@ -4,9 +4,23 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+#ifdef linux
+#include <unistd.h>
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 int main(int argc, const char **argv){
-	path = argv[0];
-	folder =  path.substr(0,path.find_last_of("/")+1);
+	char buf[256];
+	#ifdef linux
+	readlink("/proc/self/exe", buf, 256);
+	#endif
+	#ifdef _WIN32
+	GetModuleFileName(NULL, buf, 256);
+	#endif
+	path = buf;
+	folder = path.substr(0,path.find_last_of("/")+1);
 	#ifdef linux
 	folder += "../share/zany80/";
 	#endif

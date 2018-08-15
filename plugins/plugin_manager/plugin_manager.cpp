@@ -7,12 +7,12 @@
  * TODO: actually rewrite this garbage.
  */
 #include <plugin_manager.hpp>
-#include <iostream>
 #include <Zany80/Plugins.hpp>
 #include <Zany80/Zany80.hpp>
 #include <Zany80/Drawing.hpp>
 #include <Zany80/GenericException.hpp>
 #include <cstring>
+#include <iostream>
 
 typedef void(*post_t)(PluginMessage m);
 
@@ -333,7 +333,7 @@ liblib::Library *getDefaultRunner() {
 		while (zany->window->pollEvent(e)) {
 			switch (e.type) {
 				case sf::Event::Closed:
-					zany->window->close();
+					zany->close();
 					break;
 				case sf::Event::KeyPressed:
 					if (e.key.code == sf::Keyboard::Down) {
