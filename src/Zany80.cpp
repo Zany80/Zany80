@@ -69,6 +69,7 @@ bool Zany80::attemptLoad(std::string name, liblib::Library **library) {
 		*library = nullptr;
 	}
 	try {
+		std::cout << "Loading "<<name<<" from "<<folder<<"...\n";
 		*library = new liblib::Library(folder + name);
 		((init_t)(**library)["init"])(*library);
 	}
@@ -101,13 +102,18 @@ Zany80::Zany80(){
 			std::cout << folder << "\n";
 		}
 	}
-	char *working_directory = new char[FILENAME_MAX];
-	if (GetCurrentDir(working_directory, FILENAME_MAX)) {
-		true_folder = absolutize(working_directory + (std::string)"/" + folder);
-		folder = true_folder;
+	if (folder[0] != '/' && folder.find("C:\\") != 0) {
+		char working_directory[FILENAME_MAX];
+		if (GetCurrentDir(working_directory, FILENAME_MAX)) {
+			true_folder = absolutize(working_directory + (std::string)"/" + folder);
+			folder = true_folder;
+		}
+		else {
+			exit(1);
+		}
 	}
 	else {
-		exit(1);
+		folder = true_folder = absolutize(folder);
 	}
 	if (!attemptLoad("plugins/plugin_manager",&plugin_manager)) {
 		close("Error loading plugin manager!\n");
