@@ -186,7 +186,7 @@ void Zany80::frame(){
 				close();
 				break;
 			case sf::Event::KeyPressed:
-				if (e.key.code == sf::Keyboard::Escape
+				if (e.key.code == sf::Keyboard::M
 						&& e.key.control) {
 					this->pushRunner((liblib::Library *)(*plugin_manager)["getDefaultRunner"]());
 					return;
