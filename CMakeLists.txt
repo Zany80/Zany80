@@ -112,7 +112,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "Zany80")
 if(WIN32)
   # There is a bug in NSIS that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}\\\\misc/zany80.bmp")
+  SET(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}\\\\misc\\\\zany80.bmp")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "\\\\zany80.exe")
   SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Fantasy Computer")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\zany80.github.io")
