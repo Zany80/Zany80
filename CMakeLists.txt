@@ -46,7 +46,7 @@ add_subdirectory(src)
 add_library(zany SHARED ${SOURCES})
 add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
 
-target_include_directories(zany80 PRIVATE ${LIBLIB_INCLUDE_DIR})
+include_directories("${LIBLIB_INCLUDE_DIR}")
 target_include_directories(zany80 PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
 target_include_directories(zany PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
 target_link_libraries(zany ${LIBLIB_LIBRARY} sfml-graphics)
