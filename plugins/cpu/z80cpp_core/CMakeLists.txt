@@ -1,6 +1,7 @@
 set(z80cpp_core_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/z80cpp_core.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/BIOSPlugin.cpp
 )
 
 find_package(Z80CPP REQUIRED)

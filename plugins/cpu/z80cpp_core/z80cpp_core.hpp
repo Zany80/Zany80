@@ -26,3 +26,9 @@ public:
 private:
 	uint64_t tstates;
 };
+
+
+uint8_t readRAM(uint16_t);
+void writeRAM(uint16_t, uint8_t);
+uint8_t in(uint16_t);
+void out(uint16_t, uint8_t);

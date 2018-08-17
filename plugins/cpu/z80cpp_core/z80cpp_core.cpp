@@ -3,11 +3,6 @@
 #include <iostream>
 #include <vector>
 
-extern uint8_t(*readRAM)(uint16_t);
-extern void(*writeRAM)(uint16_t, uint8_t);
-extern uint8_t in(uint16_t);
-extern void out(uint16_t, uint8_t);
-
 extern std::vector<uint8_t> int_queue;
 
 z80cpp_core::z80cpp_core() {
@@ -83,8 +78,12 @@ uint8_t z80cpp_core::interrupt_value() {
 
 uint8_t z80cpp_core::breakpoint(uint16_t address, uint8_t opcode) {
 	// can be used to modify opcode
-	//extern Z80 *cpu;
+	extern Z80 *cpu;
 	//std::cout << "HL: "<<cpu->getRegHL() << "\n";
+	if (opcode == 0x18 && readRAM(address + 1) == 0xFE) {
+		std::cout << "Device: "<<cpu->getRegIY()<<", source: "<<cpu->getRegHL()<<'\n';
+		exit(1);
+	}
 	return opcode;
 }
 

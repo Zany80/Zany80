@@ -42,6 +42,20 @@ bool activated;
 
 const uint8_t vsync_reset = 0xD7;
 
+extern "C" uint16_t getSize() {
+	return 0x1000;
+}
+
+extern "C" uint8_t read(uint16_t addr) {
+	return ROM[addr];
+}
+
+extern "C" void haltTimer() {
+	if (activated)
+		time_passed += precision.restart().asSeconds();
+	activated = false;
+}
+
 void run() {
 	((message_t)(*plugin_manager)["message"])({
 		0, "interrupt", (int)strlen("interrupt"), "Runner/BIOSLauncher", (char*)&vsync_reset
@@ -86,18 +100,18 @@ bool activate(const char *arg) {
 	if (ROM != nullptr) {
 		std::cout << "BIOS loaded, launching...\n";
 		activated = true;
+		((textMessage_t)(*plugin_manager)["textMessage"])("Fetch BIOS","Runner/BIOSLauncher;CPU/z80");
+		((textMessage_t)(*plugin_manager)["textMessage"])("unhalt","Runner/BIOSLauncher;CPU/z80");
 	}
 	else
 		std::cout << "BIOS not loaded!\n";
-	((textMessage_t)(*plugin_manager)["textMessage"])("unhalt","Runner/BIOSLauncher;CPU/z80");
+	precision.restart();
 	return ROM != nullptr;
 }
 
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "deactivate")) {
-		if (activated)
-			time_passed += precision.restart().asSeconds();
-		activated = false;
+		haltTimer();
 	}
 	else if(!strcmp(m.data, "init")) {
 		plugin_manager = (liblib::Library*)m.context;
@@ -108,11 +122,6 @@ void postMessage(PluginMessage m) {
 		if (z80 == nullptr) {
 			throw std::exception();
 		}
-		ram = ((liblib::Library *(*)(const char *))(*plugin_manager)["getRAM"])("16_8");
-		if (ram == nullptr) {
-			throw std::exception();
-		}
-		((void (*)(liblib::Library*))((*z80)["setRAM"]))(ram);
 		emulate=(void(*)(uint64_t))((*z80)["emulate"]);
 		// Load in the BIOS
 		std::ifstream BIOS(true_folder + "/bios.rom", std::ios::binary | std::ios::ate);

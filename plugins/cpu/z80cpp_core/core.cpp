@@ -1,11 +1,8 @@
 #include "z80cpp_core.hpp"
+#include "BIOSPlugin.hpp"
 
-#define ADDRESS_BUS_SIZE 16
-#define DATA_BUS_SIZE 8
-#define NEEDED_PLUGINS "RAM/16_8"
-#define OVERRIDE_RAM
+#define NEEDED_PLUGINS ""
 #include <Zany80/Plugins/CPU.hpp>
-
 #include <Zany80/Drawing.hpp>
 
 #include <iostream>
@@ -27,12 +24,28 @@ bool isType(const char *cat) {
 
 int8_t to_execute;
 
-liblib::Library *plugin_manager, *_RAM;
+liblib::Library *plugin_manager;
+BIOSPlugin BIOS;
 
-void setRAM(liblib::Library *RAM) {
-	_RAM = RAM;
-	readRAM = (read_t)(*RAM)["read"];
-	writeRAM = (write_t)(*RAM)["write"];
+uint16_t *internal_memory = nullptr;
+bool internal_memory_active = true;
+
+uint8_t readRAM(uint16_t address) {
+	if (internal_memory_active && address < BIOS.size()) {
+		// std::cout << "Read: "<<internal_memory[address]<<'\n';
+		return internal_memory[address];
+	}
+	throw;
+}
+
+void writeRAM(uint16_t address, uint8_t value) {
+	if (internal_memory_active && address < BIOS.size()) {
+		internal_memory[address] = value;
+	}
+	else {
+		// std::cerr << "Invalid write of "<<(int)value << " to "<<(int)address<<'\n';
+		throw;
+	}
 }
 
 sf::Color palette[] = {
@@ -46,12 +59,21 @@ sf::Texture *sprites[256] {nullptr};
 
 void postMessage(PluginMessage m) {
 	if (!strcmp(m.data, "init")) {
+		plugin_manager = (liblib::Library*)m.context;
 		core = new z80cpp_core();
 		cpu = new Z80(core);
 		for (int i = 0x0000; i < 0xFFFF;i++)
 			cpu->setBreakpoint(i, true);
 		to_execute = 0;
-		plugin_manager = (liblib::Library*)m.context;
+	}
+	else if (!strcmp(m.data, "Fetch BIOS")) {
+		BIOS = ((liblib::Library*(*)(const char *))(*plugin_manager)["getPlugin"])("Runner/BIOSLauncher");
+		if (!internal_memory) {
+			internal_memory = new uint16_t[BIOS.size()];
+			for (int i = 0;i < BIOS.size(); i++) {
+				internal_memory[i] = BIOS[i];
+			}
+		}
 	}
 	else if (!strcmp(m.data, "cleanup")) {
 		if (core != nullptr) {
@@ -82,7 +104,7 @@ void postMessage(PluginMessage m) {
 
 void cycle() {
 	uint64_t pstates = getCycles();
-	if (to_execute ++< 1)
+	if (to_execute++ < 1)
 		return;
 	/**
 	 * Executes one *instruction*, *not* one cycle. to_execute keeps track of
@@ -96,78 +118,81 @@ uint64_t getCycles() {
 	return core->getCycles();
 }
 
+std::vector<uint8_t> peripheral_buffer;
+
 void out(uint16_t port, uint8_t value) {
 	//std::cout << (int)cpu->getRegA()<<' '<< (int)cpu->getRegB()<<' '<< (int)cpu->getRegC()<<' '<< (int)cpu->getRegD()<<' '<< (int)cpu->getRegE()<<' '<< (int)cpu->getRegH()<<' '<< (int)cpu->getRegL()<<"\n";
-	if ((port & 0xFF) == 0) {
-		if (value == 0) {
-			// hl, b, c, e - string address, x, y, color
-			std::string string = "";
-			for (int i = 0; ;i++) {
-				char c = readRAM(i + cpu->getRegHL());
-				if (c == 0)
-					break;
-				string += c;
-			}
-			text(string, cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
-		}
-		else if (value == 1) {
-			// cls(color). Color is in register B.
-			clear(palette[cpu->getRegB()]);
-		}
-		else if (value == 2) {
-			// Upload sprite - address in hl, index in bc
-			uint16_t start_address = cpu->getRegHL();
-			uint16_t index = cpu->getRegBC();
-			if (index > 255) {
-				cpu->setRegA(0);
-				return;
-			}
-			sf::Image image;
-			image.create(8, 8);
-			for (int i = 0; i < 32; i++) {
-				// x and y are two consecutive pixels, NOT 2d coordinates.
-				int x = i * 2, y = x + 1;
-				int pixels = readRAM(start_address + i);
-				image.setPixel(x % 8, x / 8, palette[(pixels & 0xF0) >> 4]);
-				image.setPixel(y % 8, y / 8, palette[pixels & 0x0F]);
-			}
-			if (sprites[index] != nullptr) {
-				delete sprites[index];
-			}
-			sprites[index] = new sf::Texture;
-			if (sprites[index]->loadFromImage(image)) {
-				cpu->setRegA(1);
-			}
-			else {
-				cpu->setRegA(0);
-			}
-			}
-		else if (value == 3) {
-			// Draw sprite - index in hl, position in bc
-			uint16_t index = cpu->getRegHL();
-			if (index > 255) {
-				cpu->setRegA(0);
-				return;
-			}
-			if (sprites[index] == nullptr) {
-				cpu->setRegA(0);
-				return;
-			}
-			sf::Sprite s(*sprites[index]);
-			s.setPosition(cpu->getRegB(), cpu->getRegC());
-			zany->window->draw(s);
-			cpu->setRegA(1);
-		}
-		else if (value == 4) {
-			palette[cpu->getRegB() % 16] = sf::Color(cpu->getRegC(), cpu->getRegH(), cpu->getRegL());
-		}
-	}
-	else if ((port & 0xFF) == 1) {
+	// ~if ((port & 0xFF) == 0) {
+		// ~if (value == 0) {
+			// ~// hl, b, c, e - string address, x, y, color
+			// ~std::string string = "";
+			// ~for (int i = 0; ;i++) {
+				// ~char c = readRAM(i + cpu->getRegHL());
+				// ~if (c == 0)
+					// ~break;
+				// ~string += c;
+			// ~}
+			// ~text(string, cpu->getRegB(), cpu->getRegC(), palette[cpu->getRegE()]);
+		// ~}
+		// ~else if (value == 1) {
+			// ~// cls(color). Color is in register B.
+			// ~clear(palette[cpu->getRegB()]);
+		// ~}
+		// ~else if (value == 2) {
+			// ~// Upload sprite - address in hl, index in bc
+			// ~uint16_t start_address = cpu->getRegHL();
+			// ~uint16_t index = cpu->getRegBC();
+			// ~if (index > 255) {
+				// ~cpu->setRegA(0);
+				// ~return;
+			// ~}
+			// ~sf::Image image;
+			// ~image.create(8, 8);
+			// ~for (int i = 0; i < 32; i++) {
+				// ~// x and y are two consecutive pixels, NOT 2d coordinates.
+				// ~int x = i * 2, y = x + 1;
+				// ~int pixels = readRAM(start_address + i);
+				// ~image.setPixel(x % 8, x / 8, palette[(pixels & 0xF0) >> 4]);
+				// ~image.setPixel(y % 8, y / 8, palette[pixels & 0x0F]);
+			// ~}
+			// ~if (sprites[index] != nullptr) {
+				// ~delete sprites[index];
+			// ~}
+			// ~sprites[index] = new sf::Texture;
+			// ~if (sprites[index]->loadFromImage(image)) {
+				// ~cpu->setRegA(1);
+			// ~}
+			// ~else {
+				// ~cpu->setRegA(0);
+			// ~}
+			// ~}
+		// ~else if (value == 3) {
+			// ~// Draw sprite - index in hl, position in bc
+			// ~uint16_t index = cpu->getRegHL();
+			// ~if (index > 255) {
+				// ~cpu->setRegA(0);
+				// ~return;
+			// ~}
+			// ~if (sprites[index] == nullptr) {
+				// ~cpu->setRegA(0);
+				// ~return;
+			// ~}
+			// ~sf::Sprite s(*sprites[index]);
+			// ~s.setPosition(cpu->getRegB(), cpu->getRegC());
+			// ~zany->window->draw(s);
+			// ~cpu->setRegA(1);
+		// ~}
+		// ~else if (value == 4) {
+			// ~palette[cpu->getRegB() % 16] = sf::Color(cpu->getRegC(), cpu->getRegH(), cpu->getRegL());
+		// ~}
+	// ~}
+	// ~else
+	if ((port & 0xFF) == 1) {
 		static int state = 0;
 		switch (state) {
 		case 0:
 			switch (value) {
-			case 0:
+			// ~case 0:
 			case 1:
 				state = value + 1;
 				break;
@@ -175,27 +200,39 @@ void out(uint16_t port, uint8_t value) {
 				std::cerr << "Unrecognized command "<<(int)value<<"!\n";
 			}
 			break;
-		case 1:
-			if (value & 0x04) {
-				((textMessage_t)(*plugin_manager)["textMessage"])("map_data","CPU/z80;Runner/ROM");
-			}
-			else {
-				uint8_t bank = (value & 0x03);
-				uint8_t disk = 0;
-				//std::cout << "[CPU/Monitor] Mapping disk to bank "<<(int)bank<<'\n';
-				((message_t)(*plugin_manager)["message"])({
-					bank, "map_disk", (int)strlen("map_disk"), "CPU/z80", (char *)&disk
-				}, "Hardware/CartridgeManager");
-				state = 0;
-			}
-			break;
+		// ~case 1:
+			// ~if (value & 0x04) {
+				// ~((textMessage_t)(*plugin_manager)["textMessage"])("map_data","CPU/z80;Runner/ROM");
+			// ~}
+			// ~else {
+				// ~uint8_t bank = (value & 0x03);
+				// ~uint8_t disk = 0;
+				// ~//std::cout << "[CPU/Monitor] Mapping disk to bank "<<(int)bank<<'\n';
+				// ~((message_t)(*plugin_manager)["message"])({
+					// ~bank, "map_disk", (int)strlen("map_disk"), "CPU/z80", (char *)&disk
+				// ~}, "Hardware/CartridgeManager");
+				// ~state = 0;
+			// ~}
+			// ~break;
 		case 2:
 			state = 0;
 			if (value == 0) {
+				BIOS["haltTimer"]();
 				((textMessage_t)(*plugin_manager)["textMessage"])("reset","CPU/z80;Runner/ROM");
 				zany->popRunner();
 			}
 			break;
+		}
+	}
+	else if ((port & 0xFF) == 0xFF) {
+		static int state = 0;
+		switch (state) {
+			case 0:
+				state = value + 1;
+				break;
+			case 1:
+				peripheral_buffer.push_back();
+				break;
 		}
 	}
 	else {
