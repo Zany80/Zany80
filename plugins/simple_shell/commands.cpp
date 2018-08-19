@@ -5,10 +5,8 @@
 #include <string>
 
 #ifdef _WIN32
-//int _chdir(const char *);
 #include <windows.h>
-#define chdir SetCurrentDirectory;
-#warning SetCurrentDirectory doesn't seem to function!
+#define chdir SetCurrentDirectory
 #else
 int chdir(const char *);
 #endif
@@ -106,7 +104,13 @@ std::map <std::string, command_t> commands = {
 				addToHistory("Usage: `cd directory`");
 				return;
 			}
+			#ifdef _WIN32
+			if (!chdir(args[0].c_str())) {
+				addToHistory("SetCurrentDirectory failed! #" + std::to_string(GetLastError()));
+			}
+			#else
 			chdir(args[0].c_str());
+			#endif
 			updateWorkingDirectory();
 		},
 		.help = "Changes the current directory"
