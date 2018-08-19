@@ -18,6 +18,8 @@ install:
 - sudo apt build-dep libsfml-dev
 - sudo apt install libboost-dev g++-mingw-w64-i686 g++-mingw-w64-x86-64 nsis libudev-dev
 - mkdir extra_install/win32 extra_install/linux extra_install/win64 -p
+- cp misc/win64/lib*.dll extra_install/win64
+- cp misc/win32/lib*.dll extra_install/win32
 - git clone https://github.com/dlfcn-win32/dlfcn-win32
 - cd dlfcn-win32
 - mkdir build32
