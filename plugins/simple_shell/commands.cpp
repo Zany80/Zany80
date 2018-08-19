@@ -130,7 +130,11 @@ std::map <std::string, command_t> commands = {
 		.function = [](std::vector<std::string> args) {
 			args.push_back("-c");
 			args.push_back("-I");
+			#ifdef _WIN32
+			args.push_back("\"" + folder + "/include/Zany80/libc\"");
+			#else
 			args.push_back("\"" + folder + "/include/Zany80/libc/\"");
+			#endif
 			args.push_back("-Wp,-include -Wp,system.h");
 			args.push_back("-Wp,-include -Wp,output.h");
 			args.push_back("-Wp,-include -Wp,input.h");
