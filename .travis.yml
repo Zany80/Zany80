@@ -16,13 +16,19 @@ sudo: required
 install:
 - sudo apt update
 - sudo apt build-dep libsfml-dev
-- sudo apt install libboost-dev g++-mingw-w64-i686 nsis libudev-dev
-- mkdir extra_install/win32 extra_install/linux -p
+- sudo apt install libboost-dev g++-mingw-w64-i686 g++-mingw-w64-x86_64 nsis libudev-dev
+- mkdir extra_install/win32 extra_install/linux extra_install/win64 -p
 - git clone https://github.com/dlfcn-win32/dlfcn-win32
 - cd dlfcn-win32
-- mkdir build
-- cd build
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DBUILD_SHARED_LIBS=false
+- mkdir build32
+- cd build32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DBUILD_SHARED_LIBS=false
+- make -j4
+- sudo make install
+- cd ..
+- mkdir build64
+- cd build64
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DBUILD_SHARED_LIBS=false
 - make -j4
 - sudo make install
 - cd ../..
@@ -38,7 +44,13 @@ install:
 - cd ..
 - mkdir win32
 - cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
+- make -j4
+- sudo make install
+- cd ..
+- mkdir win64
+- cd win64
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32
 - make -j4
 - sudo make install
 - cd ../..
@@ -55,10 +67,16 @@ install:
 - cd ..
 - mkdir win32
 - cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
 - make -j4
 - sudo make install
 - sudo cp libz80cpp.dll /usr/i686-w64-mingw32/lib/
+- cd ..
+- mkdir win64
+- cd win64
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32
+- make -j4
+- sudo make install
 - cd ../..
 - git clone https://github.com/knightos/scas
 - cd scas
@@ -89,12 +107,19 @@ install:
 - mkdir -p ../../extra_install/linux/lib
 - cp lib/* ../../extra_install/linux/lib
 - cd ..
-- mkdir build-win32
-- cd build-win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MINGW.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true
+- mkdir win32
+- cd win32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true
 - make -j4
 - sudo make install
 - find /usr/i686-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win32/ \;
+- cd ..
+- mkdir win64
+- cd win64
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true
+- make -j4
+- sudo make install
+- find /usr/x86_64-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win64/ \;
 - cd ../..
 script:
 # First, build the BIOS.
@@ -102,6 +127,7 @@ script:
 - cd BIOS
 - make -j4
 - make install DESTDIR=../extra_install/win32
+- make install DESTDIR=../extra_install/win64
 - sudo make install DESTDIR=../extra_install/linux/share/zany80
 - cd ..
 - mkdir build
@@ -110,9 +136,15 @@ script:
 - make -kj4
 - cpack
 - cd ..
-- mkdir buildwin32
-- cd buildwin32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MINGW.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win32`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include
+- mkdir win32
+- cd win32
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MinGW32.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/win32/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/win32/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win32`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include
+- make -kj4
+- cpack
+- cd ..
+- mkdir win64
+- cd win64
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MinGW64.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/win64/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/win64/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win64`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/x86_64-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/x86_64-w64-mingw32/include
 - make -kj4
 - cpack
 - cd ..
@@ -128,7 +160,8 @@ deploy:
   file_glob: true
   file:
   - build/Zany80*
-  - buildwin32/Zany80*
+  - win32/Zany80*
+  - win64/Zany80*
   skip_cleanup: true
   on:
     repo: Zany80/Zany80

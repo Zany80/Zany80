@@ -20,12 +20,6 @@ find_library(Z80CPP_LIBRARY NAMES z80cpp libz80cpp
 	PATHS ${Z80CPP_PATHS}
 )
 
-if (WIN32)
-	find_file(Z80CPP_DLL NAMES libz80cpp.dll
-		PATH_SUFFIXES lib
-		PATHS ${Z80CPP_PATHS} /usr/i686-w64-mingw32
-	)
-endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Z80CPP  DEFAULT_MSG
