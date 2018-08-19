@@ -35,7 +35,7 @@ void postMessage(PluginMessage m) {
 	}
 	else if (!strcmp(m.data, "invoke")) {
 		#ifdef _WIN32
-		std::string command = "\"\"" + true_folder + "\plugins\binaries\kcc\" ";
+		std::string command = "\"\"" + true_folder + "\\plugins\\binaries\\kcc\" ";
 		#else
 		std::string command = "\"" + true_folder + "/plugins/binaries/kcc\" ";
 		#endif
