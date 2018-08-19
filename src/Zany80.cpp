@@ -117,6 +117,13 @@ Zany80::Zany80(){
 	else {
 		folder = true_folder = absolutize(folder);
 	}
+	// On Windows, add the binaries to the PATH so that `cpp` is found
+	#ifdef _WIN32
+	std::string path = std::getenv("PATH");
+	path += ";" + folder + "\\plugins\\binaries";
+	path = "PATH=" + path;
+	_putenv(path.c_str());
+	#endif
 	if (!attemptLoad("plugins/plugin_manager",&plugin_manager)) {
 		close("Error loading plugin manager!\n");
 	}

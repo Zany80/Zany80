@@ -34,11 +34,18 @@ void postMessage(PluginMessage m) {
 		
 	}
 	else if (!strcmp(m.data, "invoke")) {
+		#ifdef _WIN32
+		std::string command = "\"\"" + true_folder + "\\plugins\\binaries\\scas\" -fno-remove-unused-funcs ";
+		#else
 		std::string command = "\"" + true_folder + "/plugins/binaries/scas\" -fno-remove-unused-funcs ";
+		#endif
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}
 		command += "2>" + getHomeFolder() + "/scas_error.log";
+		#ifdef _WIN32
+		command += "\"";
+		#endif
 		std::cout << '\n' << command << '\n';
 		if (system(command.c_str()) == 0) {
 			messageShell("Assembled successfully!");
