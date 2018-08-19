@@ -10,14 +10,14 @@
 * Show program selection menu on start instead of defaulting to the shell
 * Add ls command to the shell
 * Add basic sprite support to the emulation core
-* Split BIOS off into separate project
+* Split BIOS off into [separate project](https://github.com/Zany80/BIOS)
 * Fix BIOS loading on Windows
 * Fix path detection (also fixes use in debuggers)
 * Fix build commands on Windows (compile/link/assemble)
 * Fix Windows installers
 	* The installed shortcut now works
 	* Now installs all needed components instead of leaving some out
-	
+* Embed icon in Windows installer
 * Add support for uninstalling previous versions to Windows installer
 * Add shortcut to launch program after installing
 * Fix window icon on all platforms

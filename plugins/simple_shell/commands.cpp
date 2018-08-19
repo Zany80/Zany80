@@ -7,7 +7,8 @@
 #ifdef _WIN32
 //int _chdir(const char *);
 #include <windows.h>
-#define chdir _chdir;
+#define chdir SetCurrentDirectory;
+#warning SetCurrentDirectory doesn't seem to function!
 #else
 int chdir(const char *);
 #endif

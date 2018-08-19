@@ -87,6 +87,8 @@ Zany80::Zany80(){
 	zany = this;
 	window = new sf::RenderWindow(sf::VideoMode(LCD_WIDTH,LCD_HEIGHT),"Zany80 IDE");
 	window->setFramerateLimit(60);
+	extern memory_image zany_icon;
+	window->setIcon(zany_icon.width, zany_icon.height, zany_icon.data);
 	if (!font.loadFromFile(folder + "font.png")) {
 		// tries a few different options for the path
 		if (!font.loadFromFile(absolutize(folder + "/../font.png")) && !font.loadFromFile(absolutize(folder + "../../font.png")) &&

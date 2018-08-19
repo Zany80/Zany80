@@ -218,8 +218,8 @@ void executeCommand(std::string c) {
 }
 
 std::string default_autocompleter(std::string word) {
-	#ifndef _WIN32
 	std::vector<std::string> files;
+	#ifndef _WIN32
 	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
 		std::string path = entry.path();
 		path = path.substr(path.find_last_of('/') + 1);
@@ -227,6 +227,16 @@ std::string default_autocompleter(std::string word) {
 			files.push_back(path);
 		}
 	}
+	#else
+	WIN32_FIND_DATA data;
+	HANDLE hFind = FindFirstFile((workingDirectory + "\\*").c_str(), &data);      // DIRECTORY
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			files.push_back(std::string(data.cFileName));
+		} while(FindNextFile(hFind, &data));
+		FindClose(hFind);
+	}
+	#endif
 	if (files.size() == 1) {
 		return files[0] + ' ';
 	}
@@ -237,9 +247,6 @@ std::string default_autocompleter(std::string word) {
 		}
 		addToHistory(s.substr(0, s.size() - 1));
 	}
-	#else
-	addToHistory("file autocompletion is not supported on Windows!");
-	#endif
 	return word;
 }
 

@@ -35,12 +35,18 @@ void postMessage(PluginMessage m) {
 	}
 	else if (!strcmp(m.data, "invoke")) {
 		std::string command = "\"" + true_folder + "/plugins/binaries/kcc\" ";
+		#ifdef _WIN32
+		command = "\"" + command;
+		#endif
 		for (std::string s : *((std::vector<std::string>*)m.context)) {
 			command += s + " ";
 		}
 		command += "2>" + getHomeFolder() + "/kcc_error.log";
+		#ifdef _WIN32
+		command += "\"";
+		#endif
 		std::cout << '\n' << command << '\n';
-		if (system(command.c_str()) == 0) {
+		if (!system(command.c_str())) {
 			messageShell("Compiled successfully!");
 		}
 		else {
@@ -56,6 +62,6 @@ void postMessage(PluginMessage m) {
 				messageShell("Error!");
 			}
 		}
-		remove("kcc_error.log");
+		remove((getHomeFolder() + "/kcc_error.log").c_str());
 	}
 }

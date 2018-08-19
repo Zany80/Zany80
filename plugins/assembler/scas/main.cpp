@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 liblib::Library *plugin_manager;
 
@@ -38,6 +39,7 @@ void postMessage(PluginMessage m) {
 			command += s + " ";
 		}
 		command += "2>" + getHomeFolder() + "/scas_error.log";
+		std::cout << '\n' << command << '\n';
 		if (system(command.c_str()) == 0) {
 			messageShell("Assembled successfully!");
 		}
@@ -49,11 +51,11 @@ void postMessage(PluginMessage m) {
 					messageShell(buf.c_str());
 				}
 				error.close();
-				remove("scas_error.log");
 			}
 			else {
 				messageShell("Error!");
 			}
 		}
+		remove((getHomeFolder() + "/scas_error.log").c_str());
 	}
 }
