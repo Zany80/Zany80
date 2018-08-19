@@ -74,7 +74,7 @@ if(WIN32)
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
-	file(GLOB BINARIES misc/win32/*)
+	file(GLOB BINARIES "${WINPATH}/binaries/*")
 	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
 else()
 	set(CPACK_GENERATOR "TGZ;DEB")
