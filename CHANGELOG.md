@@ -1,3 +1,6 @@
+0.1.2:
+* Add command history to the shell plugin
+
 0.1.1:
 * Add 64-bit Windows support
 	* Build added to Travis

@@ -45,6 +45,8 @@ int command_lines;
 
 std::string *command_string = nullptr;
 std::vector<std::string> *history = nullptr;
+std::vector<std::string> *command_history = nullptr;
+int command_index = -1;
 
 void updateCommandLine() {
 	command_line = workingDirectory + "$ " + *command_string;
@@ -109,30 +111,29 @@ void postMessage(PluginMessage m) {
 		}
 	}
 	else if (strcmp(m.data, "init") == 0) {
+		if (history != nullptr)
+			throw;
 		plugin_manager = (liblib::Library*)m.context;
 		workingDirectory = "";
-		if (history == nullptr) {
-			history = new std::vector<std::string>;
-			addToHistory("Zany80 Simple Shell...");
-			addToHistory("Hello! For help, contact me at pleasantatk@gmail.com");
-			addToHistory("You can scroll using CTRL+UP and CTRL+DOWN");
-			addToHistory("Also, for help, you can use `help`. It's an extremely helpful command ;)");
-		}
-		if (command_string == nullptr) {
-			command_string = new std::string;
-		}
+		history = new std::vector<std::string>;
+		addToHistory("Zany80 Simple Shell...");
+		addToHistory("Hello! For help, contact me at pleasantatk@gmail.com");
+		addToHistory("You can scroll using CTRL+UP and CTRL+DOWN");
+		addToHistory("Also, for help, you can use `help`. It's an extremely helpful command ;)");
+		command_string = new std::string;
+		command_history = new std::vector<std::string>;
 		scroll_up = 0;
 		updateWorkingDirectory();
 	}
 	else if (strcmp(m.data, "cleanup") == 0) {
-		if (history != nullptr) {
-			delete history;
-			history = nullptr;
-		}
-		if (command_string != nullptr) {
-			delete command_string;
-			command_string = nullptr;
-		}
+		if (history == nullptr)
+			throw;
+		delete history;
+		delete command_history;
+		delete command_string;
+		command_string = nullptr;
+		command_history = nullptr;
+		history = nullptr;
 	}
 }
 
@@ -188,6 +189,8 @@ void executeCommand(std::string c) {
 	size_t space = c.find_first_of(' ');
 	std::vector<std::string> args;
 	std::string command = c;
+	if (command_history->size() == 0 || (*command_history)[command_history->size()-1] != c)
+		command_history->push_back(c);
 	if (space != std::string::npos) {
 		command = command.substr(0, space);
 		c = c.substr(space+1,c.size() - space);
@@ -321,6 +324,10 @@ void event(sf::Event &e) {
 			break;
 		case sf::Event::KeyPressed:
 			if (e.key.code == sf::Keyboard::Return) {
+				if (command_index != -1) {
+					command_index = -1;
+					command_history->pop_back();
+				}
 				if (command_string->size() > 0) {
 					executeCommand(*command_string);
 				}
@@ -336,11 +343,39 @@ void event(sf::Event &e) {
 			if (e.key.code == sf::Keyboard::Tab) {
 				autocomplete();
 			}
-			if (e.key.control && e.key.code == sf::Keyboard::Up) {
-				scroll_up += 5;
+			if (e.key.code == sf::Keyboard::Up) {
+				if (e.key.control) {
+					scroll_up += 5;
+				}
+				else {
+					if (command_history->size()) {
+						if (command_index == -1) {
+							command_index = command_history->size() - 1;
+							command_history->push_back(*command_string);
+						}
+						else if (command_index > 0) {
+							command_index--;
+						}
+						*command_string = (*command_history)[command_index];
+						updateCommandLine();
+					}
+				}
 			}
-			if (e.key.control && e.key.code == sf::Keyboard::Down) {
-				scroll_up -= 5;
+			if (e.key.code == sf::Keyboard::Down) {
+				if (e.key.control) {
+					scroll_up -= 5;
+				}
+				else {
+					if (command_index != -1) {
+						command_index++;
+						*command_string = (*command_history)[command_index];
+						if (command_index == command_history->size() - 1) {
+							command_index = -1;
+							command_history->pop_back();
+						}
+						updateCommandLine();
+					}
+				}
 			}
 			if (e.key.control && e.key.code == sf::Keyboard::Equal) {
 				scroll_up = 0;
