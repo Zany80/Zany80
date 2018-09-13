@@ -1,8 +1,0 @@
-add_library(MMU MODULE ${CMAKE_CURRENT_SOURCE_DIR}/MMU.cpp)
-set_target_properties(MMU PROPERTIES PREFIX "../")
-target_include_directories(MMU PRIVATE ../include ${CMAKE_SOURCE_DIR}/include)
-if (WIN32)
-	install(TARGETS MMU DESTINATION plugins/)
-else()
-	install(TARGETS MMU DESTINATION share/zany80/plugins/)
-endif()
