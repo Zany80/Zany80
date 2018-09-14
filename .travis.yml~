@@ -163,8 +163,7 @@ deploy:
   file_glob: true
   file:
   - build/Zany80*
-  - win32/Zany80*
-  - win64/Zany80*
+ # - buildwin32/Zany80*
   skip_cleanup: true
   on:
     repo: Zany80/Zany80
