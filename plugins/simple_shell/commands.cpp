@@ -223,13 +223,7 @@ std::map <std::string, command_t> commands = {
 	{"ls", {
 		.function = [](std::vector<std::string> args) {
 			std::string s;
-			#ifndef _WIN32
-			for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
-				std::string path = entry.path();
-				path = path.substr(path.find_last_of('/') + 1);
-				s += path + ' ';
-			}
-			#else
+			#ifdef _WIN32
 			WIN32_FIND_DATA data;
 			HANDLE hFind = FindFirstFile((workingDirectory + "\\*").c_str(), &data);      // DIRECTORY
 			if (hFind != INVALID_HANDLE_VALUE) {
@@ -238,8 +232,10 @@ std::map <std::string, command_t> commands = {
 				} while(FindNextFile(hFind, &data));
 				FindClose(hFind);
 			}
-			#endif
 			addToHistory(s);
+			#else
+			addToHistory("Not supported!");
+			#endif
 		},
 		.help = "Prints out a list of files in the current folder.",
 		.detailed_help = "Prints out a list of files in the current folder."

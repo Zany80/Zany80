@@ -10,11 +10,6 @@
 #include <string>
 #include <cstring>
 
-#ifndef _WIN32
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
-
 bool isCategory(const char *sig) {
 	return !strcmp(sig, "Runner") || !strcmp(sig, "Shell");
 }
@@ -222,15 +217,7 @@ void executeCommand(std::string c) {
 
 std::string default_autocompleter(std::string word) {
 	std::vector<std::string> files;
-	#ifndef _WIN32
-	for (fs::directory_entry entry : fs::directory_iterator(workingDirectory)) {
-		std::string path = entry.path();
-		path = path.substr(path.find_last_of('/') + 1);
-		if (path.compare(0, word.size(), word) == 0) {
-			files.push_back(path);
-		}
-	}
-	#else
+	#ifdef _WIN32
 	WIN32_FIND_DATA data;
 	HANDLE hFind = FindFirstFile((workingDirectory + "\\*").c_str(), &data);      // DIRECTORY
 	if (hFind != INVALID_HANDLE_VALUE) {
