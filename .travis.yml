@@ -104,22 +104,22 @@ install:
 - cd sfml
 - mkdir build
 - cd build
-- cmake ..
+- cmake .. -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
 - make -j4
 - sudo make install
 - mkdir -p ../../extra_install/linux/lib
-- cp lib/* ../../extra_install/linux/lib
+- cp lib/libsfml-{graphics,window,system}*2.5 ../../extra_install/linux/lib
 - cd ..
 - mkdir win32
 - cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
 - make -j4
 - sudo make install
 - find /usr/i686-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win32/ \;
 - cd ..
 - mkdir win64
 - cd win64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true
+- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
 - make -j4
 - sudo make install
 - find /usr/x86_64-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win64/ \;
