@@ -5,6 +5,5 @@ target_link_libraries(simple_shell ${LIBLIB_LIBRARY} ${SFML_LIBRARIES} ${SFML_DE
 if (WIN32)
 	install(TARGETS simple_shell DESTINATION plugins)
 else()
-	target_link_libraries(simple_shell stdc++fs)
 	install(TARGETS simple_shell DESTINATION share/zany80/plugins)
 endif()
