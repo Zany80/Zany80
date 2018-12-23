@@ -1,5 +1,5 @@
 #include "Editor.h"
-#include "Z80Instructions.h"
+#include "Identifiers.h"
 
 #include <IMUI/IMUI.h>
 
@@ -47,15 +47,22 @@ extern "C" void EMSCRIPTEN_KEEPALIVE EditorOpen(const char *name, const char *da
 
 void Editor::ResetEditor() {
 	widget = TextEditor();
-	// Base it off of C, to use the accelerated tokenizing
-	TextEditor::LanguageDefinition language = TextEditor::LanguageDefinition::C();
-	language.mName = "Zany80 Assembly";
-	language.mSingleLineComment = ";";
-	language.mPreprocChar = '.';
-	// TODO: predefine certain symbols
+	widget.SetLanguageDefinition(language);
 }
 
 Editor::Editor() {
+	language = TextEditor::LanguageDefinition::C();
+	language.mIdentifiers = TextEditor::Identifiers();
+	language.mName = "Zany80 Assembly";
+	language.mSingleLineComment = ";";
+	language.mPreprocChar = '.';
+	for (Map<const char *, const char *> m : identifiers) {
+		for (KeyValuePair<const char *,const char *> k : m) {
+			 TextEditor::Identifier id;
+			 id.mDeclaration = k.value;
+			 language.mIdentifiers[k.key] = id;
+		} 
+	}
 	#ifdef ORYOL_EMSCRIPTEN
 	editor_instance = this;
 	#endif

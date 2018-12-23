@@ -340,7 +340,7 @@ SimpleShell::~SimpleShell() {
 }
 
 void SimpleShell::frame(float delta) {
-	ImGui::SetNextWindowSizeConstraints(ImVec2(300,100), ImVec2(700, 500));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(530,200), ImVec2(FLT_MAX, FLT_MAX));
 	char buf[256];
 	sprintf(buf, "SimpleShell##%lu",instance);
 	ImGui::Begin(buf);
