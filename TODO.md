@@ -2,5 +2,7 @@
 * Split the BIOS build out of the Zany80 Travis configuration (which will help
 with performance as KCC and Scas won't have to be installed for the builds)
 * Add version info function to Plugin
-* Multiple file support in editor
+* Multiple file support in editor (multiple buffers at once, multi-file projects)
 * C support
+* Built in help (tutorial plugin?)
+* More examples for editor
