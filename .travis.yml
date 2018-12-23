@@ -1,173 +1,142 @@
-language: cpp
-compiler:
-#- clang
-- gcc
-#~ addons:
-  #~ apt:
-    #~ sources:
-    #~ - ubuntu-toolchain-r-test
-    #~ packages:
-    #~ - g++-4.9
-#~ env:
-#~ - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-#~ before_install:
-#~ - eval "${MATRIX_EVAL}"
+language:
+  - cpp
 sudo: required
+matrix:
+  include:
+    - os: linux
+      env:
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev" DEPLOY_BUILD="y" FIPS_CONFIG="linux-make-release"
+      addons:
+        apt:
+          sources:
+            - boost-latest
+          packages:
+            - libboost-all-dev
+    - os: linux
+      env:
+        - FIPS_CONFIG="emsc-make-debug" SETUP="docker pull ubuntu:16.04" DEPLOY_BUILD="n" EMSCRIPTEN="1"
+      addons:
+        apt:
+          sources:
+            - boost-latest
+          packages:
+            - libboost-all-dev
+    - os: linux
+      env:
+        - FIPS_CONFIG="emsc-make-release" SETUP="docker pull ubuntu:16.04" DEPLOY_BUILD="y" EMSCRIPTEN="1"
+      addons:
+        apt:
+          sources:
+            - boost-latest
+          packages:
+            - libboost-all-dev
+    - os: linux
+      env:
+        - FIPS_CONFIG="wasm-make-debug" SETUP="docker pull ubuntu:16.04" DEPLOY_BUILD="n" EMSCRIPTEN="1"
+      addons:
+        apt:
+          sources:
+            - boost-latest
+          packages:
+            - libboost-all-dev
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - boost-latest
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libboost-all-dev
+      env:
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-6 && CXX=g++-6" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - boost-latest
+          packages:
+            - g++-7
+            - libboost-all-dev
+      env:
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-7 && CXX=g++-7" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - boost-latest
+          packages:
+            - g++-8
+            - libboost-all-dev
+      env:
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-8 && CXX=g++-8" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+    #~ - os: osx
+      #~ osx_image: xcode8
+      #~ env:
+        #~ - DEPLOY_BUILD="y" FIPS_CONFIG="osx-make-release" MATRIX_EVAL="rm fips-files/verbs/build*"
+      #~ addons:
+        #~ homebrew:
+          #~ packages:
+            #~ - python3
+          #~ update: true
+
+services:
+  - docker
+  
+before_install:
+  - sudo rm -rf /etc/apt/sources.list.d
+  - if [[ $FIPS_CONFIG != osx-make-release ]]; then sudo apt install python3; fi
+  - eval "${MATRIX_EVAL}"
+
 install:
-- sudo apt update
-- sudo apt build-dep libsfml-dev
-- sudo apt install libboost-dev g++-mingw-w64-i686 g++-mingw-w64-x86-64 nsis libudev-dev
-- mkdir extra_install/win32 extra_install/linux extra_install/win64 -p
-- cp misc/win64/lib*.dll extra_install/win64
-- cp misc/win32/lib*.dll extra_install/win32
-- git clone https://github.com/dlfcn-win32/dlfcn-win32
-- cd dlfcn-win32
-- mkdir build32
-- cd build32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DBUILD_SHARED_LIBS=false
-- make -j4
-- sudo make install
-- cd ..
-- mkdir build64
-- cd build64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DBUILD_SHARED_LIBS=false
-- make -j4
-- sudo make install
-- cd ../..
-- git clone https://github.com/pixelherodev/liblib.git
-- cd liblib
-- mkdir build
-- cd build
-- cmake ..
-- make -j4
-- sudo make install
-- mkdir -p ../../extra_install/linux/lib/
-- sudo cp liblib.so ../../extra_install/linux/lib/
-- cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
-- make -j4
-- sudo make install
-- cd ..
-- mkdir win64
-- cd win64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32
-- make -j4
-- sudo make install
-- cd ../..
-- git clone https://github.com/pixelherodev/z80cpp
-- cd z80cpp
-- git checkout interrupt
-- cp ../misc/z80cppCMakeLists.txt CMakeLists.txt
-- mkdir build
-- cd build
-- cmake ..
-- make -j4
-- sudo make install
-- sudo cp libz80cpp.so ../../extra_install/linux/lib/
-- cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32
-- make -j4
-- sudo make install
-- sudo cp libz80cpp.dll /usr/i686-w64-mingw32/lib/
-- cd ..
-- mkdir win64
-- cd win64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32
-- make -j4
-- sudo make install
-- sudo cp libz80cpp.dll /usr/x86_64-w64-mingw32/lib/
-- cd ../..
-- git clone https://github.com/knightos/scas
-- cd scas
-- mkdir build
-- cd build
-- cmake ..
-- make -j4
-- sudo make install
-- sudo mkdir -p ../../extra_install/linux/share/zany80/plugins/binaries/
-- sudo cp bin/scas ../../extra_install/linux/share/zany80/plugins/binaries/
-- cd ../..
-- git clone https://github.com/knightos/kcc
-- cd kcc
-- mkdir build
-- cd build
-- cmake ..
-- make -j4
-- sudo make install
-- sudo cp bin/kcc ../../extra_install/linux/share/zany80/plugins/binaries/
-- cd ../..
-- git clone https://github.com/sfml/sfml
-- cd sfml
-- mkdir build
-- cd build
-- cmake .. -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
-- make -j4
-- sudo make install
-- mkdir -p ../../extra_install/linux/lib
-- cp lib/libsfml-{graphics,window,system}*2.5 ../../extra_install/linux/lib
-- cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW32.cmake -DCMAKE_INSTALL_PREFIX=/usr/i686-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x86/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
-- make -j4
-- sudo make install
-- find /usr/i686-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win32/ \;
-- cd ..
-- mkdir win64
-- cd win64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../../cmake_modules/MinGW64.cmake -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 -DOPENAL_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libopenal32.a`" -DOPENAL_INCLUDE_DIR="`readlink -f ../extlibs/headers/AL`" -DFLAC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libFLAC.a`"  -DFLAC_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbis.a`" -DVORBISENC_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisenc.a`" -DVORBISFILE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libvorbisfile.a`" -DOGG_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libogg.a`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DOGG_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DVORBIS_INCLUDE_DIR="`readlink -f ../extlibs/headers`" -DFREETYPE_LIBRARY="`readlink -f ../extlibs/libs-mingw/x64/libfreetype.a`" -DFREETYPE_INCLUDE_DIR_ft2build="`readlink -f ../extlibs/headers/freetype2`" -DFREETYPE_INCLUDE_DIR_freetype2="`readlink -f ../extlibs/headers/freetype2`" -DBUILD_SHARED_LIBS=true -DSFML_BUILD_AUDIO=FALSE -DSFML_BUILD_NETWORK=FALSE
-- make -j4
-- sudo make install
-- find /usr/x86_64-w64-mingw32/bin/ -name "sfml*.dll" -exec cp {} ../../extra_install/win64/ \;
-- cd ../..
+  - eval "${SETUP}"
+  - ./fips set config ${FIPS_CONFIG}
+  - git clone https://github.com/knightos/scas
+  - cd scas
+  - mkdir build
+  - cd build
+  - cmake .. && make -j8 && sudo make install
+  - cd ../..
+  - git clone https://github.com/knightos/kcc
+  - cd kcc
+  - mkdir build
+  - cd build
+  - cmake .. && make -j8 && sudo make install
+  - cd ../..
+
 script:
-# First, build the BIOS.
-- git clone https://github.com/Zany80/BIOS.git
-- cd BIOS
-- make -j4
-- make install DESTDIR=../extra_install/win32
-- make install DESTDIR=../extra_install/win64
-- sudo make install DESTDIR=../extra_install/linux/share/zany80
-- cd ..
-- mkdir build
-- cd build
-- cmake .. -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/linux`"
-- make -kj4
-- cpack
-- cd ..
-- mkdir win32
-- cd win32
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MinGW32.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/win32/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/win32/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win32`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/i686-w64-mingw32/include
-- make -kj4
-- cpack
-- cd ..
-- mkdir win64
-- cd win64
-- cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake_modules/MinGW64.cmake -DLIBGCC_LIBRARY="`readlink -f ../misc/win64/libgcc_s_sjlj-1.dll`" -DLIBSTDCPLUSPLUS_LIBRARY="`readlink -f ../misc/win64/libstdc++-6.dll`" -DSFML_STATIC_LIBRARIES=false -DEXTRA_INSTALL_DIR="`readlink -f ../extra_install/win64`" -DCMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/x86_64-w64-mingw32/include -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES:PATH=/usr/x86_64-w64-mingw32/include
-- make -kj4
-- cpack
-- cd ..
+  - git config --global user.name Travis CI
+  - git config --global user.email pleasantatk@gmail.com
+  - pushd ..
+  - git clone https://github.com/Zany80/BIOS
+  - popd
+  - make -C ../BIOS/ install DESTDIR=`pwd`/build
+  - if [[ "$EMSCRIPTEN" != "1" ]]; then if ! ./fips build;then FIPS_CONFIG=failure-failure-failure;exit 1;fi;else if ! docker build -t zany80/oryolized .;then FIPS_CONFIG=failure-failure-failure;exit 2;fi;fi
+  - if [[ "$EMSCRIPTEN" != "1" ]]; then ./fips make package;else if [[ "$DEPLOY_BUILD" == "y" ]];then docker run -e GITHUB_KEY zany80/oryolized bash -c "cd /root/Oryolized;./fips publish";fi;fi
+
 before_deploy:
-# Set up git user name and tag this commit
-- git config --local user.name "Noam Preil"
-- git config --local user.email "pleasantatk@gmail.com"
-- git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+  - git tag "$(./tools/get_version.sh)-$(git log --format=%h -1)" || true
+  - export VERSION="$(./tools/get_version.sh)"
+  - export MINIFIED_VERSION="${VERSION%.*}"
+  - mkdir deploy
+  - mv build/fips-build/Oryolized/$FIPS_CONFIG/Zany80-$MINIFIED_VERSION* deploy/
+
 deploy:
   provider: releases
-  api_key:
-    secure: JeF9NCSedvS5ZboGKlsOIjTVmECaztBku4gD4Z6ElnbU1kVYbjJlbApdehbmhT64eKRSy3W0I7DjyD8ygNFAebAePQAa4HfA47ijtKvAkZ7cetfvk24/kDc774sTvx5k97i9FX4q6h1pDq8HZz4yNjwfckDBvTUsVhXGpJZiC1TIdb7zLCMnqI927T3AXkmQoUjr3Ld9djMH95VnDjx5mSu+g2UxXUWZa3Fb0HjXliRhef82Rq/7nyAZfjiOsdxxSFV2u82GjRdCsdhbMdjKOitIA9vTL60V32CxoN+Un7q0G94isJrdK3Pr1OhFDU38uxh4Q6n4Bw5yZZipNDiiq7aVSfhI6r84Hj+dpqQdCqJw/BX42+yKQPrf8OHEUed/fzjXiJl5mwJ0eQf7rNnlTzWf9vgJX2sQesev6SI4Olxsd86qrBFA7XQt2jdBjx+wEqLeqxWpS3l/mi5ppP85JTmeL7gr6hL1OpQfUeIJLEwk8vDS5cPuYnnFJb16B8hi+kVf2t1u52LWB1SX6Aw1j9qxz1xG1r/9ybRpEmfLvk1k5vw6DMY/XrTgFgbrYfeWtnOcBrHmVLWhOT2RSqkfSkvjO0s/Qj+zXm0MjO5BN7+Jl0aHRe56jPCWGw6noCnk0hggRs/U8Ykel+fhoQP3uzUIRt6zPAfjkwBuLNIcrmc=
+  api_key: "$GITHUB_KEY"
   file_glob: true
-  file:
-  - build/Zany80*
-  - win32/Zany80*
-  - win64/Zany80*
+  file: deploy/*
   skip_cleanup: true
+  overwrite: true
+  prerelease: true
+  name: $VERSION
   on:
-    repo: Zany80/Zany80
+    condition:
+      - $DEPLOY_BUILD = y
+      - $EMSCRIPTEN != 1
+
 branches:
   only:
-  - master
+    - master

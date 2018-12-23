@@ -3,7 +3,5 @@ if(NOT DEFINED ZANY80_BUILD_UNUSED)
 endif()
 
 if(ZANY80_BUILD_UNUSED)
-	add_subdirectory(z80)
+	fips_add_subdirectory(z80)
 endif()
-
-add_subdirectory(z80cpp_core)

@@ -1,0 +1,8 @@
+#pragma once
+
+#define _pvstr(x) #x
+#define pvstr(x) _pvstr(x)
+
+#cmakedefine PROJECT_VERSION pvstr(@PROJECT_VERSION@)
+#cmakedefine FIPS_EMSCRIPTEN_USE_WASM @FIPS_EMSCRIPTEN_USE_WASM@
+#cmakedefine FIPS_EMSCRIPTEN_LOCALIZE @FIPS_EMSCRIPTEN_LOCALIZE@

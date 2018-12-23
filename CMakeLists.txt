@@ -1,102 +1,74 @@
 cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_CXX_STANDARD 11)
+# Needed by the plugin system due to multiple inheritance
+set(FIPS_RTTI ON CACHE BOOL "" FORCE)
+set(FIPS_EMSCRIPTEN_USE_CWRAP ON CACHE BOOL "" FORCE)
 
-# Enable use of VERSION in project() command
-cmake_policy(SET CMP0048 NEW)
+# Load in FIPS
+get_filename_component(FIPS_ROOT_DIR "./build/fips" ABSOLUTE)
+include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
-# Enable debug symbols by default
-# must be done before project() statement
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
-endif()
+fips_setup(PROJECT Zany80)
+# Needed to define a version
+project(Zany80 VERSION 0.0.2.3)
 
-# Default to shared libs
-if(NOT DEFINED SFML_STATIC_LIBRARIES)
-	set(SFML_STATIC_LIBRARIES FALSE CACHE BOOL "Use static SFML libs" FORCE)
-endif()
-
-project(Zany80 VERSION 0.1.1.0 LANGUAGES C CXX)
-
-if(WIN32)
+# TODO: get this working on native Windows compilation
+# TODO: and also mingw cross-compilation
+if(FIPS_WINDOWS)
   ENABLE_LANGUAGE(RC)
   set(CMAKE_RC_COMPILE_OBJECT
     "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/misc/icon.rc)
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mwindows")
+  set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/icon.rc)
+elseif(FIPS_OSX)
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -undefined dynamic_lookup")
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
+fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_BINARY_DIR}")
 
-include(git_revision)
-
-configure_file(
-  "${PROJECT_SOURCE_DIR}/config.h.in"
-  "${PROJECT_BINARY_DIR}/config.h"
-  )
-
-find_package(LIBLIB 0.1 REQUIRED)
-
-find_package(SFML 2 REQUIRED graphics window system )
-if(SFML_NOTFOUND)
-	message(FATAL_ERROR "SFML not found!")
-endif()
-
-add_subdirectory(src)
-add_library(zany SHARED ${SOURCES})
-add_executable(zany80 ${CMAKE_SOURCE_DIR}/src/main.cpp ${ICON_SOURCE})
-
-include_directories("${LIBLIB_INCLUDE_DIR}")
-target_include_directories(zany80 PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
-target_include_directories(zany PRIVATE "${Zany80_BINARY_DIR}" PUBLIC "${Zany80_SOURCE_DIR}/include")
-target_link_libraries(zany ${LIBLIB_LIBRARY} sfml-graphics)
-if (SFML_STATIC_LIBRARIES)
-	target_link_libraries(zany80 ${LIBLIB_LIBRARY} zany)
+configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
+fips_begin_app(zany80 windowed)
+fips_deps(Gfx IMUI lib)
+if (FIPS_EMSCRIPTEN)
+	fips_deps(HttpFS simple_shell z80cpp_core scas_plugin editor)
 else()
-	target_link_libraries(zany80 ${LIBLIB_LIBRARY} zany sfml-graphics)
+	fips_deps(LocalFS)
 endif()
-link_libraries(zany)
+fips_src(src/)
+fips_end_app()
 
-add_subdirectory(plugins)
+fips_add_subdirectory(plugins)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+fips_finish()
 
-if(WIN32)
+if(FIPS_WINDOWS)
 	set(CPACK_GENERATOR "NSIS")
-	if (NOT DEFINED LIBGCC_LIBRARY)
-		set(LIBGCC_LIBRARY "" CACHE FILEPATH "libgcc dll - needed for windows cross-compilation" FORCE)
-	endif()
-	if (NOT DEFINED LIBSTDCPLUSPLUS_LIBRARY)
-		set(LIBSTDCPLUSPLUS_LIBRARY "" CACHE FILEPATH "libstdc++ dll - needed for windows cross-compilation" FORCE)
-	endif()
-	install(FILES ${LIBLIB_LIBRARY} font.png ${LIBGCC_LIBRARY} ${LIBSTDCPLUSPLUS_LIBRARY} DESTINATION .)
-	install (TARGETS zany80 zany
+	install (TARGETS zany80
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
-	file(GLOB BINARIES "${WINPATH}/binaries/*")
-	install(PROGRAMS ${BINARIES} DESTINATION plugins/binaries/)
-else()
+	install (FILES misc/libc.o DESTINATION lib)
+elseif(FIPS_LINUX)
 	set(CPACK_GENERATOR "TGZ;DEB")
-	install(
-		FILES font.png DESTINATION share/zany80
-	)
 	install (FILES misc/zany80.desktop DESTINATION share/applications)
 	install (FILES misc/zany80.png DESTINATION share/pixmaps)
-	install (TARGETS zany80 zany
+	install (FILES misc/libc.o DESTINATION share/zany80/lib)
+	install (TARGETS zany80
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 	)
-	file(GLOB BINARIES misc/linux/*)
-	install(PROGRAMS ${BINARIES} DESTINATION share/zany80/plugins/binaries/)
-	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/plugins/binaries)
-	file(COPY ${BINARIES} DESTINATION ${CMAKE_BINARY_DIR}/plugins/binaries)
-	install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION share/zany80/include)
+elseif (FIPS_OSX)
+	set(CPACK_GENERATOR "Bundle")
+	set(CPACK_BUNDLE_NAME "Zany80")
+	set(CPACK_BUNDLE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/misc/zany80.png")
+	set(CPACK_BUNDLE_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/misc/zany80.plist")
+	install(TARGETS zany80 DESTINATION .)
 endif()
 
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/headers/ DESTINATION include)
+
 if (DEFINED EXTRA_INSTALL_DIR)
-#	file(GLOB EXTRA_INSTALL ${EXTRA_INSTALL_DIR}/*)
-#	set(EXTRA_INSTALL "${EXTRA_INSTALL}" CACHE STRING "" FORCE)
 	install(DIRECTORY "${EXTRA_INSTALL_DIR}/" DESTINATION .)
 endif()
 
@@ -105,29 +77,27 @@ include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Zany80 Fantasy Computer")
 set(CPACK_PACKAGE_VENDOR "Noam Preil")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
-set(CPACK_PACKAGE_VERSION_MAJOR ${Zany80_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${Zany80_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${Zany80_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Zany80")
-if(WIN32)
-  # There is a bug in NSIS that does not handle full unix paths properly. Make
-  # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}\\\\misc\\\\zany80.bmp")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "\\\\zany80.exe")
-  set(CPACK_NSIS_DISPLAY_NAME "Zany80 Fantasy Computer")
-  set(CPACK_NSIS_PACKAGE_NAME "Zany80 Fantasy Computer")
-  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\zany80.github.io")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\zany80.github.io")
-  SET(CPACK_NSIS_CONTACT "pleasantatk@gmail.com")
-  set(CPACK_NSIS_MODIFY_PATH "OFF")
-  set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
-  set(CPACK_NSIS_EXECUTABLES_DIRECTORY "./")
-  set(CPACK_NSIS_MUI_FINISHPAGE_RUN "\\\\zany80.exe")
-  set(CPACK_NSIS_HELP_LINK "https://zany80.github.io")
-  set(CPACK_NSIS_URL_INFO_ABOUT "https://zany80.github.io")
-  set(CPACK_NSIS_CONTACT "Feel free to send me a message at pleasantatk@gmail.com for assistance!")
-  set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}\\\\misc\\\\zany.ico")
+if (FIPS_WINDOWS)
+	set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}\\\\misc\\\\zany80.png")
+	set(CPACK_NSIS_INSTALLED_ICON_NAME "\\\\zany80.exe")
+	set(CPACK_NSIS_DISPLAY_NAME "Zany80 Fantasy Computer")
+	set(CPACK_NSIS_PACKAGE_NAME "Zany80 Fantasy Computer")
+	set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\zany80.github.io")
+	set(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\zany80.github.io")
+	set(CPACK_NSIS_CONTACT "pleasantatk@gmail.com")
+	set(CPACK_NSIS_MODIFY_PATH "OFF")
+	set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
+	set(CPACK_NSIS_EXECUTABLES_DIRECTORY "./")
+	set(CPACK_NSIS_MUI_FINISHPAGE_RUN "\\\\zany80.exe")
+	set(CPACK_NSIS_HELP_LINK "https://zany80.github.io")
+	set(CPACK_NSIS_URL_INFO_ABOUT "https://zany80.github.io")
+	set(CPACK_NSIS_CONTACT "Feel free to send me a message at pleasantatk@gmail.com for assistance!")
+	set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}\\\\misc\\\\zany.ico")
+	set(CPACK_PACKAGE_EXECUTABLES "Zany80;Zany80")
+else()
+	set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/misc/zany80.png")
 endif()
-set(CPACK_PACKAGE_EXECUTABLES "Zany80;Zany80")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "pixelherodev")
 include(CPack)

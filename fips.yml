@@ -1,0 +1,14 @@
+imports:
+  oryol:
+    git: https://github.com/pixelherodev/oryol.git
+    branch: zany_active
+  oryol-imgui:
+    git: https://github.com/floooh/oryol-imgui.git
+  liblib:
+    git: https://github.com/pixelherodev/liblib.git
+  z80cpp_core:
+    git: https://git.sr.ht/~pixelherodev/z80cpp_core
+  scas:
+    git: https://github.com/zany80/fips-scas.git
+  imguicolortextedit:
+    git: https://github.com/pixelherodev/ImGuiColorTextEdit

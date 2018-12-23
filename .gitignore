@@ -1,6 +1,6 @@
-build*/
-misc/linux/
-bin/
-BIOS/bin/
-Zany80.geany
-extra_install/
+.fips-imports.cmake
+.fips-settings.yml
+zany80_deps.cpp.tags
+build/
+*.geany
+fips-files/verbs/__pycache__/*.pyc
