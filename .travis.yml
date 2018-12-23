@@ -113,15 +113,15 @@ script:
   - git clone https://github.com/Zany80/BIOS
   - popd
   - make -C ../BIOS/ install DESTDIR=`pwd`/build
-  - if [[ "$EMSCRIPTEN" != "1" ]]; then if ! ./fips build;then FIPS_CONFIG=failure-failure-failure;exit 1;fi;else if ! docker build -t zany80/oryolized .;then FIPS_CONFIG=failure-failure-failure;exit 2;fi;fi
-  - if [[ "$EMSCRIPTEN" != "1" ]]; then ./fips make package;else if [[ "$DEPLOY_BUILD" == "y" ]];then docker run -e GITHUB_KEY zany80/oryolized bash -c "cd /root/Oryolized;./fips publish";fi;fi
+  - if [[ "$EMSCRIPTEN" != "1" ]]; then if ! ./fips build;then FIPS_CONFIG=failure-failure-failure;exit 1;fi;else if ! docker build -t zany80/zany80 .;then FIPS_CONFIG=failure-failure-failure;exit 2;fi;fi
+  - if [[ "$EMSCRIPTEN" != "1" ]]; then ./fips make package;else if [[ "$DEPLOY_BUILD" == "y" ]];then docker run -e GITHUB_KEY Zany80/Zany80 bash -c "cd /root/Zany80;./fips publish";fi;fi
 
 before_deploy:
   - git tag "$(./tools/get_version.sh)-$(git log --format=%h -1)" || true
   - export VERSION="$(./tools/get_version.sh)"
   - export MINIFIED_VERSION="${VERSION%.*}"
   - mkdir deploy
-  - mv build/fips-build/Oryolized/$FIPS_CONFIG/Zany80-$MINIFIED_VERSION* deploy/
+  - mv build/fips-build/Zany80/$FIPS_CONFIG/Zany80-$MINIFIED_VERSION* deploy/
 
 deploy:
   provider: releases
