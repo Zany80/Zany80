@@ -6,3 +6,7 @@ with performance as KCC and Scas won't have to be installed for the builds)
 * C support
 * Built in help (tutorial plugin?)
 * More examples for editor
+* Finish implementing SimpleShell commands
+* KnightOS support
+* Merge legacy and oryolized plugins into one solid codebase
+* Support alternative backends in addition to Oryol (Sokol)

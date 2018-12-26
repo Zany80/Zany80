@@ -58,8 +58,8 @@ public:
 };
 
 class CPUPlugin;
-typedef uint8_t(*read_handler_t)(CPUPlugin*);
-typedef void(*write_handler_t)(uint8_t, CPUPlugin*);
+typedef std::function<uint8_t()> read_handler_t;
+typedef std::function<void(uint8_t)> write_handler_t;
 
 class CPUPlugin : INHERIT_TYPE Plugin {
 	OryolClassDecl(CPUPlugin);
