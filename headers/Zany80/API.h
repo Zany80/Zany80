@@ -11,9 +11,10 @@ String processFileURI(String path);
 
 extern unsigned long plugin_instances;
 
+Array<Plugin*> getPlugins(String type);
+String getPluginName(Plugin *plugin);
+
 #ifndef ORYOL_EMSCRIPTEN
-Array<PPTR> getPlugins(String type);
-String getPluginName(PPTR plugin);
 bool requirePlugin(String type);
 #endif
 

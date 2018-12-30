@@ -27,10 +27,10 @@ void Display::frame(float delta) {
 		ImGui::EndMenuBar();
 	}
 	if (!connected) {
-		Array<PPTR> cpus = getPlugins("z80");
+		Array<Plugin*> cpus = getPlugins("z80");
 		if (cpus.Size()) {
 			connected = true;
-			cpu = CAST_PPTR(cpus[0], CPUPlugin);
+			cpu = dynamic_cast<CPUPlugin*>(cpus[0]);
 			cpu->attachToPort(1, [this](uint8_t value) {
 				if (value == 0)
 					output_buffer.Clear();

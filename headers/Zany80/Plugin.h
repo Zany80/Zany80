@@ -8,29 +8,6 @@
 #include <IO/IOTypes.h>
 using namespace Oryol;
 
-#define ORYOL_PPTRS
-#define FORCE_DC_PPTR
-#define INHERIT_TYPE public virtual
-
-#define DC_CAST_PPTR(PTR, TYPE) dynamic_cast<TYPE*>(GET_PPTR(PTR))
-
-#ifdef ORYOL_PPTRS
-#define PPTR Ptr<Plugin>
-#define GET_PPTR(P) P.p
-#define CLEANUP_PPTR(P)
-#define CAST_PPTR(PTR, TYPE) (PTR->IsA<TYPE>() ? GET_PPTR(PTR->DynamicCast<TYPE>()) : nullptr)
-#else
-#define PPTR Plugin*
-#define GET_PPTR(P) P
-#define CLEANUP_PPTR(P) delete P;P = nullptr
-#define CAST_PPTR(PTR, TYPE) DC_CAST_PPTR(PTR, TYPE)
-#endif
-
-#ifdef FORCE_DC_PPTR
-#undef CAST_PPTR
-#define CAST_PPTR(PTR, TYPE) DC_CAST_PPTR(PTR, TYPE)
-#endif
-
 class Plugin : public RefCounted {
 	OryolClassDecl(Plugin);
 	OryolBaseTypeDecl(Plugin);
@@ -55,7 +32,7 @@ public:
 	}
 };
 
-class PerpetualPlugin : INHERIT_TYPE Plugin {
+class PerpetualPlugin : public virtual Plugin {
 	OryolClassDecl(PerpetualPlugin);
 	OryolTypeDecl(PerpetualPlugin, Plugin);
 public:
@@ -63,7 +40,7 @@ public:
 	virtual void frame(float delta) = 0;
 };
 
-class ShellPlugin : INHERIT_TYPE Plugin {
+class ShellPlugin : public virtual Plugin {
 	OryolClassDecl(ShellPlugin);
 	OryolTypeDecl(ShellPlugin, Plugin);
 public:
@@ -77,7 +54,7 @@ class CPUPlugin;
 typedef std::function<uint8_t()> read_handler_t;
 typedef std::function<void(uint8_t)> write_handler_t;
 
-class CPUPlugin : INHERIT_TYPE Plugin {
+class CPUPlugin : public virtual Plugin {
 	OryolClassDecl(CPUPlugin);
 	OryolTypeDecl(CPUPlugin, Plugin);
 public:
@@ -94,7 +71,7 @@ public:
 	virtual void reset() = 0;
 };
 
-class ToolchainPlugin : INHERIT_TYPE Plugin {
+class ToolchainPlugin : public virtual Plugin {
 	OryolClassDecl(ToolchainPlugin);
 	OryolTypeDecl(ToolchainPlugin, Plugin);
 public:
@@ -106,7 +83,7 @@ public:
 	virtual void setVerbosity(int verbosity) = 0;
 };
 
-extern Map<String, PPTR> plugins;
+extern Map<String, Plugin*> plugins;
 
 #ifndef ORYOL_EMSCRIPTEN
 void spawnPlugin(String plugin);

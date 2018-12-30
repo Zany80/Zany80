@@ -148,14 +148,14 @@ AppState::Code Zany80::OnInit() {
 			 fwrite(res.Data.Data(), 1, res.Data.Size(), file);
 			 fflush(file);
 			 fclose(file);
-	 		(CAST_PPTR(plugins["SimpleShell"], ShellPlugin))->output("/lib/libc.o saved!");
+	 		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("/lib/libc.o saved!");
 		 }
 		 else {
-	 		(CAST_PPTR(plugins["SimpleShell"], ShellPlugin))->output("Error opening /lib/libc.o for writing!");
+	 		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("Error opening /lib/libc.o for writing!");
 	 		::reportError("Error opening /lib/libc.o for writing!");
 		 }
 	}, [](const URL& url, IOStatus::Code ioStatus) {
-		(CAST_PPTR(plugins["SimpleShell"], ShellPlugin))->output("Error loading libc into emscripten!");
+		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("Error loading libc into emscripten!");
 		::reportError("Error loading libc!");
 	});
 	#endif
@@ -286,7 +286,7 @@ AppState::Code Zany80::OnRunning() {
 				StringBuilder features	;
 				bool any = false;
 				for (const char *tag : listed_tags) {
-					if (GET_PPTR(plugins.ValueAtIndex(i))->supports(tag)) {
+					if (plugins.ValueAtIndex(i)->supports(tag)) {
 						features.AppendFormat(32, "%s, ", tag);
 						any = true;
 					}
@@ -296,8 +296,8 @@ AppState::Code Zany80::OnRunning() {
 					features.PopBack();
 					ImGui::Text("\t\tKnown features: %s", features.AsCStr());
 				}
-				if (GET_PPTR(plugins.ValueAtIndex(i))->supports("Shell")) {
-					Array<String> commands = CAST_PPTR(plugins.ValueAtIndex(i), ShellPlugin)->getCommands();
+				if (plugins.ValueAtIndex(i)->supports("Shell")) {
+					Array<String> commands = dynamic_cast<ShellPlugin*>(plugins.ValueAtIndex(i))->getCommands();
 					StringBuilder c;
 					for (String _c : commands)
 						c.AppendFormat(512, "%s ", _c.AsCStr());
@@ -308,14 +308,14 @@ AppState::Code Zany80::OnRunning() {
 					ImGui::Text("\t\tSend a command to the shell: ");
 					static char buf[128];
 					if (ImGui::InputText("", buf, 128, ImGuiInputTextFlags_EnterReturnsTrue)) {
-						CAST_PPTR(plugins.ValueAtIndex(i), ShellPlugin)->execute(buf);
+						dynamic_cast<ShellPlugin*>(plugins.ValueAtIndex(i))->execute(buf);
 						strcpy(buf, "");
 					}
 				}
-				if (GET_PPTR(plugins.ValueAtIndex(i))->supports("CPU")) {
+				if (plugins.ValueAtIndex(i)->supports("CPU")) {
 					ImGui::Text("\t\t\tRegisters:");
 					int per_line = 1;
-					Map<String, uint32_t> registers = CAST_PPTR(plugins.ValueAtIndex(i), CPUPlugin)->getRegisters();
+					Map<String, uint32_t> registers = dynamic_cast<CPUPlugin*>(plugins.ValueAtIndex(i))->getRegisters();
 					for (int i = 5; i > 1; i--) {
 						if (registers.Size() % i == 0) {
 							per_line = i;
@@ -333,9 +333,9 @@ AppState::Code Zany80::OnRunning() {
 						}
 					}
 				}
-				if (GET_PPTR(plugins.ValueAtIndex(i))->supports("Toolchain")) {
+				if (plugins.ValueAtIndex(i)->supports("Toolchain")) {
 					ImGui::Text("\t\t\tTransforms:");
-					Map<String, Array<String>> transforms = CAST_PPTR(plugins.ValueAtIndex(i), ToolchainPlugin)->supportedTransforms();
+					Map<String, Array<String>> transforms = dynamic_cast<ToolchainPlugin*>(plugins.ValueAtIndex(i))->supportedTransforms();
 					for (int i = 0; i < transforms.Size(); i++) {
 						StringBuilder line("\t\t\t\t");
 						line.Append(transforms.KeyAtIndex(i));
@@ -353,7 +353,7 @@ AppState::Code Zany80::OnRunning() {
 	}
 	for (auto pair : plugins) {
 		if (pair.value->supports("Perpetual")) {
-			CAST_PPTR(pair.value, PerpetualPlugin)->frame(delta.AsSeconds());
+			dynamic_cast<PerpetualPlugin*>(pair.value)->frame(delta.AsSeconds());
 		}
 	}
 	ImGui::Render();
@@ -363,8 +363,9 @@ AppState::Code Zany80::OnRunning() {
 }
 
 AppState::Code Zany80::OnCleanup() {
-	for (KeyValuePair<String, PPTR> p : plugins) {
-		CLEANUP_PPTR(p.value);
+	for (KeyValuePair<String, Plugin*> &p : plugins) {
+		delete p.value;
+		p.value = nullptr;
 	}
 	plugins.Clear();
 	IMUI::Discard();

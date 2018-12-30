@@ -10,7 +10,7 @@ include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.0.3.0)
+project(Zany80 VERSION 0.0.3.1)
 
 # TODO: get this working on native Windows compilation
 # TODO: and also mingw cross-compilation
