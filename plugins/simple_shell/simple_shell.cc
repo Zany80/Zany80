@@ -119,7 +119,7 @@ SimpleShell::SimpleShell() {
 
 		{"assembler", {
 			.function = [](Array<String> args, SimpleShell *shell) -> int {
-				Array<PPTR> tools = getPlugins("Toolchain");
+				Array<Plugin*> tools = getPlugins("Toolchain");
 				if (tools.Size() == 0) {
 					shell->output("Error: no assembler plugins loaded!");
 					return 1;
@@ -158,8 +158,8 @@ SimpleShell::SimpleShell() {
 				}
 				ToolchainPlugin *t = nullptr;
 				Array<ToolchainPlugin*> assemblers;
-				for (PPTR p : tools) {
-					t = CAST_PPTR(p, ToolchainPlugin);
+				for (Plugin *p : tools) {
+					t = dynamic_cast<ToolchainPlugin*>(p);
 					if (t->supportedTransforms().Contains(".asm"))
 						assemblers.Add(t);
 				}

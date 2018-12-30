@@ -249,9 +249,9 @@ void Editor::Execute() {
 	if (has_file) {
 		// TODO: make sure it has been built first
 		if (!cpu) {
-			Array<PPTR> cpus = getPlugins("CPU");
+			Array<Plugin*> cpus = getPlugins("CPU");
 			if (cpus.Size() == 1) {
-				cpu = CAST_PPTR(cpus[0], CPUPlugin);
+				cpu = dynamic_cast<CPUPlugin*>(cpus[0]);
 				messages.Clear();
 				messages.Add("One CPU detected, automatically selecting...");
 			}
@@ -282,9 +282,9 @@ void Editor::SelectCPU(String s) {
 		messages.Add("Invalid number!");
 	}
 	else {
-		Array<PPTR> cpus = getPlugins("CPU");
+		Array<Plugin*> cpus = getPlugins("CPU");
 		if (c < cpus.Size()) {
-			this->cpu = CAST_PPTR(cpus[c], CPUPlugin);
+			this->cpu = dynamic_cast<CPUPlugin*>(cpus[c]);
 			messages.Add("Attached to CPU.");
 		}
 		else {
@@ -295,9 +295,9 @@ void Editor::SelectCPU(String s) {
 }
 
 void Editor::SelectCPU() {
-	Array<PPTR> cpus = getPlugins("CPU");
+	Array<Plugin*> cpus = getPlugins("CPU");
 	if (cpus.Size() == 1) {
-		cpu = CAST_PPTR(cpus[0], CPUPlugin);
+		cpu = dynamic_cast<CPUPlugin*>(cpus[0]);
 		messages.Clear();
 		messages.Add("One CPU detected, automatically selecting...");
 	}
@@ -320,9 +320,9 @@ void Editor::SelectASM(String s) {
 		messages.Add("Invalid number!");
 	}
 	else {
-		Array<PPTR> tools = getPlugins("Toolchain");
+		Array<Plugin*> tools = getPlugins("Toolchain");
 		if (t < tools.Size()) {
-			this->assembler = CAST_PPTR(tools[t], ToolchainPlugin);
+			this->assembler = dynamic_cast<ToolchainPlugin*>(tools[t]);
 			messages.Add("Assembler selected");
 		}
 		else {
@@ -333,10 +333,10 @@ void Editor::SelectASM(String s) {
 }
 
 void Editor::SelectASM() {
-	// TODO: ensure selected tool is assembler
-	Array<PPTR> tools = getPlugins("Toolchain");
+	// TODO: ensure selected tool is an assembler
+	Array<Plugin*> tools = getPlugins("Toolchain");
 	if (tools.Size() == 1) {
-		assembler = CAST_PPTR(tools[0], ToolchainPlugin);
+		assembler = dynamic_cast<ToolchainPlugin*>(tools[0]);
 		messages.Clear();
 		messages.Add("One assembler detected, automatically selecting...");
 	}
