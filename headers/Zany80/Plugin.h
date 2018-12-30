@@ -47,7 +47,7 @@ public:
 		if (functionName == "supports") {
 			va_list args;
 			va_start(args, functionName);
-			bool supported = this->supports(va_arg(args, String));
+			bool supported = this->supports(va_arg(args, const char *));
 			va_end(args);
 			return (void*)supported;
 		}
