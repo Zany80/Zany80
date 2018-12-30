@@ -37,6 +37,22 @@ class Plugin : public RefCounted {
 public:
 	virtual ~Plugin(){}
 	virtual bool supports(String type) = 0;
+	/** 
+	 * This function can be used to call known functions without casts.
+	 * Its primary purpose is future-compatibility - using this function allows
+	 * a newer plugin to be added to an older host.
+	 * A default implementation exists mostly to ease the burden on plugins.
+	 */
+	virtual void* named_function(String functionName, ...) {
+		if (functionName == "supports") {
+			va_list args;
+			va_start(args, functionName);
+			bool supported = this->supports(va_arg(args, String));
+			va_end(args);
+			return (void*)supported;
+		}
+		return 0;
+	}
 };
 
 class PerpetualPlugin : INHERIT_TYPE Plugin {

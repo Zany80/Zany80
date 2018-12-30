@@ -75,7 +75,11 @@ extern "C" void reportError(const char *error_message) {
 }
 
 void Zany80::reportError(const char *error) {
-	this->error = error;
+	StringBuilder s(this->error);
+	if (s.Length())
+		s.Append('\n');
+	s.Append(error);
+	this->error = s.GetString();
 }
 
 AppState::Code Zany80::OnInit() {
@@ -222,13 +226,19 @@ AppState::Code Zany80::OnRunning() {
 		ImGui::Text("Backend: D3D11");
 		#elif ORYOL_EMSCRIPTEN
 		ImGui::Text("Backend: Emscripten");
+		#else
+		ImGui::Text("Unknown backend. This platform may not be fully supported.");
 		#endif
-		if (error != "") {
-			ImGui::Text("Error: %s", error.AsCStr());
-		}
 		if (ImGui::Button("Hide")) {
 			debug_window = false;
 		}
+		ImGui::End();
+	}
+	if (error != "") {
+		ImGui::Begin("Error!", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("%s", error.AsCStr());
+		if (ImGui::Button("Clear"))
+			error = "";
 		ImGui::End();
 	}
 	if (this->hub) {
@@ -257,7 +267,7 @@ AppState::Code Zany80::OnRunning() {
 				if (plugins.FindIndex(path) == InvalidIndex) {
 					ImGui::Text("%d: %s", c++, available_plugins[i].AsCStr());
 					s.Set("Load ");
-					s.Append(path);
+					s.Append(available_plugins[i]);
 					if (ImGui::Button(s.GetString().AsCStr())) {
 						Log::Dbg("Spawning %s\n", path.AsCStr());
 						spawnPlugin(path);

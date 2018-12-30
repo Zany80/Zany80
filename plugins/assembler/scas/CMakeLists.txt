@@ -16,7 +16,7 @@ else()
 endif()
 
 set_target_properties(scas_plugin PROPERTIES PREFIX "")
-set_target_properties(scas_plugin PROPERTIES OUTPUT_NAME "official_assembler")
+set_target_properties(scas_plugin PROPERTIES OUTPUT_NAME "assembler")
 
 if (FIPS_LINUX)
 	install(TARGETS scas_plugin DESTINATION share/zany80/plugins)

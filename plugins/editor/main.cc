@@ -51,6 +51,8 @@ void Editor::ResetEditor() {
 }
 
 Editor::Editor() {
+	if (!requirePlugin("Toolchain"))
+		return;
 	language = TextEditor::LanguageDefinition::C();
 	language.mIdentifiers = TextEditor::Identifiers();
 	language.mName = "Zany80 Assembly";

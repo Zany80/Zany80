@@ -1,4 +1,4 @@
-set(VERSION 1.0.2.0)
+set(VERSION 1.0.3.0)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/editor_config.h)
 
 if (FIPS_EMSCRIPTEN)
