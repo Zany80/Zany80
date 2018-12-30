@@ -26,6 +26,7 @@
 #if ORYOL_EMSCRIPTEN
 #include "../plugins/simple_shell/simple_shell.h"
 #include "../plugins/editor/Editor.h"
+#include "../plugins/display/Display.h"
 #include "../plugins/assembler/scas/scas.h"
 #include "../build/z80cpp_core/src/oryolized/ZanyCore.h"
 #endif
@@ -136,11 +137,14 @@ AppState::Code Zany80::OnInit() {
 	#ifndef ORYOL_EMSCRIPTEN
 	IO::SetAssign("lib:", "root:lib/");
 	updateAvailablePlugins();
+	spawnPlugin("plugins:editor");
+	spawnPlugin("plugins:display");
 	#else
 	plugins.Add("SimpleShell", new SimpleShell);
 	plugins.Add("ZanyCore", new ZanyCore);
 	plugins.Add("Official Assembler", new scas);
 	plugins.Add("Editor", new Editor);
+	plugins.Add("Display", new Display);
 	IO::Load("root:libc.o", [](IO::LoadResult res) {
 		 mkdir("/lib", 0700);
 		 FILE *file = fopen("/lib/libc.o", "w");
@@ -232,13 +236,6 @@ AppState::Code Zany80::OnRunning() {
 		if (ImGui::Button("Hide")) {
 			debug_window = false;
 		}
-		ImGui::End();
-	}
-	if (error != "") {
-		ImGui::Begin("Error!", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::Text("%s", error.AsCStr());
-		if (ImGui::Button("Clear"))
-			error = "";
 		ImGui::End();
 	}
 	if (this->hub) {
@@ -355,6 +352,14 @@ AppState::Code Zany80::OnRunning() {
 		if (pair.value->supports("Perpetual")) {
 			dynamic_cast<PerpetualPlugin*>(pair.value)->frame(delta.AsSeconds());
 		}
+	}
+	if (error != "") {
+		ImGui::SetNextWindowFocus();
+		ImGui::Begin("Error!", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("%s", error.AsCStr());
+		if (ImGui::Button("Clear"))
+			error = "";
+		ImGui::End();
 	}
 	ImGui::Render();
 	Gfx::EndPass();
