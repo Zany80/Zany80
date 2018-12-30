@@ -75,11 +75,11 @@ bool Display::supports(String type) {
 	return (Array<String>{"Perpetual", "Serial Monitor", "Display"}).FindIndexLinear(type) != InvalidIndex;
 }
 
+#ifndef ORYOL_EMSCRIPTEN
+
 extern "C" const char *getName() {
 	return "Serial Monitor";
 }
-
-#ifndef ORYOL_EMSCRIPTEN
 
 extern "C" Plugin *make() {
 	return new Display;

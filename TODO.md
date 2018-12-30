@@ -23,3 +23,5 @@ with performance as KCC and Scas won't have to be installed for the builds)
 * Unit tests
 * Go over all the rushed parts and add cleanup (e.g. plugin removal)
 * Ensure all error reporting goes through reportError
+* Add other CPUs (e.g. 6809)
+* Sound support
