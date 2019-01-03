@@ -1,5 +1,7 @@
 #pragma once
 
+#define ZANY80_ABI 1
+
 #include <Zany80/Plugin.h>
 #include <TextEditor.h>
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#define ZANY80_ABI 1
+
 #include <Core/Core.h>
 #include <Core/Creator.h>
 #include <Core/String/String.h>

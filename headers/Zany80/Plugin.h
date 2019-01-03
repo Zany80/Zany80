@@ -1,90 +1,17 @@
-#pragma once
+#if ZANY80_ABI == 1 || ZANY80_ABI == CPP
 
-#include <Core/Core.h>
-#include <Core/RefCounted.h>
-#include <Core/String/String.h>
-#include <Core/String/StringBuilder.h>
-#include <Core/Containers/Map.h>
-#include <IO/IOTypes.h>
-using namespace Oryol;
+#ifndef __cplusplus
+#error Zany80 ABI 1 can only be used from C++. Try using ABI 2.
+#endif
+#include "ABI/ABI1.h"
 
-class Plugin : public RefCounted {
-	OryolClassDecl(Plugin);
-	OryolBaseTypeDecl(Plugin);
-public:
-	virtual ~Plugin(){}
-	virtual bool supports(String type) = 0;
-	/** 
-	 * This function can be used to call known functions without casts.
-	 * Its primary purpose is future-compatibility - using this function allows
-	 * a newer plugin to be added to an older host.
-	 * A default implementation exists mostly to ease the burden on plugins.
-	 */
-	virtual void* named_function(String functionName, ...) {
-		if (functionName == "supports") {
-			va_list args;
-			va_start(args, functionName);
-			bool supported = this->supports(va_arg(args, const char *));
-			va_end(args);
-			return (void*)supported;
-		}
-		return 0;
-	}
-};
+#elif ZANY80_ABI == 2 || ZANY80_ABI == LIBLIB
 
-class PerpetualPlugin : public virtual Plugin {
-	OryolClassDecl(PerpetualPlugin);
-	OryolTypeDecl(PerpetualPlugin, Plugin);
-public:
-	virtual ~PerpetualPlugin(){}
-	virtual void frame(float delta) = 0;
-};
+#warning Zany80 ABI 2 is experimental
+#include "ABI/ABI2.h"
 
-class ShellPlugin : public virtual Plugin {
-	OryolClassDecl(ShellPlugin);
-	OryolTypeDecl(ShellPlugin, Plugin);
-public:
-	virtual ~ShellPlugin(){}
-	virtual void output(const char *fmt, ...) __attribute__((format(printf, 2, 3))) = 0;
-	virtual int execute(String command) = 0;
-	virtual Array<String> getCommands() = 0;
-};
+#else
 
-class CPUPlugin;
-typedef std::function<uint8_t()> read_handler_t;
-typedef std::function<void(uint8_t)> write_handler_t;
+#error Must specify a plugin ABI
 
-class CPUPlugin : public virtual Plugin {
-	OryolClassDecl(CPUPlugin);
-	OryolTypeDecl(CPUPlugin, Plugin);
-public:
-	virtual ~CPUPlugin(){}
-	virtual Map<String, uint32_t> getRegisters() = 0;
-	virtual uint64_t executedCycles() = 0;
-	virtual void execute(uint32_t cycles) = 0;
-	virtual Array<uint32_t> getBreakpoints() = 0;
-	virtual void setBreakpoint(uint32_t address, bool active) = 0;
-	virtual void attachToPort(uint32_t port, read_handler_t read_handler) = 0;
-	virtual void attachToPort(uint32_t port, write_handler_t write_handler) = 0;
-	virtual void fireInterrupt(uint8_t IRQ) = 0;
-	virtual void loadROM(String path) = 0;
-	virtual void reset() = 0;
-};
-
-class ToolchainPlugin : public virtual Plugin {
-	OryolClassDecl(ToolchainPlugin);
-	OryolTypeDecl(ToolchainPlugin, Plugin);
-public:
-	virtual ~ToolchainPlugin() {}
-	virtual Map<String, Array<String>> supportedTransforms() = 0;
-	virtual int transform(Array<String> sources, String destination, StringBuilder *out) = 0;
-	virtual void addIncludeDirectory(String dir) = 0;
-	virtual String getChain() = 0;
-	virtual void setVerbosity(int verbosity) = 0;
-};
-
-extern Map<String, Plugin*> plugins;
-
-#ifndef ORYOL_EMSCRIPTEN
-void spawnPlugin(String plugin);
 #endif

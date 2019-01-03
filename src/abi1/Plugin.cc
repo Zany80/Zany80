@@ -1,3 +1,5 @@
+#define ZANY80_ABI 1
+
 #include <Zany80/Zany80.h>
 #include <Zany80/API.h>
 #include <Zany80/Plugin.h>

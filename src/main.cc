@@ -1,3 +1,9 @@
+#define ZANY80_ABI 1
+#include <Zany80/Plugin.h>
+#undef ZANY80_ABI
+#define ZANY80_ABI 2
+#include <Zany80/Plugin.h>
+
 #include <Zany80/Zany80.h>
 
 #include <Gfx/Gfx.h>
@@ -14,10 +20,9 @@
 #endif
 #if ORYOL_GLFW
 #include <GLFW/glfw3.h>
-#include <Zany80/glfw_icon.h>
+#include <Zany80/internal/glfw_icon.h>
 #endif
 
-#include <Zany80/Plugin.h>
 #include <Zany80/API.h>
 #include <sstream>
 
