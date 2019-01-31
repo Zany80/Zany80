@@ -36,7 +36,7 @@ typedef struct {
 	bool (*supports)(const char *functionality);
 	perpetual_plugin_t *perpetual;
 	cpu_plugin_t *cpu;
-	// The host program can store ANY TYPE here
+	// The host program can store ANY TYPE in library
 	// Plugins must not use it directly!
 	void *library;
 	const char *path;

@@ -12,19 +12,19 @@
 #endif
 
 #include "simple_shell.h"
-#include <shell_config.h>
-
 #include <IO/IO.h>
 #include <IMUI/IMUI.h>
 
 #include <Zany80/API.h>
+#include <scas/stringop.h>
+
+#include <shell_config.h>
 
 bool SimpleShell::supports(String type) {
 	return Array<String>({"Perpetual", "Shell"}).FindIndexLinear(type) != InvalidIndex;
 }
 
 SimpleShell::SimpleShell() {
-	instance = plugin_instances++;
 	strcpy(command_string, "");
 	commands = {
 		{"exit", {
@@ -117,95 +117,95 @@ SimpleShell::SimpleShell() {
 			.help = "Changes the current directory"
 		}},
 
-		{"assembler", {
-			.function = [](Array<String> args, SimpleShell *shell) -> int {
-				Array<Plugin*> tools = getPlugins("Toolchain");
-				if (tools.Size() == 0) {
-					shell->output("Error: no assembler plugins loaded!");
-					return 1;
-				}
-				Array<String> inputs, libs;
-				String target = "";
-				for (int i = 0; i < args.Size(); i++) {
-					String arg = args[i];
-					if (arg.Length() && arg.Front() == '-') {
-						if (arg == "-c") {
-							libs.Add(processFileURI("lib:libc.o"));
-						}
-						else if (arg == "-o") {
-							if (i + 1 == args.Size()) {
-								shell->output("-o specified without output file!");
-								return 9;
-							}
-							else {
-								if (target != "") {
-									shell->output("Overriding previous -o of %s", target.AsCStr());
-								}
-								target = args[++i];
-							}
-						}
-						else {
-							shell->output("Unknown option: %s", arg.AsCStr());
-						}
-					}
-					else {
-						inputs.Add(arg);
-					}
-				}
-				if (inputs.Size() < 1) {
-					shell->output("Error: must provide input and output files!");
-					return 7;
-				}
-				ToolchainPlugin *t = nullptr;
-				Array<ToolchainPlugin*> assemblers;
-				for (Plugin *p : tools) {
-					t = dynamic_cast<ToolchainPlugin*>(p);
-					if (t->supportedTransforms().Contains(".asm"))
-						assemblers.Add(t);
-				}
-				if (assemblers.Size() == 0) {
-					shell->output("Error: no assembler plugins loaded!");
-					return 2;
-				}
-				t = nullptr;
-				for (ToolchainPlugin *a : assemblers) {
-					if (a->getChain() == "Official") {
-						t = a;
-						break;
-					}
-				}
-				if (t == nullptr) {
-					t = assemblers[0];
-					shell->output("Warning: official assembler not found. Resorting to %s", t->getChain().AsCStr());
-				}
-				t->setVerbosity((int)Log::GetLogLevel());
-				StringBuilder output;
-				if (target == "") {
-					target = inputs[inputs.Size() - 1];
-					inputs.PopBack();
-				}
-				// Make sure target isn't a library
-				if (target.Length() > processFileURI("lib:").Length()) {
-					if (!strncmp(target.AsCStr(), processFileURI("lib:").AsCStr(), processFileURI("lib:").Length())) {
-						shell->output("Target is a library: %s", target.AsCStr());
-						return 8;
-					}
-				}
-				// TODO: update
-				// Add libraries to BEGINNING of inputs (temporary to ensure boot code in proper location)
-				for (String s : libs) {
-					inputs.Insert(0, s);
-				}
-				int code = t->transform(inputs, target, &output);
-				Array<String> newMessages;
-				output.Tokenize("\n", newMessages);
-				for (String s : newMessages) {
-					shell->output(s);
-				}
-				return code;
-			},
-			.help = "Invokes the assembler to turn an assembly input file into an object file."
-		}},
+		//~ {"assembler", {
+			//~ .function = [](Array<String> args, SimpleShell *shell) -> int {
+				//~ Array<Plugin*> tools = getPlugins("Toolchain");
+				//~ if (tools.Size() == 0) {
+					//~ shell->output("Error: no assembler plugins loaded!");
+					//~ return 1;
+				//~ }
+				//~ Array<String> inputs, libs;
+				//~ String target = "";
+				//~ for (int i = 0; i < args.Size(); i++) {
+					//~ String arg = args[i];
+					//~ if (arg.Length() && arg.Front() == '-') {
+						//~ if (arg == "-c") {
+							//~ libs.Add(processFileURI("lib:libc.o"));
+						//~ }
+						//~ else if (arg == "-o") {
+							//~ if (i + 1 == args.Size()) {
+								//~ shell->output("-o specified without output file!");
+								//~ return 9;
+							//~ }
+							//~ else {
+								//~ if (target != "") {
+									//~ shell->output("Overriding previous -o of %s", target.AsCStr());
+								//~ }
+								//~ target = args[++i];
+							//~ }
+						//~ }
+						//~ else {
+							//~ shell->output("Unknown option: %s", arg.AsCStr());
+						//~ }
+					//~ }
+					//~ else {
+						//~ inputs.Add(arg);
+					//~ }
+				//~ }
+				//~ if (inputs.Size() < 1) {
+					//~ shell->output("Error: must provide input and output files!");
+					//~ return 7;
+				//~ }
+				//~ ToolchainPlugin *t = nullptr;
+				//~ Array<ToolchainPlugin*> assemblers;
+				//~ for (Plugin *p : tools) {
+					//~ t = dynamic_cast<ToolchainPlugin*>(p);
+					//~ if (t->supportedTransforms().Contains(".asm"))
+						//~ assemblers.Add(t);
+				//~ }
+				//~ if (assemblers.Size() == 0) {
+					//~ shell->output("Error: no assembler plugins loaded!");
+					//~ return 2;
+				//~ }
+				//~ t = nullptr;
+				//~ for (ToolchainPlugin *a : assemblers) {
+					//~ if (a->getChain() == "Official") {
+						//~ t = a;
+						//~ break;
+					//~ }
+				//~ }
+				//~ if (t == nullptr) {
+					//~ t = assemblers[0];
+					//~ shell->output("Warning: official assembler not found. Resorting to %s", t->getChain().AsCStr());
+				//~ }
+				//~ t->setVerbosity((int)Log::GetLogLevel());
+				//~ StringBuilder output;
+				//~ if (target == "") {
+					//~ target = inputs[inputs.Size() - 1];
+					//~ inputs.PopBack();
+				//~ }
+				//~ // Make sure target isn't a library
+				//~ if (target.Length() > processFileURI("lib:").Length()) {
+					//~ if (!strncmp(target.AsCStr(), processFileURI("lib:").AsCStr(), processFileURI("lib:").Length())) {
+						//~ shell->output("Target is a library: %s", target.AsCStr());
+						//~ return 8;
+					//~ }
+				//~ }
+				//~ // TODO: update
+				//~ // Add libraries to BEGINNING of inputs (temporary to ensure boot code in proper location)
+				//~ for (String s : libs) {
+					//~ inputs.Insert(0, s);
+				//~ }
+				//~ int code = t->transform(inputs, target, &output);
+				//~ Array<String> newMessages;
+				//~ output.Tokenize("\n", newMessages);
+				//~ for (String s : newMessages) {
+					//~ shell->output(s);
+				//~ }
+				//~ return code;
+			//~ },
+			//~ .help = "Invokes the assembler to turn an assembly input file into an object file."
+		//~ }},
 		
 		{"compile", {
 			.function = [](Array<String> args, SimpleShell *shell) -> int {
@@ -282,9 +282,12 @@ SimpleShell::SimpleShell() {
 					s.AppendFormat(256, "%s: ", path.AsCStr());
 					shell->output(s.GetString());
 					s.Set("\t");
-					for (String _s : readDirectory(path.AsCStr())) {
-						s.AppendFormat(256, "%s ", _s.AsCStr());
+					list_t *dir = read_directory(path.AsCStr());
+					for (int i = 0; i < dir->length; i++) {
+						s.Append((const char *)dir->items[i]);
+						s.Append(' ');
 					}
+					free_flat_list(dir);
 					shell->output(s.GetString());
 				}
 				return true;
@@ -326,9 +329,6 @@ SimpleShell::SimpleShell() {
 			return last_word;
 		}}
 	};
-	
-	this->output("Zany80 Simple Shell...");
-	this->output("Version " PROJECT_VERSION);
 	this->output("Hello! If you need assistance, contact me at pleasantatk@gmail.com");
 	this->output("Also, for help, you can use `help`. It's an extremely helpful command ;)");
 	this->working_directory = "";
@@ -341,10 +341,8 @@ SimpleShell::~SimpleShell() {
 
 void SimpleShell::frame(float delta) {
 	ImGui::SetNextWindowSizeConstraints(ImVec2(530,200), ImVec2(FLT_MAX, FLT_MAX));
-	char buf[256];
-	sprintf(buf, "SimpleShell##%lu",instance);
-	ImGui::Begin(buf);
-	ImGui::Text("SimpleShell");
+	ImGui::Begin("SimpleShell");
+	ImGui::Text("SimpleShell v" PROJECT_VERSION);
 	for (int i = 0; i < history.Size(); i++) {
 		ImGui::TextWrapped("%s", history[i].AsCStr());
 	}
@@ -411,35 +409,38 @@ void SimpleShell::frame(float delta) {
 					if (i + 1 != current_command.Length())
 						last_word.Set(current_command.GetSubString(i + 1, EndOfString));
 					String(*autocompleter)(String, SimpleShell*) = [](String word, SimpleShell *shell) -> String {
-						Array<String> files = readDirectory(".");
+						list_t *files = read_directory(".");
 						bool changed = true;
 						while (changed) {
 							changed = false;
-							for (int i = 0; i < files.Size(); i++) {
-								StringBuilder file = files[i];
+							for (int i = 0; i < files->length; i++) {
+								StringBuilder file((const char *)files->items[i]);
 								if (word.Length()
-							&& (file.Length() <= word.Length()
-							|| file.GetSubString(0, word.Length()) != word)) {
+										&& (file.Length() <= word.Length()
+										|| file.GetSubString(0, word.Length()) != word)) {
 									changed = true;
-									files.Erase(i);
+									free(files->items[i]);
+									list_del(files, i);
 									break;
 								}
 							}
 						}
-						if (files.Size() == 1) {
-							StringBuilder f = files[0];
+						if (files->length == 1) {
+							StringBuilder f((const char *)files->items[0]);
 							f.Append(' ');
+							free_flat_list(files);
 							return f.GetString();
 						}
-						else if (files.Size()) {
+						else if (files->length > 1) {
 							StringBuilder s;
-							for (String f : files) {
-								s.Append(f);
+							for (int i = 0; i < files->length; i++) {
+								s.Append((const char *)files->items[i]);
 								s.Append(' ');
 							}
 							s.PopBack();
 							shell->output(s.GetString());
 						}
+						free_flat_list(files);
 						return word;
 					};
 					if (((SimpleShell*)data->UserData)->autocompletion_map.Contains(first_word)) {
@@ -557,13 +558,3 @@ int SimpleShell::execute(String command) {
 	memcpy(command_string, buf, size);
 	return result;
 }
-
-#ifndef ORYOL_EMSCRIPTEN
-extern "C" Plugin *make() {
-	return new SimpleShell;
-}
-
-extern "C" const char *getName() {
-	return "Simple Shell";
-}
-#endif

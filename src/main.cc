@@ -92,7 +92,7 @@ AppState::Code Zany80::OnInit() {
 #endif
 	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
-	//~ load_plugin("plugins:z80cpp_core");
+	load_plugin("plugins:simple_shell");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:display");
 #ifdef ORYOL_EMSCRIPTEN

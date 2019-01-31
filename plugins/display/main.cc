@@ -89,7 +89,7 @@ extern "C" {
 		};
 		plugin.perpetual = &perpetual;
 		connected = false;
-		require_plugin("CPU");
+		require_plugin("z80cpp_core");
 		output_buffer = new StringBuilder;
 		input_buffer = new Array<char>;
 		attach_cpu();

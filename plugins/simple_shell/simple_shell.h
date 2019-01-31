@@ -1,16 +1,11 @@
 #pragma once
 
-#define ZANY80_ABI 1
-
 #include <Core/Core.h>
 #include <Core/Creator.h>
 #include <Core/String/String.h>
 #include <Core/String/StringBuilder.h>
 #include <Core/Containers/Array.h>
 #include <Core/Containers/Map.h>
-#include <IMUI/IMUI.h>
-
-#include <Zany80/Plugin.h>
 
 using namespace Oryol;
 
@@ -21,20 +16,17 @@ struct shell_command {
 	String detailed_help;
 };
 
-class SimpleShell : public PerpetualPlugin, public ShellPlugin {
-	OryolClassDecl(SimpleShell);
-	OryolTypeDecl(SimpleShell, ShellPlugin);
+class SimpleShell {
 public:
 	SimpleShell();
-	virtual ~SimpleShell();
-	virtual void frame(float delta);
-	virtual bool supports(String type);
+	~SimpleShell();
+	void frame(float delta);
+	bool supports(String type);
 	void output(String);
-	virtual void output(const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-	virtual int execute(String command);
-	virtual Array<String> getCommands();
+	void output(const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+	int execute(String command);
+	Array<String> getCommands();
 private:
-	unsigned long instance;
 	char command_string[256];
 	Map<String, shell_command> commands;
 	Array<String> history;

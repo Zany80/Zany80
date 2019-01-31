@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <setjmp.h>
+
 #include <scas/list.h>
 #include <scas/stringop.h>
+
 #include <liblib/liblib.hpp>
 #include <Zany80/API.h>
 #include <Zany80/Plugin.h>
-#include <setjmp.h>
+
 #include <Core/Containers/Array.h>
 #include <Core/Containers/Map.h>
 #include <IO/IO.h>
@@ -130,7 +134,7 @@ bool require_plugin(const char *type) {
 		if (plugins != nullptr) {
 			bool found = false;
 			for (int j = 0; j < plugins->length; j++) {
-				if (attempting.FindIndexLinear(((plugin_t*)plugins->items[j])->path)) {
+				if (!strcmp(((plugin_t*)plugins->items[j])->path, s.AsCStr())) {
 					found = true;
 					break;
 				}
@@ -139,14 +143,45 @@ bool require_plugin(const char *type) {
 				continue;
 		}
 		fprintf(stderr, "Trying %s (%s) as a %s\n", path, s.AsCStr(), type);
-		if (load_plugin(s.AsCStr())) {
-			loaded = true;
-			break;
+		attempting.Add(path);
+		liblib::Library *library = new liblib::Library(s.GetString());
+		if (library->isValid() && validate_plugin_library(library)) {
+			jmp_buf env;
+			envs.Add(&env);
+			if (setjmp(env) == 0) {
+				((void(*)())(*library)["init"])();
+				plugin_t *plugin = ((plugin_t*(*)())(*library)["get_interface"])();
+				if (!plugin->supports(type)) {
+					fprintf(stderr, "Plugin '%s' does not match type '%s', unloading...\n", plugin->name, type);
+					((void(*)())(*library)["cleanup"])();
+					delete library;
+				}
+				else {
+					plugin->library = library;
+					if (plugins == nullptr) {
+						plugins = create_list();
+					}
+					plugin->path = path;
+					list_add(plugins, plugin);
+					loaded = true;
+				}
+			}
+			else {
+				invalid_plugin(path, library);
+			}
+			envs.Erase(envs.FindIndexLinear(&env));
 		}
+		else {
+			invalid_plugin(path, library);
+		}
+		attempting.Erase(attempting.FindIndexLinear(path));
+		if (loaded)
+			break;
 	}
 	free_flat_list(libraries);
 	if (!loaded) {
-		longjmp(*envs.Back(), 1);
+		if (envs.Size() != 0)
+			longjmp(*envs.Back(), 1);
 	}
 	return true;
 }
