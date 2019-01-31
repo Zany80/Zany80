@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
 
-# Needed by the plugin system due to multiple inheritance
-set(FIPS_RTTI ON CACHE BOOL "" FORCE)
 set(FIPS_EMSCRIPTEN_USE_CWRAP ON CACHE BOOL "" FORCE)
 
 # Load in FIPS
@@ -25,17 +23,27 @@ elseif(FIPS_OSX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -undefined dynamic_lookup")
 endif()
 
-fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_BINARY_DIR}")
+fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/3rd-party" "${PROJECT_BINARY_DIR}")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
 fips_begin_app(zany80 windowed)
 fips_deps(Gfx IMUI lib)
 if (FIPS_EMSCRIPTEN)
-	fips_deps(HttpFS simple_shell z80cpp_core scas_plugin editor display)
+	fips_deps(HttpFS simple_shell)
+	#~  z80cpp_core scas_plugin editor display
 else()
 	fips_deps(LocalFS)
 endif()
 fips_src(src/)
+fips_dir(backend/)
+if (FIPS_WINDOWS)
+	fips_files(windows.cc)
+elseif(FIPS_POSIX)
+	fips_files(posix.c)
+endif()
+if (ORYOL_OPENGL AND (FIPS_MACOS OR FIPS_WINDOWS OR FIPS_LINUX))
+	fips_files(glfw.cc)
+endif()
 fips_end_app()
 
 fips_add_subdirectory(plugins)

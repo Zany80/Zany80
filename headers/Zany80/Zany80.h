@@ -14,15 +14,14 @@ public:
 	AppState::Code OnInit();
 	AppState::Code OnRunning();
 	AppState::Code OnCleanup();
-	void reportError(const char *errorMessage);
+	void report_error(const char *errorMessage);
 private:
-	#if ORYOL_GLFW
-	void Fullscreen();
-	bool fullscreen;
-	#endif
-	bool debug_window, hub;
-	glm::vec4 windowed_position;
+	void ToggleFullscreen();
+	bool is_fullscreen;
+	bool show_debug_window, hub;
 	TimePoint tp;
 	String error;
 };
 extern Zany80 *zany;
+
+void SetupIcon();

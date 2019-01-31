@@ -1,4 +1,4 @@
-fips_add_subdirectory(assembler)
-fips_add_subdirectory(simple_shell)
-fips_add_subdirectory(editor)
+#~ fips_add_subdirectory(assembler)
+#~ fips_add_subdirectory(simple_shell)
+#~ fips_add_subdirectory(editor)
 fips_add_subdirectory(display)

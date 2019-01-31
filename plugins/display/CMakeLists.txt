@@ -1,15 +1,7 @@
-if (FIPS_EMSCRIPTEN)
-	fips_begin_module(display)
-else()
-	fips_begin_sharedlib(display)
-endif()
+fips_begin_sharedlib(display)
 fips_files(main.cc)
 fips_include_directories(${CMAKE_CURRENT_BINARY_DIR})
-if (FIPS_EMSCRIPTEN)
-	fips_end_module()
-else()
-	fips_end_sharedlib()
-endif()
+fips_end_sharedlib()
 
 set_target_properties(display PROPERTIES PREFIX "")
 
