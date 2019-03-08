@@ -5,10 +5,6 @@
 #include <stddef.h>
 #include <list.h>
 
-//~ #include <functional>
-//~ typedef std::function<uint8_t()> read_handler_t;
-//~ typedef std::function<void(uint8_t)> write_handler_t;
-
 typedef uint8_t(*read_handler_t)();
 typedef void(*write_handler_t)(uint8_t);
 
@@ -29,21 +25,43 @@ typedef struct {
 	void(*attach_input)(uint32_t port, read_handler_t handler);
 	void(*reset)();
 	void(*fire_interrupt)(uint8_t irq);
+	void(*load_rom)(const char *rom);
 } cpu_plugin_t;
 
 typedef struct {
+	const char *source_ext;
+	const char *target_ext;
+} toolchain_conversion_t;
+
+typedef struct {
+	list_t *(*get_conversions)();
+	// Buffer should be a pointer to an UNINITIALIZED char*. The convert function
+	// mallocs and reallocs as needed.
+	int (*convert)(list_t *sources, const char *target, char **buffer);
+} toolchain_plugin_t;
+
+typedef struct {
+	unsigned int major;
+	unsigned int minor;
+	unsigned int patch;
+	const char *str;
+} plugin_version_t;
+
+typedef struct {
 	const char *name;
-	bool (*supports)(const char *functionality);
-	perpetual_plugin_t *perpetual;
-	cpu_plugin_t *cpu;
 	// The host program can store ANY TYPE in library
 	// Plugins must not use it directly!
 	void *library;
-	const char *path;
+	char *path;
+	bool (*supports)(const char *functionality);
+	perpetual_plugin_t *perpetual;
+	cpu_plugin_t *cpu;
+	toolchain_plugin_t *toolchain;
+	plugin_version_t *version;
 } plugin_t;
 
 list_t *get_plugins(const char *type);
 list_t *get_all_plugins();
-bool require_plugin(const char *type);
+void require_plugin(const char *type);
 bool load_plugin(const char *path);
 void unload_plugin(plugin_t *plugin);

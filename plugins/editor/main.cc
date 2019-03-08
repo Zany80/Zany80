@@ -2,8 +2,9 @@
 #include "Identifiers.h"
 
 #include <IMUI/IMUI.h>
+#include <IO/IO.h>
 
-#include <Zany80/API.h>
+#include <Zany80/Plugin.h>
 #include <editor_config.h>
 
 #include <stdio.h>
@@ -20,8 +21,20 @@ _main:\n\
 	call putchar\n\
 	jr .loop\n\
 \n\
-msg: .asciiz \"ROM built by Zany80 Scas plugin...\\n\"\n\
-received: .asciiz \"Character received: \"\n"
+msg: .asciiz \"ROM built by Zany80 Scas plugin...\\n\"\n"
+
+const char *validate_cpu(cpu_plugin_t *cpu) {
+	if (cpu == nullptr) {
+		return "CPU information structure absent";
+	}
+	if (cpu->load_rom == nullptr) {
+		return "CPU lacks ROM loading functionality";
+	}
+	if (cpu->reset == nullptr) {
+		return "CPU lacks external reset functionality";
+	}
+	return nullptr;
+}
 
 #ifdef ORYOL_EMSCRIPTEN
 #include <emscripten.h>
@@ -51,8 +64,7 @@ void Editor::ResetEditor() {
 }
 
 Editor::Editor() {
-	if (!requirePlugin("Toolchain"))
-		return;
+	require_plugin("Assembler");
 	language = TextEditor::LanguageDefinition::C();
 	language.mIdentifiers = TextEditor::Identifiers();
 	language.mName = "Zany80 Assembly";
@@ -68,7 +80,6 @@ Editor::Editor() {
 	#ifdef ORYOL_EMSCRIPTEN
 	editor_instance = this;
 	#endif
-	sprintf(window_title, "Editor v" PROJECT_VERSION "##%lu", this->instance = plugin_instances++);
 	buffer = nullptr;
 	cpu = nullptr;
 	assembler = nullptr;
@@ -92,10 +103,10 @@ void Editor::DoSave() {
 	o_assert_dbg(has_file);
 	FILE *file = fopen(path.AsCStr(), "w");
 	Map<int, String> error_strings = {
-		{ EACCES, "Access to file denied!" },
-		{ EISDIR, "That's a folder. Not a file." },
-		{ ENOENT, "No such file!" },
-		{ EPERM,  "Permission denied!" },
+		{ EACCES, "File access denied!" },
+		{ EISDIR, "That's a folder, which is not a file." },
+		{ ENOENT, "No such file or directory!" },
+		{ EPERM,  "Permission denied by the operating system!" },
 		{ ENOSPC, "Disk full!" },
 		{ ETXTBSY,"File is being used by another application!" }
 	};
@@ -218,12 +229,15 @@ void Editor::Build() {
 			SelectASM();
 		}
 		if (assembler) {
-			assembler->setVerbosity(1);
 			StringBuilder s = StringBuilder(path);
 			s.Append(".rom");
 			String target = s.GetString();
-			s.Set("");
-			int i = assembler->transform({processFileURI("lib:libc.o"), path}, target, &s);
+			char *buf = NULL;
+			list_t *sources = create_list();
+			String libc = StringBuilder(IO::ResolveAssigns("lib:libc.o")).GetSubString(8, EndOfString);
+			list_add(sources, (void*)path.AsCStr());
+			list_add(sources, (void*)libc.AsCStr());
+			int i = assembler->convert(sources, target.AsCStr(), &buf);
 			messages.Clear();
 			markers.clear();
 			if (i == 0) {
@@ -231,12 +245,13 @@ void Editor::Build() {
 			}
 			else {
 				Array<String> newMsgs;
-				s.Tokenize("\n", newMsgs);
+				StringBuilder(buf).Tokenize("\n", newMsgs);
 				for (int i = 0; i < newMsgs.Size(); i++) {
 					messages.Add(newMsgs[i]);
 					CheckError(newMsgs[i]);
 				}
 			}
+			free(buf);
 			widget.SetErrorMarkers(markers);
 		}
 	}
@@ -249,21 +264,30 @@ void Editor::Execute() {
 	if (has_file) {
 		// TODO: make sure it has been built first
 		if (!cpu) {
-			Array<Plugin*> cpus = getPlugins("CPU");
-			if (cpus.Size() == 1) {
-				cpu = dynamic_cast<CPUPlugin*>(cpus[0]);
-				messages.Clear();
-				messages.Add("One CPU detected, automatically selecting...");
+			list_t *cpus = get_plugins("z80cpp_core");
+			if (cpus->length == 1) {
+				const char *error = validate_cpu(((plugin_t*)cpus->items[0])->cpu);
+				if (error == nullptr) {
+					cpu = ((plugin_t*)cpus->items[0])->cpu;
+					messages.Clear();
+					messages.Add("One CPU detected, automatically selecting...");
+				}
+				else {
+					messages.Clear();
+					messages.Add("Insufficient CPU plugin detected. Error:");
+					messages.Add(error);
+				}
 			}
 			else {
 				messages.Add("Try selecting a CPU (Build -> Select CPU) first!");
 			}
+			list_free(cpus);
 		}
 		if (cpu) {
 			StringBuilder rom = path;
 			rom.Append(".rom");
 			messages.Add("Instructing CPU to run this program...");
-			cpu->loadROM(rom.AsCStr());
+			cpu->load_rom(rom.AsCStr());
 			cpu->reset();
 		}
 	}
@@ -282,32 +306,34 @@ void Editor::SelectCPU(String s) {
 		messages.Add("Invalid number!");
 	}
 	else {
-		Array<Plugin*> cpus = getPlugins("CPU");
-		if (c < cpus.Size()) {
-			this->cpu = dynamic_cast<CPUPlugin*>(cpus[c]);
+		list_t *cpus = get_plugins("CPU");
+		if (c < cpus->length) {
+			this->cpu = ((plugin_t*)cpus->items[c])->cpu;
 			messages.Add("Attached to CPU.");
 		}
 		else {
 			messages.Clear();
 			messages.Add("No such CPU");
 		}
+		list_free(cpus);
 	}
 }
 
 void Editor::SelectCPU() {
-	Array<Plugin*> cpus = getPlugins("CPU");
-	if (cpus.Size() == 1) {
-		cpu = dynamic_cast<CPUPlugin*>(cpus[0]);
+	list_t *cpus = get_plugins("CPU");
+	if (cpus->length == 1) {
+		cpu = ((plugin_t*)cpus->items[0])->cpu;
 		messages.Clear();
 		messages.Add("One CPU detected, automatically selecting...");
 	}
-	else if (cpus.Size()) {
+	else if (cpus->length > 0) {
 		info_type = set_cpu;
 		needs_info = true;
 	}
 	else {
 		messages.Add("No CPUs loaded!");
 	}
+	list_free(cpus);
 }
 
 void Editor::SelectASM(String s) {
@@ -320,9 +346,9 @@ void Editor::SelectASM(String s) {
 		messages.Add("Invalid number!");
 	}
 	else {
-		Array<Plugin*> tools = getPlugins("Toolchain");
-		if (t < tools.Size()) {
-			this->assembler = dynamic_cast<ToolchainPlugin*>(tools[t]);
+		list_t *asms = get_plugins("Assembler");
+		if (t < asms->length) {
+			this->assembler = ((plugin_t*)asms->items[t])->toolchain;
 			messages.Add("Assembler selected");
 		}
 		else {
@@ -334,24 +360,25 @@ void Editor::SelectASM(String s) {
 
 void Editor::SelectASM() {
 	// TODO: ensure selected tool is an assembler
-	Array<Plugin*> tools = getPlugins("Toolchain");
-	if (tools.Size() == 1) {
-		assembler = dynamic_cast<ToolchainPlugin*>(tools[0]);
+	list_t *asms = get_plugins("Assembler");
+	if (asms->length == 1) {
+		assembler = ((plugin_t*)asms->items[0])->toolchain;
 		messages.Clear();
 		messages.Add("One assembler detected, automatically selecting...");
 	}
-	else if (tools.Size()) {
+	else if (asms->length > 0) {
 		info_type = set_asm;
 		needs_info = true;
 	}
 	else {
 		messages.Add("No assemblers loaded!");
 	}
+	list_free(asms);
 }
 
 void Editor::frame(float delta) {
 	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 300), ImVec2(FLT_MAX, FLT_MAX));
-	ImGui::Begin(window_title, NULL, ImGuiWindowFlags_MenuBar);
+	ImGui::Begin("Editor", NULL, ImGuiWindowFlags_MenuBar);
 	ImGui::SetWindowSize(ImVec2(600,480), ImGuiCond_FirstUseEver);
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("File", !needs_info)) {
@@ -422,19 +449,3 @@ void Editor::frame(float delta) {
 	ImGui::EndChild();
 	ImGui::End();
 }
-
-bool Editor::supports(String type) {
-	return (Array<String>{"Perpetual"}).FindIndexLinear(type) != InvalidIndex;
-}
-
-extern "C" const char *getName() {
-	return "Editor";
-}
-
-#ifndef ORYOL_EMSCRIPTEN
-
-extern "C" Plugin *make() {
-	return new Editor;
-}
-
-#endif

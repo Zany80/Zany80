@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include <list.h>
+#include <scas/list.h>
 
 list_t *read_directory(const char *path);
 void report_error(const char *message);

@@ -1,8 +1,12 @@
+#include <scas/list.h>
+#include <scas/stringop.h>
+
 #include <Core/Args.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <stdlib.h>
 
 #include "scas.h"
 #include <scas_version.h>
@@ -207,6 +211,7 @@ int scas::transform(Array<String> sources, String destination, StringBuilder *ou
 void scas_abort(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
+	scas_log(L_ERROR, "Aborted: ");
 	scas_log(L_ERROR, format, args);
 	va_end(args);
 	longjmp(env, 1);
@@ -220,10 +225,60 @@ String scas::getChain() {
 	return "Official";
 }
 
-#ifndef ORYOL_EMSCRIPTEN
+scas *instance;
 
-extern "C" Plugin *make() {
-	return new scas;
+toolchain_plugin_t toolchain = {
+	.get_conversions = []() -> list_t* {
+		list_t *conversions = create_list();
+		list_add(conversions, new toolchain_conversion_t {
+			.source_ext = "asm",
+			.target_ext = "o"
+		});
+		list_add(conversions, new toolchain_conversion_t {
+			.source_ext = "o",
+			.target_ext = "rom"
+		});
+		return conversions;
+	},
+	.convert = [](list_t *sources, const char *target, char **buffer) -> int {
+		int level = (int)Log::GetLogLevel();
+		if (level > 1)
+			level -= 1;
+		instance->setVerbosity(level);
+		StringBuilder out;
+		Array<String> s;
+		for (int i = 0; i < sources->length; i++) {
+			s.Add((const char *)sources->items[i]);
+		}
+		int ret = instance->transform(s, target, &out);
+		if (buffer != NULL) {
+			*buffer = (char*)malloc(out.Length() + 1);
+			strcpy(*buffer, out.AsCStr());
+		}
+		return ret;
+	}
+};
+
+plugin_t plugin = {
+	.name = "SirCmpwn's Assembler",
+	.supports = [](const char *type) -> bool {
+		return (!strcmp(type, "Assembler")) || (!strcmp(type, "Toolchain")) || (!strcmp(type, "scas"));
+	},
+	.toolchain = &toolchain
+};
+
+extern "C" {
+	
+	void init() {
+		instance = new scas;
+	}
+	
+	plugin_t *get_interface() {
+		return &plugin;
+	}
+	
+	void cleanup() {
+		delete instance;
+	}
+	
 }
-
-#endif

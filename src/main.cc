@@ -92,9 +92,6 @@ AppState::Code Zany80::OnInit() {
 #endif
 	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
-	load_plugin("plugins:simple_shell");
-	load_plugin("plugins:editor");
-	load_plugin("plugins:display");
 #ifdef ORYOL_EMSCRIPTEN
 	// Preload libc.o
 	IO::Load("root:libc.o", [](IO::LoadResult res) {
@@ -124,6 +121,9 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
+	load_plugin("plugins:display");
+	load_plugin("plugins:editor");
+	load_plugin("plugins:simple_shell");
 	show_debug_window = hub = true;
 	this->tp = Clock::Now();
 	return App::OnInit();
@@ -166,7 +166,9 @@ AppState::Code Zany80::OnRunning() {
 		ImGui::Text("Framerate: %.1f", 
 		//~ ImGui::GetIO().Framerate > 60 ? 60 : 
 				ImGui::GetIO().Framerate);
-		#if ORYOL_GLFW
+		#if FIPS_GLFW_WAYLAND
+		ImGui::Text("Backend: Wayland/OpenGL");
+		#elif ORYOL_GLFW
 		ImGui::Text("Backend: OpenGL");
 		#elif ORYOL_D3D11
 		ImGui::Text("Backend: D3D11");

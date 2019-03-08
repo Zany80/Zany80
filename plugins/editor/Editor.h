@@ -1,25 +1,24 @@
 #pragma once
 
-#define ZANY80_ABI 1
+#include <TextEditor.h>
+#include <Core/String/String.h>
+#include <Core/String/StringBuilder.h>
+#include <Core/Containers/Array.h>
+using namespace Oryol;
 
 #include <Zany80/Plugin.h>
-#include <TextEditor.h>
 
 #ifdef ORYOL_EMSCRIPTEN
-class Editor;
 extern "C" void EditorOpen(const char *name, const char *path);
 #endif
 
-class Editor : public PerpetualPlugin {
+class Editor {
 #ifdef ORYOL_EMSCRIPTEN
 	friend void EditorOpen(const char *name, const char *path);
 #endif
-	OryolClassDecl(Editor);
-	OryolTypeDecl(Editor, PerpetualPlugin);
 public:
 	Editor();
-	virtual void frame(float delta);
-	virtual bool supports(String type);
+	void frame(float delta);
 private:
 	// GUI routines
 	void NewFile();
@@ -36,9 +35,6 @@ private:
 	void SelectASM();
 	void SelectASM(String s);
 	void CheckError(String s);
-	// Plugin instance, used to disassociate windows of multiple instances of editors
-	unsigned long instance;
-	char window_title[64];
 	TextEditor widget;
 	// File info
 	String path;
@@ -52,8 +48,8 @@ private:
 		open, save, set_cpu, set_asm
 	} info_type;
 	// Target plugins
-	CPUPlugin *cpu;
-	ToolchainPlugin *assembler;
+	cpu_plugin_t *cpu;
+	toolchain_plugin_t *assembler;
 	// Used to check for modifications
 	std::string UnmodifiedText;
 	// Mark errors

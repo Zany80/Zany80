@@ -3,11 +3,13 @@
 #include <Core/String/String.h>
 #include <Core/String/StringBuilder.h>
 #include <Core/Containers/Array.h>
+#include <Input/Input.h>
 using namespace Oryol;
 
 bool connected;
+bool focused = false;
 StringBuilder *output_buffer;
-Array<char> *input_buffer;
+Array<uint8_t> *input_buffer;
 cpu_plugin_t *cpu;
 
 void clear() {
@@ -60,15 +62,16 @@ void frame(float delta) {
 	}
 	// TODO: remove this InputText and use direct inputs
 	else {
-		static char buf[256];
-		if (ImGui::InputText("", buf, 255, ImGuiInputTextFlags_NoUndoRedo | ImGuiInputTextFlags_EnterReturnsTrue)) {
-			strcpy(buf + strlen(buf), "\n");
-			for (size_t i = 0; i < strlen(buf); i++) {
-				input_buffer->Add(buf[i]);
-				cpu->fire_interrupt(0);
-			}
-			strcpy(buf, "");
-		}
+		focused = ImGui::IsWindowFocused();
+		//~ static char buf[256];
+		//~ if (ImGui::InputText("", buf, 255, ImGuiInputTextFlags_NoUndoRedo | ImGuiInputTextFlags_EnterReturnsTrue)) {
+			//~ strcpy(buf + strlen(buf), "\n");
+			//~ for (size_t i = 0; i < strlen(buf); i++) {
+				//~ input_buffer->Add(buf[i]);
+				//~ cpu->fire_interrupt(0);
+			//~ }
+			//~ strcpy(buf, "");
+		//~ }
 		ImGui::Text("%s", output_buffer->AsCStr());
 	}
 	ImGui::End();
@@ -91,8 +94,20 @@ extern "C" {
 		connected = false;
 		require_plugin("z80cpp_core");
 		output_buffer = new StringBuilder;
-		input_buffer = new Array<char>;
+		input_buffer = new Array<uint8_t>;
 		attach_cpu();
+		Input::SubscribeEvents([](InputEvent e) {
+			if (focused) {
+				if (e.Type == InputEvent::KeyDown) {
+					input_buffer->Add(e.KeyCode & 0x7F);
+					cpu->fire_interrupt(0);
+				}
+				else if(e.Type == InputEvent::KeyUp) {
+					input_buffer->Add(e.KeyCode | 0x80);
+					cpu->fire_interrupt(1);
+				}
+			}
+		});
 	}
 	
 	void cleanup() {

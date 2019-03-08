@@ -29,7 +29,8 @@ configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/co
 fips_begin_app(zany80 windowed)
 fips_deps(Gfx IMUI lib)
 if (FIPS_EMSCRIPTEN)
-	fips_deps(HttpFS simple_shell)
+	fips_deps(HttpFS)
+	#~ simple_shell)
 	#~  z80cpp_core scas_plugin editor display
 else()
 	fips_deps(LocalFS)

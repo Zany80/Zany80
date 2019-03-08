@@ -1,19 +1,21 @@
 #pragma once
 
-#define ZANY80_ABI 1
-
 #include <Zany80/Plugin.h>
 
-class scas : public ToolchainPlugin {
-	OryolClassDecl(scas);
-	OryolTypeDecl(scas, ToolchainPlugin);
+#include <Core/Containers/Array.h>
+#include <Core/Containers/Map.h>
+#include <Core/String/String.h>
+#include <Core/String/StringBuilder.h>
+using namespace Oryol;
+
+class scas {
 public:
-	virtual int transform(Array<String> sources, String destination, StringBuilder *out);
-	virtual Map<String, Array<String>> supportedTransforms();
-	virtual bool supports(String type);
-	virtual void addIncludeDirectory(String dir);
-	virtual String getChain();
-	virtual void setVerbosity(int verbosity);
+	int transform(Array<String> sources, String destination, StringBuilder *out);
+	Map<String, Array<String>> supportedTransforms();
+	bool supports(String type);
+	void addIncludeDirectory(String dir);
+	String getChain();
+	void setVerbosity(int verbosity);
 private:
 	StringBuilder include_dirs;
 };

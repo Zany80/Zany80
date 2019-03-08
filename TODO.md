@@ -30,4 +30,8 @@ with performance as KCC and Scas won't have to be installed for the builds)
 * Proper dependency cleanups on unloads
 	(If a tries b which loads c, but b then fails for a, c needs to be unloaded also)
 * GPU plugin
-	* Expose low-level graphics API (from Oryol) to CPU
+	* ~~Expose low-level graphics API (from Oryol) to CPU~~
+		* Revisit in the future, need to research security implications
+	* Simple framebuffer
+* Rewrite scas plugin in pure C
+* Replace Oryol with Sokol, remove C++ dependency entirely

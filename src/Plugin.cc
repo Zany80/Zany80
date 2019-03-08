@@ -37,6 +37,7 @@ Array<jmp_buf*> envs;
 Array<String> attempting;
 
 bool load_plugin(const char *path) {
+	fprintf(stderr, "Attempting load of %s\n", path);
 	bool success = false;
 	attempting.Add(path);
 	liblib::Library *library = new liblib::Library(path);
@@ -50,9 +51,11 @@ bool load_plugin(const char *path) {
 			if (plugins == nullptr) {
 				plugins = create_list();
 			}
-			plugin->path = path;
+			plugin->path = new char[strlen(path) + 1];
+			strcpy(plugin->path, path);
 			list_add(plugins, plugin);
 			success = true;
+			fprintf(stderr, "Load of %s successful\n", path);
 		}
 		else {
 			invalid_plugin(path, library);
@@ -107,12 +110,12 @@ list_t *get_plugins(const char *type) {
 	return found;
 }
 
-bool require_plugin(const char *type) {
+void require_plugin(const char *type) {
 	if (plugins != nullptr) {
 		for (int i = 0; i < plugins->length; i++) {
 			plugin_t *plugin = (plugin_t*)plugins->items[i];
 			if (plugin->supports(type)) {
-				return true;
+				return;
 			}
 		}
 	}
@@ -161,9 +164,11 @@ bool require_plugin(const char *type) {
 					if (plugins == nullptr) {
 						plugins = create_list();
 					}
-					plugin->path = path;
+					plugin->path = new char[name.Length() + 1];
+					strcpy(plugin->path, s.AsCStr());
 					list_add(plugins, plugin);
 					loaded = true;
+					fprintf(stderr, "Plugin matches, keeping.\n");
 				}
 			}
 			else {
@@ -183,5 +188,4 @@ bool require_plugin(const char *type) {
 		if (envs.Size() != 0)
 			longjmp(*envs.Back(), 1);
 	}
-	return true;
 }

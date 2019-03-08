@@ -23,8 +23,9 @@ Map<const char *, const char *> Zany80Functions = {
 };
 
 Map<const char *, const char *> Registers = {
-	{ "a", "The 8-bit accumulator register" },
-	{ "hl", "The 16-bit HL register pair, an aggregate of the 8-bit H and L registers" }
+	{ "a", "The 8-bit accumulator register\nThe upper byte of the AF register pair" },
+	{ "hl", "The 16-bit HL register pair, an aggregate of the 8-bit H and L registers" },
+	{ "h", "The 8-bit H register\nThe upper byte of the HL register pair" }
 };
 
 Map<const char *, const char *> Directives = {
