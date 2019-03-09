@@ -35,3 +35,4 @@ with performance as KCC and Scas won't have to be installed for the builds)
 	* Simple framebuffer
 * Rewrite scas plugin in pure C
 * Replace Oryol with Sokol, remove C++ dependency entirely
+* Make error box in text editor resizable
