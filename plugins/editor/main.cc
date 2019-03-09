@@ -308,8 +308,16 @@ void Editor::SelectCPU(String s) {
 	else {
 		list_t *cpus = get_plugins("CPU");
 		if (c < cpus->length) {
-			this->cpu = ((plugin_t*)cpus->items[c])->cpu;
-			messages.Add("Attached to CPU.");
+			const char *error = validate_cpu(((plugin_t*)cpus->items[c])->cpu);
+			if (error != nullptr) {
+				messages.Add("Attached to CPU.");
+				cpu = ((plugin_t*)cpus->items[c])->cpu;
+			}
+			else {
+				messages.Clear();
+				messages.Add("Insufficient CPU plugin detected. Error:");
+				messages.Add(error);
+			}
 		}
 		else {
 			messages.Clear();
@@ -322,9 +330,16 @@ void Editor::SelectCPU(String s) {
 void Editor::SelectCPU() {
 	list_t *cpus = get_plugins("CPU");
 	if (cpus->length == 1) {
-		cpu = ((plugin_t*)cpus->items[0])->cpu;
-		messages.Clear();
-		messages.Add("One CPU detected, automatically selecting...");
+		const char *error = validate_cpu(((plugin_t*)cpus->items[0])->cpu);
+		if (error != nullptr) {
+			messages.Add("One CPU detected, automatically selecting...");
+			cpu = ((plugin_t*)cpus->items[0])->cpu;
+		}
+		else {
+			messages.Clear();
+			messages.Add("Insufficient CPU plugin detected. Error:");
+			messages.Add(error);
+		}
 	}
 	else if (cpus->length > 0) {
 		info_type = set_cpu;
