@@ -9,19 +9,41 @@
 
 #include <stdio.h>
 
-#define start_text ".export _main\n\
-_main:\n\
+#define start_text ".export main\n\
+main:\n\
 	ld a, 0\n\
-	call putchar\n\
+	out (1), a\n\
 	ld hl, msg\n\
-	call serial_write\n\
+	ld c, 1\n\
+	call write\n\
+	inc c\n\
+	call write\n\
+	; Switch to serial mode\n\
+	ld a, 1\n\
+	call set_keyboard\n\
 .loop:\n\
-	call _waitchar\n\
-	ld a, l\n\
-	call putchar\n\
+	ld a, 2\n\
+	call wait_interrupt\n\
+	call get_key\n\
+	cp -1\n\
+	jr z, .loop\n\
+	ld hl, .received\n\
+	ld c, 2\n\
+	call write\n\
+	cp 26\n\
+	jr c, .letter\n\
+	add a, '0' - 26\n\
+	jr .show\n\
+.letter:\n\
+	add a, 'a'\n\
+.show:\n\
+	out (1), a\n\
+	out (2), a\n\
+	ld a, '\\n'\n\
+	out (2), a\n\
 	jr .loop\n\
-\n\
-msg: .asciiz \"ROM built by Zany80 Scas plugin...\\n\"\n"
+.received: .asciiz \"Character received: \"\n\
+msg: .asciiz \"ROM built by Zany80 Scas plugin...\\n\""
 
 const char *validate_cpu(cpu_plugin_t *cpu) {
 	if (cpu == nullptr) {

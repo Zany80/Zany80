@@ -1,4 +1,4 @@
-set(VERSION 1.1.0.1)
+set(VERSION 1.1.2.0)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/editor_config.h)
 
 fips_begin_sharedlib(editor)
