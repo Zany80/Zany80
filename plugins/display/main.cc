@@ -36,7 +36,7 @@ bool attach_cpu() {
 		});
 		cpu->attach_input(1, []() -> uint8_t {
 			if (input_buffer->Empty()) {
-				return 0;
+				return -1;
 			}
 			return input_buffer->PopFront();
 		});
@@ -83,6 +83,70 @@ perpetual_plugin_t perpetual = {
 
 plugin_t plugin;
 
+/*
+;; Key layout:
+;;  0-25 are a-z
+;; 26-35 are 0-9
+;; 36-39 are up,left,down,right
+;; 40 is spacebar
+;; 41 is backspace
+;; 42 is escape
+;; 43-52 are []{}()<>/\
+;; 53 is |
+;; 54-55 are " and '
+;; 56-60 are `~:;?
+;; 61-63 is Caps,Alt,Ctrl
+;; 64 is tab
+;; 65-69 are -_+=
+;; 70-77 are !@#$%^&*
+;; 78 is delete
+;; 79-83 are PgUp PgDown Home End Enter
+;; Caps isn't actually a key; it's effectively (CAPS_LOCK ^ SHIFT).
+;; Bit seven is 0 on press and 1 on release
+*/
+
+const Map<Key::Code, uint8_t> keymap = {
+	{ Key::A, 0 },
+	{ Key::B, 1 },
+	{ Key::C, 2 },
+	{ Key::D, 3 },
+	{ Key::E, 4 },
+	{ Key::F, 5 },
+	{ Key::G, 6 },
+	{ Key::H, 7 },
+	{ Key::I, 8 },
+	{ Key::J, 9 },
+	{ Key::K, 10 },
+	{ Key::L, 11 },
+	{ Key::M, 12 },
+	{ Key::N, 13 },
+	{ Key::O, 14 },
+	{ Key::P, 15 },
+	{ Key::Q, 16 },
+	{ Key::R, 17 },
+	{ Key::S, 18 },
+	{ Key::T, 19 },
+	{ Key::U, 20 },
+	{ Key::V, 21 },
+	{ Key::W, 22 },
+	{ Key::X, 23 },
+	{ Key::Y, 24 },
+	{ Key::Z, 25 },
+	{ Key::N0, 26 },
+	{ Key::N1, 27 },
+	{ Key::N2, 28 },
+	{ Key::N3, 29 },
+	{ Key::N4, 30 },
+	{ Key::N5, 31 },
+	{ Key::N6, 32 },
+	{ Key::N7, 33 },
+	{ Key::N8, 34 },
+	{ Key::N9, 35 },
+	
+};
+
+bool pcaps = false;
+
 extern "C" {
 	
 	void init() {
@@ -99,12 +163,33 @@ extern "C" {
 		Input::SubscribeEvents([](InputEvent e) {
 			if (focused) {
 				if (e.Type == InputEvent::KeyDown) {
-					input_buffer->Add(e.KeyCode & 0x7F);
-					cpu->fire_interrupt(0);
+					if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
+						bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
+						if (caps != pcaps) {
+							pcaps = caps;
+							input_buffer->Add(caps ? 0xBD : 0x3D);
+							cpu->fire_interrupt(1);
+						}
+					}
+					else {
+						//~ Log::Dbg("Adding %d to input buffer\n", keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
+						input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
+						cpu->fire_interrupt(1);
+					}
 				}
 				else if(e.Type == InputEvent::KeyUp) {
-					input_buffer->Add(e.KeyCode | 0x80);
-					cpu->fire_interrupt(1);
+					if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
+						bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
+						if (caps != pcaps) {
+							pcaps = caps;
+							input_buffer->Add(caps ? 0xBD : 0x3D);
+							cpu->fire_interrupt(2);
+						}
+					}
+					else {
+						input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] | 0x80 : -1);
+						cpu->fire_interrupt(2);
+					}
 				}
 			}
 		});

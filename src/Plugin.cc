@@ -110,18 +110,19 @@ list_t *get_plugins(const char *type) {
 	return found;
 }
 
-void require_plugin(const char *type) {
+plugin_t *require_plugin(const char *type) {
 	if (plugins != nullptr) {
 		for (int i = 0; i < plugins->length; i++) {
 			plugin_t *plugin = (plugin_t*)plugins->items[i];
 			if (plugin->supports(type)) {
-				return;
+				return plugin;
 			}
 		}
 	}
 	// Try to load
 	String uri = IO::ResolveAssigns("plugins:");
 	list_t *libraries = read_directory(uri.AsCStr() + 8);
+	plugin_t *plugin;
 	bool loaded = false;
 	for (int i = 0; i < libraries->length; i++) {
 		const char *path = (char*)libraries->items[i];
@@ -153,7 +154,7 @@ void require_plugin(const char *type) {
 			envs.Add(&env);
 			if (setjmp(env) == 0) {
 				((void(*)())(*library)["init"])();
-				plugin_t *plugin = ((plugin_t*(*)())(*library)["get_interface"])();
+				plugin = ((plugin_t*(*)())(*library)["get_interface"])();
 				if (!plugin->supports(type)) {
 					fprintf(stderr, "Plugin '%s' does not match type '%s', unloading...\n", plugin->name, type);
 					((void(*)())(*library)["cleanup"])();
@@ -184,8 +185,10 @@ void require_plugin(const char *type) {
 			break;
 	}
 	free_flat_list(libraries);
-	if (!loaded) {
-		if (envs.Size() != 0)
+	if (loaded) {
+		return plugin;
+	}
+	else if (envs.Size() != 0) {
 			longjmp(*envs.Back(), 1);
 	}
 }

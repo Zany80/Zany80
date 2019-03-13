@@ -3,7 +3,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <list.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <scas/list.h>
 
 typedef uint8_t(*read_handler_t)();
 typedef void(*write_handler_t)(uint8_t);
@@ -62,6 +67,10 @@ typedef struct {
 
 list_t *get_plugins(const char *type);
 list_t *get_all_plugins();
-void require_plugin(const char *type);
+plugin_t *require_plugin(const char *type);
 bool load_plugin(const char *path);
 void unload_plugin(plugin_t *plugin);
+
+#ifdef __cplusplus
+}
+#endif

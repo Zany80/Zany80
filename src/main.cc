@@ -93,23 +93,21 @@ AppState::Code Zany80::OnInit() {
 	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
 #ifdef ORYOL_EMSCRIPTEN
-	// Preload libc.o
-	IO::Load("root:libc.o", [](IO::LoadResult res) {
+	// Preload stdlib.o
+	IO::Load("root:stdlib.o", [](IO::LoadResult res) {
 		 mkdir("/lib", 0700);
-		 FILE *file = fopen("/lib/libc.o", "w");
+		 FILE *file = fopen("/lib/stdlib.o", "w");
 		 if (file) {
 			 fwrite(res.Data.Data(), 1, res.Data.Size(), file);
 			 fflush(file);
 			 fclose(file);
-	 		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("/lib/libc.o saved!");
+			 puts("stdlib.o preloaded");
 		 }
 		 else {
-	 		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("Error opening /lib/libc.o for writing!");
-	 		::report_error("Error opening /lib/libc.o for writing!");
+	 		::report_error("Error opening /lib/stdlib.o for writing!");
 		 }
 	}, [](const URL& url, IOStatus::Code ioStatus) {
-		(dynamic_cast<ShellPlugin*>(plugins["SimpleShell"]))->output("Error loading libc into emscripten!");
-		::report_error("Error loading libc!");
+		::report_error("Error loading stdlib!");
 	});
 #endif
 	Log::Dbg("Application URL: %s\n", IO::ResolveAssigns("root:").AsCStr());
@@ -121,6 +119,7 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
+	load_plugin("plugins:debug_port");
 	load_plugin("plugins:display");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:simple_shell");

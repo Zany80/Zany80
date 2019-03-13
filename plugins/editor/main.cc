@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-#define start_text ".globl _main\n\
+#define start_text ".export _main\n\
 _main:\n\
 	ld a, 0\n\
 	call putchar\n\
@@ -234,9 +234,9 @@ void Editor::Build() {
 			String target = s.GetString();
 			char *buf = NULL;
 			list_t *sources = create_list();
-			String libc = StringBuilder(IO::ResolveAssigns("lib:libc.o")).GetSubString(8, EndOfString);
-			list_add(sources, (void*)path.AsCStr());
+			String libc = StringBuilder(IO::ResolveAssigns("lib:stdlib.o")).GetSubString(8, EndOfString);
 			list_add(sources, (void*)libc.AsCStr());
+			list_add(sources, (void*)path.AsCStr());
 			int i = assembler->convert(sources, target.AsCStr(), &buf);
 			messages.Clear();
 			markers.clear();

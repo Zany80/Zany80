@@ -1,38 +1,52 @@
 # Todo
 
-* Re-do logging so that each module has its own individual log
+## Short-term
+
+* Make error box in text editor resizable
+* Finish migrating plugins to new API
+* Fully restore text-based functionality using built-in editor and assembly
 * Split the BIOS build out of the Zany80 Travis configuration (which will help
 with performance as KCC and Scas won't have to be installed for the builds)
-* Add version info function to Plugin
+* Finish implementing SimpleShell commands
+* Unit tests
+* Go over all the rushed parts and fix them (e.g. plugin removal)
+* Ensure all error reporting goes through report_error
+* Re-do logging so that each module has its own individual log
+* Add version info to plugin interface
+
+## Slightly less short-term
+
 * Multiple file support in editor (multiple buffers at once, multi-file projects)
-* Finish migrating plugins to new API
 * Built in help (tutorial plugin?)
 * More examples for editor
-* Finish implementing SimpleShell commands
+* Finish implementing breakpoints & debugging
+* Fix all memory leaks
+* Proper dependency cleanups on unloads
+	* (If a tries b which loads c, but b then fails for a, c needs to be unloaded also)
+	* This requires dependency storage
+* GPU plugin
+	* ~~Expose low-level graphics API (from Oryol) to CPU~~
+		* Revisit in the future, not worth it right now
+	* Simple pixel framebuffer
+* Rewrite scas plugin in pure C
+* Add z80e core
+
+# Long term
+
+* Replace Oryol with Sokol as primary backend, remove C++ dependency entirely
+	* Support alternative backends in addition to Sokol (SFML, SDL, etc)
+* Add other CPUs (e.g. 6809, AVR)
+* LIMNVM support?
+* Sound support
 * KnightOS support
+* Write a dynamic recompiler for x86_64
+
+# Completed
+
+* ~~Immediate input instead of text box~~
 * ~~Merge legacy and oryolized plugins into one solid codebase~~
 	* Removed legacy code instead, supporting multiple ABIs is almost never worth it
-* Support alternative backends in addition to Oryol (Sokol, SFML, etc)
 * ~~Strip out the experimental PPTR system, use normal pointers~~
 * ~~Remove dependency on C++~~
 	* ~~Rework plugin system to not use classes~~
-* Standard plugin configurations
-	* Standard
-	* KnightOS
-* Immediate input instead of text box
-* Finish implementing breakpoints & debugging
-* Unit tests
-* Go over all the rushed parts and add cleanup (e.g. plugin removal)
-* Ensure all error reporting goes through report_error
-* Add other CPUs (e.g. 6809, AVR)
-* Sound support
-* Run under valgrind, ensure no memory leaks
-* Proper dependency cleanups on unloads
-	(If a tries b which loads c, but b then fails for a, c needs to be unloaded also)
-* GPU plugin
-	* ~~Expose low-level graphics API (from Oryol) to CPU~~
-		* Revisit in the future, need to research security implications
-	* Simple framebuffer
-* Rewrite scas plugin in pure C
-* Replace Oryol with Sokol, remove C++ dependency entirely
-* Make error box in text editor resizable
+		* Plugins can now be in standard C, no C++ required whatsoever

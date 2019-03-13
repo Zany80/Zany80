@@ -40,12 +40,13 @@ def run(fips_dir, proj_dir, args) :
     makedirs('{}/data'.format(deploy_dir), exist_ok = True)
     makedirs('{}/lib'.format(deploy_dir), exist_ok = True)
     copy('{}/misc/bios.rom'.format(proj_dir), '{}/bios.rom'.format(deploy_dir))
-    copy('{}/misc/libc.o'.format(proj_dir), '{}/lib/libc.o'.format(deploy_dir))
+    log.info(log.YELLOW + 'Copying {}/misc/stdlib.o into {}/lib/'.format(proj_dir, deploy_dir) + log.DEF)
+    copy('{}/misc/stdlib.o'.format(proj_dir), '{}/lib/stdlib.o'.format(deploy_dir))
+    log.info(log.YELLOW + 'Copying {}/misc/bios.rom into {}/data/'.format(proj_dir, deploy_dir) + log.DEF)
     if 'emsc' in cfg_name:
         copy('{}/misc/bios.rom'.format(proj_dir), '{}/data/bios.rom.txt'.format(deploy_dir))
     else:
         copy('{}/misc/bios.rom'.format(proj_dir), '{}/data/bios.rom'.format(deploy_dir))
-    log.info(log.YELLOW + 'Copying {}/misc/bios.rom into {}/data/'.format(proj_dir, deploy_dir) + log.DEF)
 
 #-------------------------------------------------------------------------------
 def help() :
