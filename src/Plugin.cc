@@ -29,7 +29,14 @@ void invalid_plugin(const char *path, liblib::Library *invalid) {
 
 bool validate_plugin_library(liblib::Library *library) {
 	#define REQUIRE(x) ((*library)[x] != 0)
-	return REQUIRE("get_interface") && REQUIRE("init") && REQUIRE("cleanup");
+	bool r = REQUIRE("get_interface") && REQUIRE("init") && REQUIRE("cleanup");
+	if (!r)
+		return false;
+	((void(*)())(*library)["init"])();
+	plugin_t *i = ((plugin_t*(*)())(*library)["get_interface"])();
+	r = i != NULL && i->supports != NULL && i->name != NULL;
+	((void(*)())(*library)["cleanup"])();
+	return r;
 }
 
 Array<jmp_buf*> envs;
@@ -45,7 +52,9 @@ bool load_plugin(const char *path) {
 		jmp_buf env;
 		envs.Add(&env);
 		if (setjmp(env) == 0) {
+			puts("Calling init");
 			((void(*)())(*library)["init"])();
+			puts("Retrieving interface");
 			plugin_t *plugin = ((plugin_t*(*)())(*library)["get_interface"])();
 			plugin->library = library;
 			if (plugins == nullptr) {
@@ -121,7 +130,7 @@ plugin_t *require_plugin(const char *type) {
 	}
 	// Try to load
 	String uri = IO::ResolveAssigns("plugins:");
-	list_t *libraries = read_directory(uri.AsCStr() + 8);
+	list_t *libraries = zany_read_directory(uri.AsCStr() + 8);
 	plugin_t *plugin;
 	bool loaded = false;
 	for (int i = 0; i < libraries->length; i++) {
@@ -147,7 +156,7 @@ plugin_t *require_plugin(const char *type) {
 				continue;
 		}
 		fprintf(stderr, "Trying %s (%s) as a %s\n", path, s.AsCStr(), type);
-		attempting.Add(path);
+		attempting.Add(s.GetString());
 		liblib::Library *library = new liblib::Library(s.GetString());
 		if (library->isValid() && validate_plugin_library(library)) {
 			jmp_buf env;
@@ -180,7 +189,7 @@ plugin_t *require_plugin(const char *type) {
 		else {
 			invalid_plugin(path, library);
 		}
-		attempting.Erase(attempting.FindIndexLinear(path));
+		attempting.Erase(attempting.FindIndexLinear(s.GetString()));
 		if (loaded)
 			break;
 	}
@@ -191,4 +200,5 @@ plugin_t *require_plugin(const char *type) {
 	else if (envs.Size() != 0) {
 			longjmp(*envs.Back(), 1);
 	}
+	return nullptr;
 }

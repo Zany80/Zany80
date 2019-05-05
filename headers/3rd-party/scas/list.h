@@ -1,6 +1,8 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <Zany80/internal/dllports.h>
+
 typedef struct {
     int capacity;
     int length;
@@ -10,12 +12,18 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-list_t *create_list();
-void list_free(list_t *list);
-void list_add(list_t *list, void *item);
-void list_del(list_t *list, int index);
-void list_cat(list_t *list, list_t *source);
-void list_foreach(list_t *list, void (*callback)(void *item));
+ZANY_DLL list_t *create_list();
+ZANY_DLL void list_free(list_t *list);
+ZANY_DLL void list_add(list_t *list, void *item);
+ZANY_DLL void list_del(list_t *list, int index);
+ZANY_DLL void list_cat(list_t *list, list_t *source);
+ZANY_DLL void list_foreach(list_t *list, void (*callback)(void *item));
+ZANY_DLL int list_seq_find(list_t *list, int compare(const void *item, const void *data), const void *data);
+ZANY_DLL void list_addunique(list_t *list, int compare(const void *item, const void *data), void *item);
+
+ZANY_DLL int list_cmp_pointer(const void *item, const void *data);
+ZANY_DLL int list_cmp_string(const void *item, const void *data);
+
 #ifdef __cplusplus
 }
 #endif

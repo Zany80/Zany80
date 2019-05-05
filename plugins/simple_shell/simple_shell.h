@@ -19,7 +19,7 @@ struct shell_command {
 class SimpleShell {
 public:
 	SimpleShell();
-	~SimpleShell();
+	~SimpleShell(){}
 	void frame(float delta);
 	bool supports(String type);
 	void output(String);

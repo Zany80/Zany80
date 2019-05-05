@@ -4,7 +4,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 fips_begin_sharedlib(editor)
 fips_src(.)
 fips_include_directories(${CMAKE_CURRENT_BINARY_DIR})
-fips_deps(imguitexteditor)
+fips_deps(imguitexteditor zany80)
 fips_end_sharedlib()
 
 set_target_properties(editor PROPERTIES PREFIX "")
@@ -14,3 +14,4 @@ if (FIPS_LINUX)
 elseif(FIPS_WINDOWS)
 	install(TARGETS editor DESTINATION plugins)
 endif()
+ 

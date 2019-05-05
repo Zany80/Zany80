@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-list_t *read_directory(const char *path) {
+list_t *zany_read_directory(const char *path) {
 	DIR *dir;
 	if ((dir = opendir(path)) != NULL) {
 		list_t *contents = create_list();

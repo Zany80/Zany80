@@ -30,6 +30,7 @@ with performance as KCC and Scas won't have to be installed for the builds)
 	* Simple pixel framebuffer
 * Rewrite scas plugin in pure C
 * Add z80e core
+* Use backtrace/stackwalker to find module names in logging functions
 
 # Long term
 

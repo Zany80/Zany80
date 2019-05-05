@@ -6,18 +6,61 @@ set(FIPS_EMSCRIPTEN_USE_CWRAP ON CACHE BOOL "" FORCE)
 get_filename_component(FIPS_ROOT_DIR "./build/fips" ABSOLUTE)
 include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
+macro(configure_msvc_runtime)
+  if(MSVC)
+
+    # Default to statically-linked runtime.
+    if("${MSVC_RUNTIME}" STREQUAL "")
+      set(MSVC_RUNTIME "dynamic")
+    endif()
+
+    # Set compiler options.
+    set(variables
+      CMAKE_C_FLAGS_DEBUG
+      CMAKE_C_FLAGS_MINSIZEREL
+      CMAKE_C_FLAGS_RELEASE
+      CMAKE_C_FLAGS_RELWITHDEBINFO
+      CMAKE_CXX_FLAGS_DEBUG
+      CMAKE_CXX_FLAGS_MINSIZEREL
+      CMAKE_CXX_FLAGS_RELEASE
+      CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    )
+    if(${MSVC_RUNTIME} STREQUAL "static")
+      message(STATUS
+        "MSVC -> forcing use of statically-linked runtime."
+      )
+      foreach(variable ${variables})
+        if(${variable} MATCHES "/MD")
+          string(REGEX REPLACE "/MD" "/MT" ${variable} "${${variable}}")
+        endif()
+      endforeach()
+    else()
+      message(STATUS
+        "MSVC -> forcing use of dynamically-linked runtime."
+      )
+      foreach(variable ${variables})
+        if(${variable} MATCHES "/MT")
+          string(REGEX REPLACE "/MT" "/MD" ${variable} "${${variable}}")
+        endif()
+      endforeach()
+    endif()
+  endif()
+endmacro()
+
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.0.4.2)
+project(Zany80 VERSION 0.1.0.0)
 
 # TODO: get this working on native Windows compilation
 # TODO: and also mingw cross-compilation
 if(FIPS_WINDOWS)
+  configure_msvc_runtime()
   ENABLE_LANGUAGE(RC)
   set(CMAKE_RC_COMPILE_OBJECT
     "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
   set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/icon.rc)
 elseif(FIPS_OSX)
+	message(WARNING "OS X not currently supported")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -undefined dynamic_lookup")
@@ -26,7 +69,7 @@ endif()
 fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/3rd-party" "${PROJECT_BINARY_DIR}")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
-fips_begin_app(zany80 windowed)
+fips_begin_app(zany80 cmdline)
 fips_deps(Gfx IMUI lib)
 if (FIPS_EMSCRIPTEN)
 	fips_deps(HttpFS)
@@ -38,14 +81,21 @@ endif()
 fips_src(src/)
 fips_dir(backend/)
 if (FIPS_WINDOWS)
-	fips_files(windows.cc)
+	fips_files(windows.c)
 elseif(FIPS_POSIX)
 	fips_files(posix.c)
 endif()
 if (ORYOL_OPENGL AND (FIPS_MACOS OR FIPS_WINDOWS OR FIPS_LINUX))
+	if (FIPS_WINDOWS)
+		message(WARNING "GLFW backend not currently supported under Windows. Unless something has changed, Zany80 will crash on launch with this configuration. Please switch Oryol's backend to D3D11.")
+	endif()
 	fips_files(glfw.cc)
+elseif(ORYOL_D3D11)
+	fips_files(d3d11.cc)
 endif()
 fips_end_app()
+target_compile_definitions(zany80 PRIVATE ZANY_EXPORT=1)
+set_property(TARGET zany80 PROPERTY ENABLE_EXPORTS TRUE)
 
 fips_add_subdirectory(plugins)
 

@@ -1,0 +1,26 @@
+#ifndef LINKER_H
+#define LINKER_H
+#include "3rd-party/scas/list.h"
+#include "objects.h"
+#include <stdio.h>
+#include <stdint.h>
+
+typedef int (*format_writer)(FILE *f, uint8_t *data, int data_length);
+
+typedef struct {
+    int automatic_relocation;
+    int merge_only;
+    list_t *errors;
+    list_t *warnings;
+    format_writer write_output;
+} linker_settings_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void link_objects(FILE *output, list_t *objects, linker_settings_t *settings);
+#ifdef __cplusplus
+}
+#endif
+
+#endif

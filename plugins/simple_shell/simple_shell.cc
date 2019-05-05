@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#ifdef ORYOL_WINDOWS
+#ifdef _WIN32
 	#include <direct.h>
 	#define GetCurrentDir _getcwd
 #else
@@ -26,17 +26,14 @@ bool SimpleShell::supports(String type) {
 
 SimpleShell::SimpleShell() {
 	strcpy(command_string, "");
-	commands = {
-		{"exit", {
-			.function = [](Array<String> args, SimpleShell *shell) -> int {
-				//TODO:IMPLEMENT
-				shell->output("Error: not yet implemented.");
-				return false;
-			},
-			.help = "Exits the shell.",
-			.detailed_help = "Exits the shell. The most recent application will be displayed; if none are open, this returns to the menu."
-		}},
-		{"echo", {
+	shell_command exit;
+	exit.function = [](Array<String> args, SimpleShell *shell) -> int {
+		//TODO:IMPLEMENT
+		shell->output("Error: not yet implemented.");
+		return false;
+	};
+	commands.Add("exit", exit);
+/* 		{"echo", {
 			.function = [](Array<String> args, SimpleShell *shell) -> int{
 				StringBuilder all_args;
 				for (String s: args) {
@@ -115,7 +112,7 @@ SimpleShell::SimpleShell() {
 				return true;
 			},
 			.help = "Changes the current directory"
-		}},
+		}}, */
 
 		//~ {"assembler", {
 			//~ .function = [](Array<String> args, SimpleShell *shell) -> int {
@@ -207,7 +204,7 @@ SimpleShell::SimpleShell() {
 			//~ .help = "Invokes the assembler to turn an assembly input file into an object file."
 		//~ }},
 		
-		{"compile", {
+		/* {"compile", {
 			.function = [](Array<String> args, SimpleShell *shell) -> int {
 				args.Add("-c");
 				args.Add("-I");
@@ -295,9 +292,9 @@ SimpleShell::SimpleShell() {
 			.help = "Prints out a list of files in the current folder.",
 			.detailed_help = "Prints out a list of files in the current folder."
 		}},
-	};
+	}; */
 
-	autocompletion_map = {
+	/*autocompletion_map = {
 		{"Help", [](String last_word, SimpleShell *shell) -> String {
 			Array<String> possible_commands;	
 			StringBuilder s;
@@ -328,15 +325,10 @@ SimpleShell::SimpleShell() {
 			}
 			return last_word;
 		}}
-	};
+	}; */
 	this->output("Hello! If you need assistance, contact me at pleasantatk@gmail.com");
 	this->output("Also, for help, you can use `help`. It's an extremely helpful command ;)");
-	this->working_directory = "";
 	this->updateWorkingDirectory();
-}
-
-SimpleShell::~SimpleShell() {
-	
 }
 
 void SimpleShell::frame(float delta) {
@@ -409,7 +401,7 @@ void SimpleShell::frame(float delta) {
 					if (i + 1 != current_command.Length())
 						last_word.Set(current_command.GetSubString(i + 1, EndOfString));
 					String(*autocompleter)(String, SimpleShell*) = [](String word, SimpleShell *shell) -> String {
-						list_t *files = read_directory(".");
+						list_t *files = zany_read_directory(".");
 						bool changed = true;
 						while (changed) {
 							changed = false;
@@ -550,11 +542,9 @@ Array<String> SimpleShell::getCommands() {
 }
 
 int SimpleShell::execute(String command) {
-	size_t size = command.Length() + 1;
-	char buf[size];
-	memcpy(buf, command_string, size);
+	char *buf = strdup(command_string);
 	strcpy(command_string, command.AsCStr());
 	int result = processCommand();
-	memcpy(command_string, buf, size);
+	memcpy(command_string, buf, strlen(buf));
 	return result;
 }

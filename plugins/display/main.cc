@@ -77,12 +77,6 @@ void frame(float delta) {
 	ImGui::End();
 }
 
-perpetual_plugin_t perpetual = {
-	.frame = frame
-};
-
-plugin_t plugin;
-
 /*
 ;; Key layout:
 ;;  0-25 are a-z
@@ -147,60 +141,64 @@ const Map<Key::Code, uint8_t> keymap = {
 
 bool pcaps = false;
 
+perpetual_plugin_t perpetual;
+plugin_t plugin;
+
 extern "C" {
 	
-	void init() {
+	PLUGIN_EXPORT void init() {
+		perpetual.frame = frame;
 		plugin.name = "Serial Monitor";
 		plugin.supports = [](const char *type) -> bool {
 			return (!strcmp(type, "Perpetual")) || (!strcmp(type, "Display")) || (!strcmp(type, "Serial Monitor"));
 		};
 		plugin.perpetual = &perpetual;
 		connected = false;
-		require_plugin("z80cpp_core");
 		output_buffer = new StringBuilder;
 		input_buffer = new Array<uint8_t>;
+		require_plugin("z80cpp_core");
 		attach_cpu();
-		Input::SubscribeEvents([](InputEvent e) {
-			if (focused) {
-				if (e.Type == InputEvent::KeyDown) {
-					if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
-						bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
-						if (caps != pcaps) {
-							pcaps = caps;
-							input_buffer->Add(caps ? 0xBD : 0x3D);
-							cpu->fire_interrupt(1);
-						}
-					}
-					else {
-						//~ Log::Dbg("Adding %d to input buffer\n", keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
-						input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
-						cpu->fire_interrupt(1);
-					}
-				}
-				else if(e.Type == InputEvent::KeyUp) {
-					if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
-						bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
-						if (caps != pcaps) {
-							pcaps = caps;
-							input_buffer->Add(caps ? 0xBD : 0x3D);
-							cpu->fire_interrupt(2);
-						}
-					}
-					else {
-						input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] | 0x80 : -1);
-						cpu->fire_interrupt(2);
-					}
-				}
-			}
-		});
+		// Input::SubscribeEvents([](InputEvent e) {
+		// 	if (focused) {
+		// 		if (e.Type == InputEvent::KeyDown) {
+		// 			if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
+		// 				bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
+		// 				if (caps != pcaps) {
+		// 					pcaps = caps;
+		// 					input_buffer->Add(caps ? 0xBD : 0x3D);
+		// 					cpu->fire_interrupt(1);
+		// 				}
+		// 			}
+		// 			else {
+		// 				//~ Log::Dbg("Adding %d to input buffer\n", keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
+		// 				input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] : -1);
+		// 				cpu->fire_interrupt(1);
+		// 			}
+		// 		}
+		// 		else if(e.Type == InputEvent::KeyUp) {
+		// 			if (e.KeyCode == Key::LeftShift || e.KeyCode == Key::RightShift || e.KeyCode == Key::CapsLock) {
+		// 				bool caps = (Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift)) != Input::KeyPressed(Key::CapsLock);
+		// 				if (caps != pcaps) {
+		// 					pcaps = caps;
+		// 					input_buffer->Add(caps ? 0xBD : 0x3D);
+		// 					cpu->fire_interrupt(2);
+		// 				}
+		// 			}
+		// 			else {
+		// 				input_buffer->Add(keymap.Contains(e.KeyCode) ? keymap[e.KeyCode] | 0x80 : -1);
+		// 				cpu->fire_interrupt(2);
+		// 			}
+		// 		}
+		// 	}
+		// });
 	}
 	
-	void cleanup() {
+	PLUGIN_EXPORT void cleanup() {
 		delete input_buffer;
 		delete output_buffer;
 	}
 	
-	plugin_t *get_interface() {
+	PLUGIN_EXPORT plugin_t *get_interface() {
 		return &plugin;
 	}
 	

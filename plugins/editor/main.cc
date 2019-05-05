@@ -1,10 +1,10 @@
 #include "Editor.h"
-#include "Identifiers.h"
 
 #include <IMUI/IMUI.h>
 #include <IO/IO.h>
 
 #include <Zany80/Plugin.h>
+#include <Zany80/API.h>
 #include <editor_config.h>
 
 #include <stdio.h>
@@ -58,7 +58,7 @@ const char *validate_cpu(cpu_plugin_t *cpu) {
 	return nullptr;
 }
 
-#ifdef ORYOL_EMSCRIPTEN
+#if ORYOL_EMSCRIPTEN
 #include <emscripten.h>
 EM_JS(void, download, (const char* name, const char* str), {
 	var element = document.createElement('a');
@@ -92,13 +92,6 @@ Editor::Editor() {
 	language.mName = "Zany80 Assembly";
 	language.mSingleLineComment = ";";
 	language.mPreprocChar = '.';
-	for (Map<const char *, const char *> m : identifiers) {
-		for (KeyValuePair<const char *,const char *> k : m) {
-			 TextEditor::Identifier id;
-			 id.mDeclaration = k.value;
-			 language.mIdentifiers[k.key] = id;
-		} 
-	}
 	#ifdef ORYOL_EMSCRIPTEN
 	editor_instance = this;
 	#endif
@@ -169,7 +162,7 @@ void Editor::Open() {
 bool Editor::Open(String path) {
 	bool success = false;
 	needs_info = false;
-	FILE *file = fopen(path.AsCStr(), "r");
+	FILE *file = fopen(path.AsCStr(), "rb");
 	Map<int, String> error_strings = {
 		{ EACCES, "Access to file denied!" },
 		{ EISDIR, "That's a folder. Not a file." },
@@ -189,11 +182,15 @@ bool Editor::Open(String path) {
 		}
 		else {
 			rewind(file);
-			char buffer[size + 1];
-			if (fread(buffer, 1, size, file) != (size_t)size) {
+			char *buffer = new char[size + 1];
+			size_t read = fread(buffer, 1, size, file);
+			if (read != (size_t)size) {
 				// Failed to read whole file!
 				messages.Clear();
 				messages.Add("Error loading in file!");
+				char buf[256];
+				sprintf(buf, "Expected %d, got %llu", size, read);
+				messages.Add(buf);
 			}
 			else {
 				buffer[size] = 0;
@@ -203,6 +200,7 @@ bool Editor::Open(String path) {
 				this->path = path;
 				success = true;
 			}
+			delete[] buffer;
 		}
 		fclose(file);
 	}
@@ -254,10 +252,11 @@ void Editor::Build() {
 			StringBuilder s = StringBuilder(path);
 			s.Append(".rom");
 			String target = s.GetString();
-			char *buf = NULL;
+			static char *buf = NULL;
 			list_t *sources = create_list();
-			String libc = StringBuilder(IO::ResolveAssigns("lib:stdlib.o")).GetSubString(8, EndOfString);
-			list_add(sources, (void*)libc.AsCStr());
+			char *libc = zany_root_folder();
+			strcat(libc, "/lib/stdlib.o");
+			list_add(sources, libc);
 			list_add(sources, (void*)path.AsCStr());
 			int i = assembler->convert(sources, target.AsCStr(), &buf);
 			messages.Clear();
@@ -273,7 +272,6 @@ void Editor::Build() {
 					CheckError(newMsgs[i]);
 				}
 			}
-			free(buf);
 			widget.SetErrorMarkers(markers);
 		}
 	}

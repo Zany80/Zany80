@@ -4,3 +4,4 @@ zany80_deps.cpp.tags
 build/
 *.geany
 fips-files/verbs/__pycache__/*.pyc
+.vscode/

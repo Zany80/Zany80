@@ -4,31 +4,30 @@
 
 SimpleShell *shell;
 
-perpetual_plugin_t perpetual = {
-	.frame = [](float delta) {
-		shell->frame(delta);
-	}
-};
-
-plugin_t plugin = {
-	.name = "Simple Shell",
-	.supports = [](const char *type) -> bool {
-		return (!strcmp(type, "Shell")) || (!strcmp(type, "Perpetual"));
-	},
-	.perpetual = &perpetual
-};
+perpetual_plugin_t perpetual;
+plugin_t plugin;
 
 extern "C" {
 	
-	void init() {
+	PLUGIN_EXPORT void init() {
 		shell = new SimpleShell;
+		memset(&perpetual, 0, sizeof(perpetual_plugin_t));
+		memset(&plugin, 0, sizeof(plugin_t));
+		perpetual.frame = [](float delta) {
+			shell->frame(delta);
+		};
+		plugin.name = "Simple Shell";
+		plugin.supports = [](const char *type) -> bool {
+			return (!strcmp(type, "Shell")) || (!strcmp(type, "Perpetual"));
+		};
+		plugin.perpetual = &perpetual;
 	}
 	
-	plugin_t *get_interface() {
+	PLUGIN_EXPORT plugin_t *get_interface() {
 		return &plugin;
 	}
 	
-	void cleanup() {
+	PLUGIN_EXPORT void cleanup() {
 		delete shell;
 	}
 	

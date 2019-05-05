@@ -28,11 +28,13 @@ unsigned long plugin_instances;
 
 Zany80 *zany;
 
+__declspec(dllexport) ImGuiContext *imguicontext;
+
 OryolMain(Zany80);
 
 Array<String> available_plugins;
 
-extern "C" void report_error(const char *error_message) {
+extern "C" void zany_report_error(const char *error_message) {
 	zany->report_error(error_message);
 }
 
@@ -119,10 +121,11 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
+	load_plugin("plugins:z80cpp_core");
 	load_plugin("plugins:debug_port");
-	load_plugin("plugins:display");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:simple_shell");
+	load_plugin("plugins:display");
 	show_debug_window = hub = true;
 	this->tp = Clock::Now();
 	return App::OnInit();
@@ -196,7 +199,7 @@ AppState::Code Zany80::OnRunning() {
 			ImGui::EndMenuBar();
 		}
 		if (show_loaded_plugins) {
-			constexpr const char *listed_tags[] = {
+			constexpr char *listed_tags[] = {
 				"CPU", "Perpetual", "Shell", "z80", "Toolchain"
 			};
 			ImGui::Text("Plugins");
@@ -234,25 +237,30 @@ AppState::Code Zany80::OnRunning() {
 					//~ }
 				}
 				if (plugin->supports("CPU")) {
-					ImGui::Text("\t\t\tRegisters:");
-					int per_line = 1;
-					list_t *registers = plugin->cpu->get_registers();
-					for (int i = 5; i > 1; i--) {
-						if (registers->length % i == 0) {
-							per_line = i;
-							break;
+					list_t *registers;
+					if (plugin->cpu->get_registers && (registers = plugin->cpu->get_registers())) {
+						ImGui::Text("\t\t\tRegisters:");
+						int per_line = 1;
+						for (int i = 5; i > 1; i--) {
+							if (registers->length % i == 0) {
+								per_line = i;
+								break;
+							}
 						}
-					}
-					StringBuilder line("\t\t\t\t");
-					for (int i = 0; i < registers->length; i++) {
-						register_value_t *reg = (register_value_t*)registers->items[i];
-						line.AppendFormat(32, "%s = %d,", reg->name, reg->value);
-						if (i % per_line == per_line - 1) {
-							ImGui::Text("%s", line.AsCStr());
-							line.Set("\t\t\t\t");
+						StringBuilder line("\t\t\t\t");
+						for (int i = 0; i < registers->length; i++) {
+							register_value_t *reg = (register_value_t*)registers->items[i];
+							line.AppendFormat(32, "%s = %d,", reg->name, reg->value);
+							if (i % per_line == per_line - 1) {
+								ImGui::Text("%s", line.AsCStr());
+								line.Set("\t\t\t\t");
+							}
 						}
+						list_free(registers);
 					}
-					free_flat_list(registers);
+					else {
+						ImGui::Text("\t\t\tThis CPU does not expose its registers");
+					}
 				}
 				if (plugin->supports("Toolchain")) {
 					//~ ImGui::Text("\t\t\tTransforms:");
@@ -292,14 +300,33 @@ AppState::Code Zany80::OnRunning() {
 }
 
 AppState::Code Zany80::OnCleanup() {
-	list_t *plugins = get_all_plugins();
-	while (plugins->length > 0) {
-		list_del(plugins, 0);
-	}
-	list_free(plugins);
-	IMUI::Discard();
+	//TODO: free plugins
 	Input::Discard();
 	Gfx::Discard();
 	IO::Discard();
 	return App::OnCleanup();
+}
+
+#if _DEBUG
+static zany_loglevel current_level = ZL_DEBUG;
+#else
+static zany_loglevel current_level = ZL_INFO;
+#endif
+
+void zany_log(zany_loglevel level, const char *format, ...) {
+	if (level < current_level) {
+		return;
+	}
+	va_list args;
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	fflush(stderr);
+	va_end(args);
+}
+
+char *zany_root_folder() {
+	StringBuilder s = IO::ResolveAssigns("root:");
+	if (s.GetSubString(0, 4) == "file")
+		s.Set(s.GetSubString(8, EndOfString));
+	return strdup(s.AsCStr());
 }

@@ -1,4 +1,4 @@
-#include "list.h"
+#include "scas/list.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,4 +71,18 @@ int list_seq_find(list_t *list, int compare(const void *item, const void *data),
 		}
 	}
 	return -1;
+}
+
+void list_addunique(list_t *list, int compare(const void *item, const void *data), void *item) {
+	if (list_seq_find(list, compare, item) == -1) {
+		list_add(list, item);
+	}
+}
+
+int list_cmp_pointer(const void *item, const void *data) {
+	return item != data;
+}
+
+int list_cmp_string(const void *item, const void *data) {
+	return strcmp((const char *)item, (const char *)data);
 }
