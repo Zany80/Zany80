@@ -29,7 +29,15 @@ plugin_t plugin = {
 	.supports = supports,
 	.perpetual = &perpetual
 };
-	
+
+void go_right() {
+	widget_set_label(label, "You turn right");
+}
+
+void go_left() {
+	widget_set_label(label, "You turn left");
+}
+
 PLUGIN_EXPORT void init() {
 	main_menu = menu_create("Plugin Demo");
 	toggle_visible = checkbox_create("Show", &visible, NULL);
@@ -37,9 +45,17 @@ PLUGIN_EXPORT void init() {
 	window_append_menu(get_root(), main_menu);
 	window = window_create("Plugin Demo (Adventure Game)");
 	window_min_size(window, 400, 150);
-	label = label_create("This is a simple text adventure written to demonstrate the power and simplicity of the Zany80 plugin API.");
+	label = label_create(
+		"This is a simple text adventure written to demonstrate the power and "
+		"simplicity of the Zany80 plugin API.\n"
+		"\n"
+		"You arrive at a fork in the road.");
 	label_set_wrapped(label, true);
 	window_append(window, label);
+	options = group_create();
+	group_add(options, button_create("Go Left", go_left));
+	group_add(options, button_create("Go Right", go_right));
+	window_append(window, options);
 }
 
 PLUGIN_EXPORT void cleanup() {
@@ -48,6 +64,8 @@ PLUGIN_EXPORT void cleanup() {
 	widget_destroy(toggle_visible);
 	window_destroy(window);
 	widget_destroy(label);
+	group_clear(options, true);
+	widget_destroy(options);
 }
 
 PLUGIN_EXPORT plugin_t *get_interface() {
