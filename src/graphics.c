@@ -165,7 +165,12 @@ void group_remove(widget_t *group, widget_t *widget) {
     sb_remove(&group->_group.widgets, widget);
 }
 
-void group_clear(widget_t *group) {
+void group_clear(widget_t *group, bool f) {
+    if (f) {
+        for (int i = 0; i < sb_count(group->_group.widgets); i++) {
+            widget_destroy(group->_group.widgets[i])
+        }
+    }
     sb_free(group->_group.widgets);
     group->_group.widgets = NULL;
 }

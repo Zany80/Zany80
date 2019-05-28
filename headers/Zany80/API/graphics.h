@@ -44,7 +44,8 @@ ZANY_DLL void label_set_wrapped(widget_t *widget, bool wrapped);
 ZANY_DLL widget_t *group_create();
 ZANY_DLL void group_add(widget_t *group, widget_t *widget);
 ZANY_DLL void group_remove(widget_t *group, widget_t *widget);
-ZANY_DLL void group_clear(widget_t *group);
+/// If f is set, all widgets in the group are destroyed
+ZANY_DLL void group_clear(widget_t *group, bool f);
 ZANY_DLL void group_setorientation(widget_t *group, group_orientation_t orientation);
 
 ZANY_DLL void render_window(window_t *window);

@@ -8,7 +8,7 @@ bool visible = true;
 
 window_t *window;
 widget_t *label;
-
+widget_t *options;
 
 void frame(float delta) {
 	if (visible) {
