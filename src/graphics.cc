@@ -34,6 +34,14 @@ static void render_widget(widget_t *widget) {
                 }
             }
             break;
+        case group:
+            for (int i = 0; i < sb_count(widget->_group.widgets); i++) {
+                render_widget(widget->_group.widgets[i]);
+                if (widget->_group.orientation == horizontal) {
+                    ImGui::SameLine();
+                }
+            }
+            break;
     }
 }
 

@@ -15,6 +15,7 @@ typedef struct {
 
 typedef struct {
     widget_t **widgets;
+    group_orientation_t orientation;
 } group_t;
 
 typedef enum {

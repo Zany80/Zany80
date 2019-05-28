@@ -41,24 +41,28 @@ void window_append_menu(window_t *window, menu_t *menu) {
     sb_push(window->menus, menu);
 }
 
-void window_remove_menu(window_t *window, menu_t *menu) {
-    // Find it
-    for (int i = 0; i < sb_count(window->menus); i++) {
-        if (menu == window->menus[i]) {
-            // Construct new list containing all save for this one
-            menu_t **menus = NULL;
+static void sb_remove(void ***array, void *item) {
+    void **new_array = NULL;
+    bool found = false;
+    for (int i = 0; i < sb_count(*array); i++) {
+        if (*array[i] == item) {
+            // Found it!
+            found = true;
             for (int j = 0; j < i; j++) {
-                sb_push(menus, window->menus[j]);
+                sb_push(new_array, *array[j]);
             }
-            for (int j = i + 1; j < sb_count(window->menus); j++) {
-                sb_push(menus, window->menus[j]);
+            for (int j = i + 1; j < sb_count(*array); j++) {
+                sb_push(new_array, *array[j]);
             }
-            sb_free(window->menus);
-            window->menus = menus;
-            return;
+            sb_free(*array);
+            *array = new_array;
+            break;
         }
     }
-    fputs("Menu not found for removal\n", stderr);
+}
+
+void window_remove_menu(window_t *window, menu_t *menu) {
+    sb_remove(&window->menus, menu);
 }
 
 window_t *get_root() {
@@ -135,6 +139,9 @@ void widget_set_visible(widget_t *widget, bool visible) {
 }
 
 void widget_destroy(widget_t *widget) {
+    if (widget->type == group) {
+        sb_free(widget->_group.widgets);
+    }
     free(widget);
 }
 
@@ -143,25 +150,26 @@ void append_main_menu(menu_t *menu) {
 }
 
 widget_t *group_create() {
-
+    widget_t *g = widget_new(NULL);
+    g->type = group;
+    g->_group.widgets = NULL;
+    g->_group.orientation = vertical;
+    return g;
 }
 
 void group_add(widget_t *group, widget_t *widget) {
-
+    sb_push(group->_group.widgets, widget);
 }
 
 void group_remove(widget_t *group, widget_t *widget) {
-
+    sb_remove(&group->_group.widgets, widget);
 }
 
 void group_clear(widget_t *group) {
-
-}
-
-void group_destroy(widget_t *group) {
-
+    sb_free(group->_group.widgets);
+    group->_group.widgets = NULL;
 }
 
 void group_setorientation(widget_t *group, group_orientation_t orientation) {
-
+    group->_group.orientation = orientation;
 }

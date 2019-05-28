@@ -45,7 +45,6 @@ ZANY_DLL widget_t *group_create();
 ZANY_DLL void group_add(widget_t *group, widget_t *widget);
 ZANY_DLL void group_remove(widget_t *group, widget_t *widget);
 ZANY_DLL void group_clear(widget_t *group);
-ZANY_DLL void group_destroy(widget_t *group);
 ZANY_DLL void group_setorientation(widget_t *group, group_orientation_t orientation);
 
 ZANY_DLL void render_window(window_t *window);
