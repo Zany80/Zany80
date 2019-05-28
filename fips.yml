@@ -2,6 +2,8 @@ imports:
   fips-imgui:
     git: https://github.com/fips-libs/fips-imgui.git
     rev: 3f066e2e19b1e11e7e0dd90183633d9a20cfb694
+  stb:
+    git: https://github.com/fips-libs/fips-stb.git
   oryol:
     git: https://github.com/pixelherodev/oryol.git
     branch: zany_active

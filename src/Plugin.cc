@@ -52,9 +52,7 @@ bool load_plugin(const char *path) {
 		jmp_buf env;
 		envs.Add(&env);
 		if (setjmp(env) == 0) {
-			puts("Calling init");
 			((void(*)())(*library)["init"])();
-			puts("Retrieving interface");
 			plugin_t *plugin = ((plugin_t*(*)())(*library)["get_interface"])();
 			plugin->library = library;
 			if (plugins == nullptr) {

@@ -45,6 +45,66 @@ main:\n\
 .received: .asciiz \"Character received: \"\n\
 msg: .asciiz \"ROM built by Zany80 Scas plugin...\\n\""
 
+#define lib_less "\
+.equ mmu, 0\n\
+\n\
+start:\n\
+\tjp boot\n\
+\n\
+.block 0x100 - $\n\
+boot:\n\
+\tld a, 1\n\
+\tld b, 3\n\
+.loop:\n\
+\tout (mmu), a\n\
+\tout (mmu), a\n\
+\tinc a\n\
+\tdjnz .loop\n\
+\n\
+\tld hl, 0\n\
+\tld de, 0x4000\n\
+\tld bc, 0x4000\n\
+\tldir\n\
+\n\
+\tld a, 0\n\
+\tout (mmu), a\n\
+\tinc a\n\
+\tout (mmu), a\n\
+\tout (mmu), a\n\
+\tld a, 4\n\
+\tout (mmu), a\n\
+\n\
+\tld sp, 0xFF00\n\
+\tld hl, .str\n\
+\tld c, 1\n\
+\tcall write\n\
+\tinc c\n\
+\tcall write\n\
+\t\n\
+.end:\n\
+\thalt\n\
+\tjr .end\n\
+\n\
+.str: .asciiz \"Hello, world!\\n\"\n\
+\n\
+; hl: string\n\
+; c: output port\n\
+write:\n\
+\tpush af\n\
+\tpush hl\n\
+.loop:\n\
+\tld a, (hl)\n\
+\tcp 0\n\
+\tjr z, .done\n\
+\tout (c), a\n\
+\tinc hl\n\
+\tjr .loop\n\
+.done:\n\
+\tpop hl\n\
+\tpop af\n\
+\tret\n\
+"
+
 const char *validate_cpu(cpu_plugin_t *cpu) {
 	if (cpu == nullptr) {
 		return "CPU information structure absent";
@@ -86,6 +146,7 @@ void Editor::ResetEditor() {
 }
 
 Editor::Editor() {
+	stdlib = true;
 	require_plugin("Assembler");
 	language = TextEditor::LanguageDefinition::C();
 	language.mIdentifiers = TextEditor::Identifiers();
@@ -103,7 +164,7 @@ Editor::Editor() {
 
 void Editor::NewFile() {
 	ResetEditor();
-	widget.SetText(start_text);
+	widget.SetText(stdlib ? start_text : lib_less);
 	path = "";
 	has_file = false;
 	needs_info = false;
@@ -254,9 +315,11 @@ void Editor::Build() {
 			String target = s.GetString();
 			static char *buf = NULL;
 			list_t *sources = create_list();
-			char *libc = zany_root_folder();
-			strcat(libc, "/lib/stdlib.o");
-			list_add(sources, libc);
+			if (stdlib) {
+				char *libc = zany_root_folder();
+				strcat(libc, "/lib/stdlib.o");
+				list_add(sources, libc);
+			}
 			list_add(sources, (void*)path.AsCStr());
 			int i = assembler->convert(sources, target.AsCStr(), &buf);
 			messages.Clear();
@@ -426,6 +489,7 @@ void Editor::frame(float delta) {
 			if (ImGui::MenuItem("Save")) {
 				Save();				
 			}
+			ImGui::Checkbox("Link to stdlib", &stdlib);
 			#ifdef ORYOL_EMSCRIPTEN
 			ImGui::Separator();
 			if (ImGui::MenuItem("Download", NULL, false, has_file)) {

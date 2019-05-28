@@ -107,7 +107,7 @@ int convert(list_t *sources, const char *target, char **buffer) {
 			deindent_log();
 		}
 		scas_log(L_DEBUG, "Opening output file for writing: %s", scas_runtime.output_file);
-		FILE *out = fopen(scas_runtime.output_file, "w+b");
+		FILE *out = fopen(scas_runtime.output_file, "wb");
 		if (!out) {
 			scas_abort("Unable to open '%s' for output.", scas_runtime.output_file);
 		}
@@ -215,7 +215,7 @@ plugin_version_t version = {
 	.major = 2,
 	.minor = 0,
 	.patch = 0,
-	.str = "2.0.0.0"
+	.str = "2.0.0.0-rc1"
 };
 
 toolchain_plugin_t toolchain = {
@@ -223,9 +223,16 @@ toolchain_plugin_t toolchain = {
 	.convert = convert
 };
 
+void frame(float delta);
+
+perpetual_plugin_t perpetual = {
+	.frame = frame
+};
+
 plugin_t plugin = {
 	.name = "SirCmpwn's Assembler (Zany80 binding)",
 	.supports = supports,
+	.perpetual = &perpetual,
 	.version = &version,
 	.toolchain = &toolchain
 };

@@ -1,5 +1,5 @@
-#include <IMUI/IMUI.h>
 #include <Zany80/Plugin.h>
+#include <Zany80/API/graphics.h>
 #include <Core/String/String.h>
 #include <Core/String/StringBuilder.h>
 #include <Core/Containers/Array.h>
@@ -44,37 +44,24 @@ bool attach_cpu() {
 	return connected;
 }
 
+window_t *window;
+menu_t *menu;
+widget_t *clear_button;
+widget_t *output;
+
 void frame(float delta) {
 	// Window starts at 300x200, minimal size of 200x160
-	ImGui::SetNextWindowSizeConstraints(ImVec2(200, 160), ImVec2(FLT_MAX, FLT_MAX));
-	ImGui::Begin("Serial Monitor", NULL, ImGuiWindowFlags_MenuBar);
-	ImGui::SetWindowSize(ImVec2(300,200), ImGuiCond_FirstUseEver);
-	if (ImGui::BeginMenuBar()) {
-		if (ImGui::MenuItem("Clear")) {
-			clear();
-		}
-		ImGui::EndMenuBar();
-	}
-	if (!connected) {
+	if (!connected && !attach_cpu()) {
 		if (!attach_cpu()) {
-			ImGui::Text("No CPU loaded!");
+			widget_set_label(output, "No CPU loaded!");
 		}
 	}
-	// TODO: remove this InputText and use direct inputs
-	else {
-		focused = ImGui::IsWindowFocused();
-		//~ static char buf[256];
-		//~ if (ImGui::InputText("", buf, 255, ImGuiInputTextFlags_NoUndoRedo | ImGuiInputTextFlags_EnterReturnsTrue)) {
-			//~ strcpy(buf + strlen(buf), "\n");
-			//~ for (size_t i = 0; i < strlen(buf); i++) {
-				//~ input_buffer->Add(buf[i]);
-				//~ cpu->fire_interrupt(0);
-			//~ }
-			//~ strcpy(buf, "");
-		//~ }
-		ImGui::Text("%s", output_buffer->AsCStr());
+	else if (output_buffer->Length() == 0) {
+		widget_set_label(output, "No output yet...");
+	} else {
+		widget_set_label(output, output_buffer->AsCStr());
 	}
-	ImGui::End();
+	render_window(window);
 }
 
 /*
@@ -147,6 +134,15 @@ plugin_t plugin;
 extern "C" {
 	
 	PLUGIN_EXPORT void init() {
+		window = window_create("Serial Monitor");
+		window_min_size(window, 200, 160);
+		window_initial_size(window, 300, 200);
+		menu = menu_create("Control");
+		clear_button = button_create("Clear", clear);
+		menu_append(menu, clear_button);
+		window_append_menu(window, menu);
+		output = label_create(NULL);
+		window_append(window, output);
 		perpetual.frame = frame;
 		plugin.name = "Serial Monitor";
 		plugin.supports = [](const char *type) -> bool {
@@ -196,6 +192,10 @@ extern "C" {
 	PLUGIN_EXPORT void cleanup() {
 		delete input_buffer;
 		delete output_buffer;
+		window_destroy(window);
+		menu_destroy(menu);
+		widget_destroy(clear_button);
+		widget_destroy(output);
 	}
 	
 	PLUGIN_EXPORT plugin_t *get_interface() {

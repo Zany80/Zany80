@@ -7,6 +7,8 @@ extern "C" {
 #include <scas/list.h>
 #include "internal/dllports.h"
 
+#include "API/graphics.h"
+
 // Returns a list of files in the specified directory.
 // Must be freed using free_flat_list, which frees all of the strings
 // plus the list itselfs

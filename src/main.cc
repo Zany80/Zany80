@@ -28,8 +28,6 @@ unsigned long plugin_instances;
 
 Zany80 *zany;
 
-__declspec(dllexport) ImGuiContext *imguicontext;
-
 OryolMain(Zany80);
 
 Array<String> available_plugins;
@@ -121,10 +119,10 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
+	load_plugin("plugins:example");
 	load_plugin("plugins:z80cpp_core");
-	load_plugin("plugins:debug_port");
-	load_plugin("plugins:editor");
-	load_plugin("plugins:simple_shell");
+	//load_plugin("plugins:debug_port");
+	//load_plugin("plugins:editor");
 	load_plugin("plugins:display");
 	show_debug_window = hub = true;
 	this->tp = Clock::Now();
@@ -293,6 +291,7 @@ AppState::Code Zany80::OnRunning() {
 			error = "";
 		ImGui::End();
 	}
+	render_window(get_root());
 	ImGui::Render();
 	Gfx::EndPass();
 	Gfx::CommitFrame();

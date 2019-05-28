@@ -56,5 +56,6 @@ private:
 	TextEditor::ErrorMarkers markers;
 	// Set up language etc
 	void ResetEditor();
+	bool stdlib;
 	TextEditor::LanguageDefinition language;
 };
