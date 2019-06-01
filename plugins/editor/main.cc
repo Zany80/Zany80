@@ -1,6 +1,5 @@
 #include "Editor.h"
 
-#include <IMUI/IMUI.h>
 #include <IO/IO.h>
 
 #include <Zany80/Plugin.h>
@@ -130,8 +129,6 @@ EM_JS(void, download, (const char* name, const char* str), {
 	document.body.removeChild(element);
 });
 
-Editor *editor_instance;
-
 extern "C" void EMSCRIPTEN_KEEPALIVE EditorOpen(const char *name, const char *data) {
 	editor_instance->ResetEditor();
 	editor_instance->widget.SetText(data);
@@ -140,10 +137,15 @@ extern "C" void EMSCRIPTEN_KEEPALIVE EditorOpen(const char *name, const char *da
 }
 #endif
 
+Editor *editor_instance;
+
 void Editor::ResetEditor() {
 	widget = TextEditor();
 	widget.SetLanguageDefinition(language);
 }
+
+window_t *main_window, *message_log;
+menu_t *file_menu, *build_menu;
 
 Editor::Editor() {
 	stdlib = true;
@@ -153,13 +155,102 @@ Editor::Editor() {
 	language.mName = "Zany80 Assembly";
 	language.mSingleLineComment = ";";
 	language.mPreprocChar = '.';
-	#ifdef ORYOL_EMSCRIPTEN
 	editor_instance = this;
-	#endif
 	buffer = nullptr;
 	cpu = nullptr;
 	assembler = nullptr;
 	NewFile();
+	main_window = window_create("Editor##C");
+	message_log = window_create("Editor##MessageWindow");
+	window_initial_size(main_window, 600, 480);
+	window_min_size(main_window, 400, 300);
+	window_min_size(message_log, 400, 0);
+	window_set_titlebar(message_log, false);
+	window_append_menu(main_window, file_menu = menu_create("File"));
+	menu_append(file_menu, menuitem_create("New", []() {
+		editor_instance->NewFile();
+	}));
+	menu_append(file_menu, menuitem_create("Open", []() {
+		editor_instance->Open();
+	}));
+	menu_append(file_menu, menuitem_create("Save", []() {
+		editor_instance->Save();
+	}));
+	menu_append(file_menu, checkbox_create("Use standard library", &stdlib, NULL));
+	window_append(main_window, customwidget_create([]() {
+		editor_instance->widget.Render("TextEditor");
+	}));
+	
+	// 	if (ImGui::BeginMenu("File", !needs_info)) {
+	// 		if (ImGui::MenuItem("New"))
+	// 			NewFile()
+	// 		if (ImGui::MenuItem("Open"))
+	// 			Open();
+	// 		if (ImGui::MenuItem("Save")) {
+	// 			Save();				
+	// 		ImGui::Checkbox("Link to stdlib", &stdlib);
+	// 		#ifdef ORYOL_EMSCRIPTEN
+	// 		ImGui::Separator();
+	// 		if (ImGui::MenuItem("Download", NULL, false, has_file)) {
+	// 			download(path.AsCStr(), UnmodifiedText.c_str());
+	// 		}
+	// 		#endif
+	// 		ImGui::EndMenu();
+	// 	}
+	// 	if (ImGui::BeginMenu("Build", !needs_info)) {
+	// 		if (ImGui::MenuItem("Build")) {
+	// 			Build();
+	// 		}
+	// 		if (ImGui::MenuItem("Execute")) {
+	// 			Execute();
+	// 		}
+	// 		ImGui::Separator();
+	// 		if (ImGui::MenuItem("Select CPU")) {
+	// 			SelectCPU();
+	// 		}
+	// 		ImGui::EndMenu();
+	// 	}
+	// 	ImGui::EndMenuBar();
+	// }
+	// if (!needs_info) {
+	// 	
+	// 	ImGui::Text(has_file ? "%sFile: \"%s\"" : "%sUntitled", widget.GetText() != UnmodifiedText ? "* " : "", has_file ? path.AsCStr() : "");
+	// 	ImGui::Text("%6d/%-6d %6d lines", widget.GetCursorPosition().mLine + 1, widget.GetCursorPosition().mColumn + 1, widget.GetTotalLines());
+	// 	ImGui::Text(widget.IsOverwrite() ? "Overwrite" : "Insert");
+	// }
+	// else {
+	// 	if (ImGui::InputText("", buffer, buffer_size - 1, ImGuiInputTextFlags_NoUndoRedo | ImGuiInputTextFlags_EnterReturnsTrue)) {
+	// 		String b = String(buffer);
+	// 		delete[] buffer;
+	// 		buffer = nullptr;
+	// 		switch (info_type) {
+	// 			case open:
+	// 				Open(b);
+	// 				break;
+	// 			case save:
+	// 				Save(b);
+	// 				break;
+	// 			case set_cpu:
+	// 				SelectCPU(b);
+	// 				break;
+	// 			case set_asm:
+	// 				SelectASM(b);
+	// 				break;
+	// 		}
+	// 	}
+	// }
+	// ImGui::Separator();
+	// ImGui::BeginChild("Messages", ImVec2(ImGui::GetWindowWidth() - 20, 30));
+	// for (String s : messages) {
+	// 	ImGui::Text("%s", s.AsCStr());
+	// }
+	// ImGui::EndChild();
+	// ImGui::End();
+}
+
+Editor::~Editor() {
+	window_destroy(main_window);
+	window_destroy(message_log);
 }
 
 void Editor::NewFile() {
@@ -475,76 +566,12 @@ void Editor::SelectASM() {
 }
 
 void Editor::frame(float delta) {
-	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 300), ImVec2(FLT_MAX, FLT_MAX));
-	ImGui::Begin("Editor", NULL, ImGuiWindowFlags_MenuBar);
-	ImGui::SetWindowSize(ImVec2(600,480), ImGuiCond_FirstUseEver);
-	if (ImGui::BeginMenuBar()) {
-		if (ImGui::BeginMenu("File", !needs_info)) {
-			if (ImGui::MenuItem("New")) {
-				NewFile();
-			}
-			if (ImGui::MenuItem("Open")) {
-				Open();
-			}
-			if (ImGui::MenuItem("Save")) {
-				Save();				
-			}
-			ImGui::Checkbox("Link to stdlib", &stdlib);
-			#ifdef ORYOL_EMSCRIPTEN
-			ImGui::Separator();
-			if (ImGui::MenuItem("Download", NULL, false, has_file)) {
-				download(path.AsCStr(), UnmodifiedText.c_str());
-			}
-			#endif
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Build", !needs_info)) {
-			if (ImGui::MenuItem("Build")) {
-				Build();
-			}
-			if (ImGui::MenuItem("Execute")) {
-				Execute();
-			}
-			ImGui::Separator();
-			if (ImGui::MenuItem("Select CPU")) {
-				SelectCPU();
-			}
-			ImGui::EndMenu();
-		}
-		ImGui::EndMenuBar();
-	}
-	if (!needs_info) {
-		widget.Render("TextEditor", ImVec2(0, ImGui::GetWindowSize().y - 140));
-		ImGui::Text(has_file ? "%sFile: \"%s\"" : "%sUntitled", widget.GetText() != UnmodifiedText ? "* " : "", has_file ? path.AsCStr() : "");
-		ImGui::Text("%6d/%-6d %6d lines", widget.GetCursorPosition().mLine + 1, widget.GetCursorPosition().mColumn + 1, widget.GetTotalLines());
-		ImGui::Text(widget.IsOverwrite() ? "Overwrite" : "Insert");
-	}
-	else {
-		if (ImGui::InputText("", buffer, buffer_size - 1, ImGuiInputTextFlags_NoUndoRedo | ImGuiInputTextFlags_EnterReturnsTrue)) {
-			String b = String(buffer);
-			delete[] buffer;
-			buffer = nullptr;
-			switch (info_type) {
-				case open:
-					Open(b);
-					break;
-				case save:
-					Save(b);
-					break;
-				case set_cpu:
-					SelectCPU(b);
-					break;
-				case set_asm:
-					SelectASM(b);
-					break;
-			}
-		}
-	}
-	ImGui::Separator();
-	ImGui::BeginChild("Messages", ImVec2(ImGui::GetWindowWidth() - 20, 30));
-	for (String s : messages) {
-		ImGui::Text("%s", s.AsCStr());
-	}
-	ImGui::EndChild();
-	ImGui::End();
+	render_window(main_window);
+	float x, y, width, height;
+	window_get_pos(main_window, &x, &y);
+	window_get_size(main_window, &width, &height);
+	window_set_pos(message_log, x, y + height);
+	window_min_size(message_log, width, 0);
+	window_max_size(message_log, width, FLT_MAX);
+	render_window(message_log);
 }

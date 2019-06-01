@@ -1,6 +1,5 @@
 #pragma once
 
-#include <TextEditor.h>
 #include <Core/String/String.h>
 #include <Core/String/StringBuilder.h>
 #include <Core/Containers/Array.h>
@@ -18,6 +17,7 @@ class Editor {
 #endif
 public:
 	Editor();
+	~Editor();
 	void frame(float delta);
 private:
 	// GUI routines

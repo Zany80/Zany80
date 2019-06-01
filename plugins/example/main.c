@@ -30,14 +30,6 @@ plugin_t plugin = {
 	.perpetual = &perpetual
 };
 
-void go_right() {
-	widget_set_label(label, "You turn right");
-}
-
-void go_left() {
-	widget_set_label(label, "You turn left");
-}
-
 PLUGIN_EXPORT void init() {
 	main_menu = menu_create("Plugin Demo");
 	toggle_visible = checkbox_create("Show", &visible, NULL);
@@ -53,9 +45,8 @@ PLUGIN_EXPORT void init() {
 	label_set_wrapped(label, true);
 	window_append(window, label);
 	options = group_create();
-	group_add(options, button_create("Go Left", go_left));
-	group_add(options, button_create("Go Right", go_right));
 	window_append(window, options);
+	
 }
 
 PLUGIN_EXPORT void cleanup() {

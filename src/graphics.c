@@ -15,6 +15,7 @@ window_t *window_create(const char *name) {
     w->name = name;
     w->widgets = NULL;
     w->menus = NULL;
+    w->absX = w->absY = -1;
     return w;
 }
 
@@ -33,6 +34,15 @@ void window_initial_size(window_t *window, float x, float y) {
     window->initialY = y;
 }
 
+void window_set_titlebar(window_t *window, bool titlebar) {
+    window->titlebar = titlebar;
+}
+
+void window_set_pos(window_t *window, float x, float y) {
+    window->absX = x;
+    window->absY = y;
+}
+
 void window_append(window_t *window, widget_t *widget) {
     sb_push(window->widgets, widget);
 }
@@ -42,10 +52,12 @@ void window_append_menu(window_t *window, menu_t *menu) {
 }
 
 static void sb_remove(void ***array, void *item) {
+    if (!array)
+        return;
     void **new_array = NULL;
     bool found = false;
     for (int i = 0; i < sb_count(*array); i++) {
-        if (*array[i] == item) {
+        if ((*array)[i] == item) {
             // Found it!
             found = true;
             for (int j = 0; j < i; j++) {
@@ -110,6 +122,12 @@ widget_t *button_create(const char *label, void(*handler)()) {
     return w;
 }
 
+widget_t *menuitem_create(const char *label, void(*handler)()) {
+    widget_t *w = button_create(label, handler);
+    w->type = menu_item;
+    return w;
+}
+
 widget_t *checkbox_create(const char *label, bool *value, void(*handler)()) {
     widget_t *w = widget_new(label);
     w->type = checkbox;
@@ -121,6 +139,13 @@ widget_t *checkbox_create(const char *label, bool *value, void(*handler)()) {
 widget_t *label_create(const char *_label) {
     widget_t *w = widget_new(_label);
     w->type = label;
+    return w;
+}
+
+widget_t *customwidget_create(void (*handler)()) {
+    widget_t *w = widget_new(NULL);
+    w->type = custom;
+    w->custom.render = handler;
     return w;
 }
 

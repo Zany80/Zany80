@@ -223,16 +223,9 @@ toolchain_plugin_t toolchain = {
 	.convert = convert
 };
 
-void frame(float delta);
-
-perpetual_plugin_t perpetual = {
-	.frame = frame
-};
-
 plugin_t plugin = {
 	.name = "SirCmpwn's Assembler (Zany80 binding)",
 	.supports = supports,
-	.perpetual = &perpetual,
 	.version = &version,
 	.toolchain = &toolchain
 };

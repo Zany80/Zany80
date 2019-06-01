@@ -42,6 +42,9 @@ static void render_widget(widget_t *widget) {
                 }
             }
             break;
+        case custom:
+            widget->custom.render();
+            break;
     }
 }
 
@@ -57,8 +60,8 @@ void render_window(window_t *window) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0,0));
         flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings;
     }
-    if (window->initialX != -1 && window->initialY != -1) {
-    	ImGui::SetWindowSize(ImVec2(window->initialX, window->initialY), ImGuiCond_FirstUseEver);
+    if (window->titlebar == false) {
+        flags |= ImGuiWindowFlags_NoTitleBar;
     }
     if (window->minX != -1 || window->minY != -1 || window->maxX != -1 || window->maxY != -1) {
         float minX = window->minX == -1 ? 0 : window->minX;
@@ -67,7 +70,14 @@ void render_window(window_t *window) {
         float maxY = window->maxY == -1 ? FLT_MAX : window->maxY;
         ImGui::SetNextWindowSizeConstraints(ImVec2(minX, minY), ImVec2(maxX, maxY));
     }
+    if (window->absX != -1 && window->absY != -1) {
+        ImGui::SetNextWindowPos(ImVec2(window->absX, window->absY));
+        window->absX = window->absY = -1;
+    }
     if (ImGui::Begin(window->name, NULL, flags)) {
+        if (window->initialX != -1 && window->initialY != -1) {
+            ImGui::SetWindowSize(ImVec2(window->initialX, window->initialY), ImGuiCond_FirstUseEver);
+        }
         if (window == get_root()) {
             ImGui::PopStyleVar(2);
         }
@@ -89,4 +99,26 @@ void render_window(window_t *window) {
         }
     }
     ImGui::End();
- }
+}
+
+void window_get_pos(window_t *window, float *x, float *y) {
+    if (ImGui::Begin(window->name)) {
+        auto pos = ImGui::GetWindowPos();
+        if (x)
+            *x = pos.x;
+        if (y)
+            *y = pos.y;
+    }
+    ImGui::End();
+}
+
+void window_get_size(window_t *window, float *x, float *y) {
+    if (ImGui::Begin(window->name)) {
+        auto size = ImGui::GetWindowSize();
+        if (x)
+            *x = size.x;
+        if (y)
+            *y = size.y;
+    }
+    ImGui::End();
+}

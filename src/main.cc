@@ -121,8 +121,8 @@ AppState::Code Zany80::OnInit() {
 	IMUI::Setup();
 	load_plugin("plugins:example");
 	load_plugin("plugins:z80cpp_core");
-	//load_plugin("plugins:debug_port");
-	//load_plugin("plugins:editor");
+	load_plugin("plugins:debug_port");
+	load_plugin("plugins:editor");
 	load_plugin("plugins:display");
 	show_debug_window = hub = true;
 	this->tp = Clock::Now();
