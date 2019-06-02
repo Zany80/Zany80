@@ -70,7 +70,7 @@ fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
 fips_begin_app(zany80 cmdline)
-fips_deps(Gfx IMUI lib)
+fips_deps(Gfx IMUI lib imguitexteditor)
 if (FIPS_EMSCRIPTEN)
 	fips_deps(HttpFS)
 	#~ simple_shell)
@@ -107,12 +107,12 @@ if(FIPS_WINDOWS)
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
-	install (FILES misc/libc.o DESTINATION lib)
+	install (FILES misc/stdlib.o DESTINATION lib)
 elseif(FIPS_LINUX)
 	set(CPACK_GENERATOR "TGZ;DEB")
 	install (FILES misc/zany80.desktop DESTINATION share/applications)
 	install (FILES misc/zany80.png DESTINATION share/pixmaps)
-	install (FILES misc/libc.o DESTINATION share/zany80/lib)
+	install (FILES misc/stdlib.o DESTINATION share/zany80/lib)
 	install (TARGETS zany80
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib

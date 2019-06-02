@@ -31,7 +31,7 @@ typedef struct {
 	void(*attach_input)(uint32_t port, read_handler_t handler);
 	void(*reset)();
 	void(*fire_interrupt)(uint8_t irq);
-	void(*load_rom)(const char *rom);
+	bool(*load_rom)(const char *rom);
 } cpu_plugin_t;
 
 typedef struct {

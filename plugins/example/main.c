@@ -30,23 +30,37 @@ plugin_t plugin = {
 	.perpetual = &perpetual
 };
 
+void left() {
+	widget_set_label(label, "LEEEEEEFT");
+}
+
+void right() {
+	widget_set_label(label, "RIIIIIGHT");	
+}
+
 PLUGIN_EXPORT void init() {
 	main_menu = menu_create("Plugin Demo");
 	toggle_visible = checkbox_create("Show", &visible, NULL);
 	menu_append(main_menu, toggle_visible);
 	window_append_menu(get_root(), main_menu);
 	window = window_create("Plugin Demo (Adventure Game)");
-	window_min_size(window, 400, 150);
+	window_min_size(window, 200, 150);
+	window_initial_size(window, 300, 150);
 	label = label_create(
 		"This is a simple text adventure written to demonstrate the power and "
 		"simplicity of the Zany80 plugin API.\n"
+		"\n"
+		"Due to time constraints, this is basically empty. It still serves its "
+		"purpose as a plugin demo, but it's not actually a game. That will be "
+		"fixed eventually.\n"
 		"\n"
 		"You arrive at a fork in the road.");
 	label_set_wrapped(label, true);
 	window_append(window, label);
 	options = group_create();
 	window_append(window, options);
-	
+	group_add(options, menuitem_create("Go Left", left));
+	group_add(options, menuitem_create("Go Right", right));
 }
 
 PLUGIN_EXPORT void cleanup() {

@@ -67,6 +67,7 @@ AppState::Code Zany80::OnInit() {
 #if ORYOL_LINUX
 	StringBuilder s(IO::ResolveAssigns("root:"));
 	if (!s.Contains("fips-deploy")) {
+		Log::Error("Reconfiguring from '%s'\n", s.AsCStr());
 		for (int i = 0; i < 2; i++) {
 			int j = s.FindLastOf(0, EndOfString, "/");
 			o_assert(j != InvalidIndex);
@@ -119,6 +120,8 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
+	load_plugin("plugins:dummy_assembler");
+	load_plugin("plugins:assembler");
 	load_plugin("plugins:example");
 	load_plugin("plugins:z80cpp_core");
 	load_plugin("plugins:debug_port");
@@ -197,7 +200,7 @@ AppState::Code Zany80::OnRunning() {
 			ImGui::EndMenuBar();
 		}
 		if (show_loaded_plugins) {
-			constexpr char *listed_tags[] = {
+			constexpr const char *listed_tags[] = {
 				"CPU", "Perpetual", "Shell", "z80", "Toolchain"
 			};
 			ImGui::Text("Plugins");
@@ -275,6 +278,7 @@ AppState::Code Zany80::OnRunning() {
 					//~ }
 				}
 			}
+			list_free(plugins);
 		}
 		ImGui::End();
 	}
@@ -298,8 +302,11 @@ AppState::Code Zany80::OnRunning() {
 	return Gfx::QuitRequested() ? AppState::Cleanup : AppState::Running;
 }
 
+void unload_all_plugins();
+
 AppState::Code Zany80::OnCleanup() {
-	//TODO: free plugins
+	unload_all_plugins();
+	IMUI::Discard();
 	Input::Discard();
 	Gfx::Discard();
 	IO::Discard();

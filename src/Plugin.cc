@@ -86,6 +86,7 @@ void unload_plugin(plugin_t *plugin) {
 		}
 	}
 	o_assert_dbg(found);
+	delete[] plugin->path;
 	liblib::Library *library = (liblib::Library*)plugin->library;
 	plugin->library = nullptr;
 	((void(*)())((*library)["cleanup"]))();
@@ -94,6 +95,12 @@ void unload_plugin(plugin_t *plugin) {
 	if (plugins->length == 0) {
 		list_free(plugins);
 		plugins = nullptr;
+	}
+}
+
+void unload_all_plugins() {
+	while (plugins) {
+		unload_plugin((plugin_t*)plugins->items[0]);
 	}
 }
 

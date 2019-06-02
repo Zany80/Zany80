@@ -189,7 +189,7 @@ int convert(list_t *sources, const char *target, char **buffer) {
 	return ret;
 }
 
-static const toolchain_conversion_t conversions[] = {
+static toolchain_conversion_t conversions[] = {
 	{
 		.source_ext = ".asm",
 		.target_ext = ".o"
@@ -201,10 +201,10 @@ static const toolchain_conversion_t conversions[] = {
 };
 
 list_t *get_conversions() {
-	list_t *conversions = create_list();
-	list_add(conversions, &conversions[0]);
-	list_add(conversions, &conversions[1]);
-	return conversions;
+	list_t *_conversions = create_list();
+	list_add(_conversions, &conversions[0]);
+	list_add(_conversions, &conversions[1]);
+	return _conversions;
 }
 
 bool supports(const char *feature) {

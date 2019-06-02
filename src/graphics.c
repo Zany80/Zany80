@@ -1,11 +1,14 @@
 #include <Zany80/API/graphics.h>
 #include "stretchy_buffer.h"
 #include <stdio.h>
+#include <string.h>
 
 #include "Zany80/internal/graphics.h"
 
 static window_t root = {
     .widgets = NULL,
+    .menus = NULL,
+    .titlebar = false,
     .name = "##MainMenuBar"
 };
 
@@ -16,6 +19,8 @@ window_t *window_create(const char *name) {
     w->widgets = NULL;
     w->menus = NULL;
     w->absX = w->absY = -1;
+    w->titlebar = true;
+    w->minimized = false;
     return w;
 }
 
@@ -52,19 +57,17 @@ void window_append_menu(window_t *window, menu_t *menu) {
 }
 
 static void sb_remove(void ***array, void *item) {
-    if (!array)
+    if (!(*array))
         return;
     void **new_array = NULL;
-    bool found = false;
-    for (int i = 0; i < sb_count(*array); i++) {
+    int c = sb_count(*array);
+    for (int i = 0; i < c; i++) {
         if ((*array)[i] == item) {
-            // Found it!
-            found = true;
             for (int j = 0; j < i; j++) {
-                sb_push(new_array, *array[j]);
+                sb_push(new_array, (*array)[j]);
             }
-            for (int j = i + 1; j < sb_count(*array); j++) {
-                sb_push(new_array, *array[j]);
+            for (int j = i + 1; j < c; j++) {
+                sb_push(new_array, (*array)[j]);
             }
             sb_free(*array);
             *array = new_array;
@@ -74,7 +77,7 @@ static void sb_remove(void ***array, void *item) {
 }
 
 void window_remove_menu(window_t *window, menu_t *menu) {
-    sb_remove(&window->menus, menu);
+    sb_remove((void***)&window->menus, menu);
 }
 
 window_t *get_root() {
@@ -92,11 +95,22 @@ void window_destroy(window_t *window) {
     }
 }
 
+bool window_is_minimized(window_t *window) {
+	return window->minimized;
+}
+
 menu_t *menu_create(const char *name) {
     menu_t *m = malloc(sizeof(menu_t));
     m->widgets = NULL;
     m->label = name;
     return m;
+}
+
+widget_t *submenu_create(menu_t *menu) {
+	widget_t *w = widget_new(NULL);
+	w->type = submenu;
+	w->menu = menu;
+	return w;
 }
 
 void menu_append(menu_t *menu, widget_t *widget) {
@@ -108,7 +122,13 @@ void menu_destroy(menu_t *menu) {
     free(menu);
 }
 
-static widget_t *widget_new(const char *label) {
+void menu_destroy_all(menu_t *menu) {
+	for (int i = 0; i < sb_count(menu->widgets); i++) {
+		widget_destroy(menu->widgets[i]);
+	}
+}
+
+widget_t *widget_new(const char *label) {
     widget_t *w = malloc(sizeof(widget_t));
     w->label = label;
     w->visible = true;
@@ -136,10 +156,30 @@ widget_t *checkbox_create(const char *label, bool *value, void(*handler)()) {
     return w;
 }
 
+widget_t *radio_create(const char *label, int *current, int index, void (*handler)(int index)) {
+	widget_t *w = widget_new(label);
+	w->type = radio;
+	w->radio.current = current;
+	w->radio.index = index;
+	w->radio.handler = handler;
+	return w;
+}
+
 widget_t *label_create(const char *_label) {
     widget_t *w = widget_new(_label);
     w->type = label;
+    w->_label.wrapped = false;
     return w;
+}
+
+widget_t *input_create(const char *label, size_t capacity, void (*handler)(widget_t *widget)) {
+	widget_t *w = widget_new(label);
+	w->type = input;
+	w->input.capacity = capacity;
+	w->input.handler = handler;
+	w->input.buf = malloc(capacity);
+	strcpy(w->input.buf, "");
+	return w;
 }
 
 widget_t *customwidget_create(void (*handler)()) {
@@ -147,6 +187,24 @@ widget_t *customwidget_create(void (*handler)()) {
     w->type = custom;
     w->custom.render = handler;
     return w;
+}
+
+char *input_get_text(widget_t *widget) {
+	if (widget->type == editor) {
+		return editor_get_text(widget);
+	}
+	else {
+		return strdup(widget->input.buf);
+	}
+}
+
+void input_set_text(widget_t *widget, const char *text) {
+	if (widget->type == editor) {
+		editor_set_text(widget, text);
+	}
+	else {
+		strncpy(widget->input.buf, text, widget->input.capacity);
+	}
 }
 
 void label_set_wrapped(widget_t *widget, bool wrapped) {
@@ -164,9 +222,19 @@ void widget_set_visible(widget_t *widget, bool visible) {
 }
 
 void widget_destroy(widget_t *widget) {
-    if (widget->type == group) {
-        sb_free(widget->_group.widgets);
-    }
+	switch (widget->type) {
+		case group:
+			sb_free(widget->_group.widgets);
+			break;
+		case editor:
+			editor_destroy(widget->editor.editor);
+			break;
+		case input:
+			free(widget->input.buf);
+			break;
+		default:
+			break;
+	}	
     free(widget);
 }
 
@@ -187,7 +255,7 @@ void group_add(widget_t *group, widget_t *widget) {
 }
 
 void group_remove(widget_t *group, widget_t *widget) {
-    sb_remove(&group->_group.widgets, widget);
+    sb_remove((void***)&group->_group.widgets, widget);
 }
 
 void group_clear(widget_t *group, bool f) {

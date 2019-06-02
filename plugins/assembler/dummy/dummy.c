@@ -1,13 +1,18 @@
 #include <Zany80/Plugin.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 int convert(list_t *sources, const char *target, char **buffer) {
-	sources;
-	target;
-	buffer;
+	*buffer = malloc(1024 * 1024);
+	snprintf(*buffer, 1024 * 1024 - 1, "Dummy assembler told to assemble into '%s' the following files: ", target);
+	for (int i = 0; i < sources->length; i++) {
+		strcat(strcat(*buffer, (char*)(sources->items[i])), "\n");
+	}
 	return 0;
 }
 
-static const toolchain_conversion_t conversions[] = {
+static toolchain_conversion_t conversions[] = {
 	{
 		.source_ext = ".asm",
 		.target_ext = ".o"
@@ -19,10 +24,10 @@ static const toolchain_conversion_t conversions[] = {
 };
 
 list_t *get_conversions() {
-	list_t *conversions = create_list();
-	list_add(conversions, &conversions[0]);
-	list_add(conversions, &conversions[1]);
-	return conversions;
+	list_t *_conversions = create_list();
+	list_add(_conversions, &conversions[0]);
+	list_add(_conversions, &conversions[1]);
+	return _conversions;
 }
 
 bool supports(const char *feature) {
