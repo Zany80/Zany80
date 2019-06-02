@@ -93,26 +93,10 @@ before_install:
 install:
   - eval "${SETUP}"
   - ./fips set config ${FIPS_CONFIG}
-  - git clone https://github.com/knightos/scas
-  - cd scas
-  - mkdir build
-  - cd build
-  - cmake .. && make -j8 && sudo make install
-  - cd ../..
-  - git clone https://github.com/knightos/kcc
-  - cd kcc
-  - mkdir build
-  - cd build
-  - cmake .. && make -j8 && sudo make install
-  - cd ../..
 
 script:
   - git config --global user.name Travis CI
   - git config --global user.email pleasantatk@gmail.com
-  - pushd ..
-  - git clone https://github.com/Zany80/BIOS
-  - popd
-  - make -C ../BIOS/ install DESTDIR=`pwd`/build
   - if [[ "$EMSCRIPTEN" != "1" ]]; then if ! ./fips build;then FIPS_CONFIG=failure-failure-failure;exit 1;fi;else if ! docker build -t zany80/zany80 .;then FIPS_CONFIG=failure-failure-failure;exit 2;fi;fi
   - if [[ "$EMSCRIPTEN" != "1" ]]; then ./fips make package;else if [[ "$DEPLOY_BUILD" == "y" ]];then docker run -e GITHUB_KEY zany80/zany80 bash -c "cd /root/Zany80;./fips publish";fi;fi
 
@@ -139,4 +123,4 @@ deploy:
 
 branches:
   only:
-    - master
+    - probably_broken

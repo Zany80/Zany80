@@ -50,6 +50,8 @@ endmacro()
 fips_setup(PROJECT Zany80)
 # Needed to define a version
 project(Zany80 VERSION 0.1.0.0)
+set(VERSION_PREFIX "")
+set(VERSION_SUFFIX "-RC1")
 
 # TODO: get this working on native Windows compilation
 # TODO: and also mingw cross-compilation
