@@ -267,13 +267,14 @@ void handle_info(widget_t *input) {
 				fseek(f, 0, SEEK_END);
 				long size = ftell(f);
 				rewind(f);
-				char buf[size + 1];
+				char *buf = malloc(size + 1);
 				fread(buf, 1, size, f);
 				buf[size] = 0;
 				fclose(f);
 				path = msg;
 				hide_info_entry();
 				input_set_text(editor, buf);
+				free(buf);
 				free(unmodified);
 				unmodified = input_get_text(editor);
 			}
@@ -335,11 +336,12 @@ void build() {
 				}
 				if (stdlib) {
 					char *root = zany_root_folder();
-					char buf[strlen(root) + 15];
+					char *buf = malloc(strlen(root) + 15);
 					strcpy(buf, root);
 					free(root);
 					strcat(buf, "/lib/stdlib.o");
 					list_add(sources, strdup(buf));
+					free(buf);
 				}
 				char *out;
 				char *output_name = get_output_name();
