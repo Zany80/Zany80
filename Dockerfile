@@ -9,8 +9,4 @@ RUN cd /root/Zany80 \
  && apt update \
  && apt install rsync cmake python3 build-essential -y \
  && ./tools/ensure_sdk.sh \
- && cd scas/build \
- && rm * .[!.]* -rf \
- && cmake .. && make -j8 && make install \
- && cd ../.. \
  && ./fips build
