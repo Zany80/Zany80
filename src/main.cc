@@ -44,11 +44,16 @@ void Zany80::report_error(const char *error) {
 	this->error = s.GetString();
 }
 
+Zany80::Zany80() {
+	this->is_fullscreen = false;
+	this->error = "";
+	this->show_debug_window = this->hub = true;
+	this->tp = Clock::Now();
+}
+
 AppState::Code Zany80::OnInit() {
 	plugin_instances = 0;
 	zany = this;
-	this->is_fullscreen = false;
-	this->error = "";
 	IOSetup ioSetup;
 	GfxSetup gfxSetup = GfxSetup::WindowMSAA4(800, 600, "Zany80 (Native Edition) v" PROJECT_VERSION);
 #if ORYOL_EMSCRIPTEN
@@ -127,7 +132,6 @@ AppState::Code Zany80::OnInit() {
 	load_plugin("plugins:debug_port");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:display");
-	show_debug_window = hub = true;
 	this->tp = Clock::Now();
 	return App::OnInit();
 }

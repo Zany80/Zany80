@@ -282,6 +282,8 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		char *end = strchr(location, ')');
 		if (!end) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated parameters");
+			free(define->name);
+			free(define);
 			return 1;
 		}
 
@@ -497,7 +499,6 @@ int handle_printf(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	argv[0][len - 1] = '\0';
-	len -= 2;
 	printf_argv = argv + 1;
 	printf_argc = argc - 1;
 	printf_state = state;
@@ -650,7 +651,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 		if (argc == 2) {
 			tokenized_expression_t *expression = parse_expression(argv[1]);
 			if (expression == NULL) {
-				error = EXPRESSION_BAD_SYNTAX;
+				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				symbol_t sym_pc = {
 					.type = SYMBOL_LABEL,
@@ -879,8 +880,6 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	argv[0][len - 1] = '\0';
-	len -= 2;
-	len = unescape_string(argv[0] + 1);
 	char *name = malloc(strlen(argv[0] + 1));
 	strcpy(name, argv[0] + 1);
 	FILE *file = fopen(name, "r");
@@ -1214,6 +1213,9 @@ char **split_directive(char *line, int *argc, int delimiter) {
 					if (*argc == capacity) {
 						capacity *= 2;
 						parts = realloc(parts, sizeof(char *) * capacity);
+						if (parts == NULL) {
+							exit(1);
+						}
 					}
 					parts[*argc] = item;
 					j = i + 1;
@@ -1229,6 +1231,9 @@ char **split_directive(char *line, int *argc, int delimiter) {
 	if (*argc == capacity) {
 		capacity++;
 		parts = realloc(parts, sizeof(char *) * capacity);
+		if (parts == NULL) {
+			exit(1);
+		}
 	}
 	parts[*argc] = item;
 	++*argc;

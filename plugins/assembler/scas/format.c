@@ -155,7 +155,6 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 		}
 	} while (repeat);
 
-	char buffer[32];
 	// TODO: Deal with things that are not integers
 	
 	uintmax_t val = get_value(spec, getarg);
@@ -163,6 +162,7 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 	const char *digits = "0123456789ABCDEF";
 
 	if (spec.base != 0) {
+		char buffer[32];
 		int i = 0;
 		uintmax_t value = val;
 		if (!(spec.flags & S_unsigned)) {

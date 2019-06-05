@@ -8,9 +8,9 @@
 
 ZANY_DLL list_t *zany_read_directory(const char *path) {
 	WIN32_FIND_DATA data;
-	char *full_path = strdup(path);
-	full_path = realloc(full_path, strlen(full_path) + 3);
-	strcpy(full_path + strlen(full_path), "\\*");
+	char *full_path = malloc(strlen(path) + 3);
+	strcpy(full_path, path);
+	strcpy(full_path + strlen(path), "\\*");
 	HANDLE hFind = FindFirstFile(full_path, &data);
 	list_t *contents = NULL;
 	if (hFind != INVALID_HANDLE_VALUE) {

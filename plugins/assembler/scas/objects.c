@@ -209,12 +209,12 @@ area_t *read_area(FILE *f) {
 	fread(area->data, sizeof(uint8_t), (int)area->data_length, f);
 	scas_log(L_DEBUG, "Read %d bytes of machine code", area->data_length);
 
-	uint64_t meta_length, meta_key;
+	uint64_t meta_length;
 	fread(&meta_length, sizeof(uint64_t), 1, f);
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (i = 0; i < (int)meta_length; ++i) {
 		metadata_t *meta = malloc(sizeof(metadata_t));
-		meta_key = fgetc(f);
+		uint64_t meta_key = fgetc(f);
 		meta->key = malloc(meta_key);
 		fread(meta->key, sizeof(char), meta_key, f);
 		fread(&meta->value_length, sizeof(uint64_t), 1, f);

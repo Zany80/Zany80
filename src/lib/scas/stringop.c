@@ -18,10 +18,9 @@
 #ifndef strcasecmp
 int strcasecmp(const char* s1, const char* s2)
 {
-	int c1, c2;
 	while (*s1 && *s2) {
-		c1 = tolower((int)*s1);
-		c2 = tolower((int)*s2);
+		int c1 = tolower((int)*s1);
+		int c2 = tolower((int)*s2);
 		if(c1 != c2)
 			return (c1 - c2);
 		s1++;

@@ -177,12 +177,15 @@ int convert(list_t *sources, const char *target, char **buffer) {
 	}
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(include_path);
+	for (int i = 0; i < objects->length; i++) {
+		object_free(objects->items[i]);
+	}
 	list_free(objects);
 	list_free(errors);
 	list_free(warnings);
 	free(scas_runtime.output_file);
 	free(scas_runtime.include_path);
-	list_free(scas_runtime.macros);
+	free_flat_list(scas_runtime.macros);
 	instruction_set_free(set);
 	*buffer = output;
 	zany_log(ZL_ERROR, "Assembler output: \"%s\"\n", output);
@@ -252,6 +255,9 @@ void scas_logv(int verbosity, const char *format, va_list args) {
 		if (out_len + indent >= out_cap) {
 			out_cap += 512;
 			output = realloc(output, out_cap);
+			if (output == NULL) {
+				exit(1);
+			}
 		}
 		for (int i = 0; i < indent; ++i) {
 			output[out_len++] = '\t';
@@ -271,6 +277,9 @@ void scas_logv(int verbosity, const char *format, va_list args) {
 		if (out_len + l + 2 >= out_cap) {
 			out_cap += l + 2;
 			output = realloc(output, out_cap);
+			if (output == NULL) {
+				exit(1);
+			}
 		}
 		strcpy(output + out_len, buffer);
 		out_len += l;

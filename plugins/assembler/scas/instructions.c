@@ -253,18 +253,6 @@ void handle_line(char *line, instruction_set_t *result) {
 	free(line);
 }
 
-instruction_set_t *load_instruction_set(FILE *file) {
-	instruction_set_t *result = malloc(sizeof(instruction_set_t));
-	result->instructions = create_list();
-	result->operand_groups = create_list();
-	result->arch = NULL;
-	while (!feof(file)) {
-		char *line = read_line(file);
-		handle_line(line, result);
-	}
-	return result;
-}
-
 instruction_set_t *load_instruction_set_s(const char *set) {
 	instruction_set_t *result = malloc(sizeof(instruction_set_t));
 	result->instructions = create_list();

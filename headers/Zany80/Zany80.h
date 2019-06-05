@@ -11,6 +11,7 @@ using namespace Oryol;
 
 class Zany80 : public App {
 public:
+	Zany80();
 	AppState::Code OnInit();
 	AppState::Code OnRunning();
 	AppState::Code OnCleanup();

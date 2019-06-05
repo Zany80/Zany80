@@ -92,7 +92,6 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
 {
 	const unsigned char *ptr;
 	MD5_u32plus a, b, c, d;
-	MD5_u32plus saved_a, saved_b, saved_c, saved_d;
  
 	ptr = (const unsigned char *)data;
  
@@ -102,10 +101,10 @@ static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
 	d = ctx->d;
  
 	do {
-		saved_a = a;
-		saved_b = b;
-		saved_c = c;
-		saved_d = d;
+		MD5_u32plus saved_a = a;
+		MD5_u32plus saved_b = b;
+		MD5_u32plus saved_c = c;
+		MD5_u32plus saved_d = d;
  
 /* Round 1 */
 		STEP(F, a, b, c, d, SET(0), 0xd76aa478, 7)
@@ -209,7 +208,7 @@ void MD5_Init(MD5_CTX *ctx)
 void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
 {
 	MD5_u32plus saved_lo;
-	unsigned long used, available;
+	unsigned long used;
  
 	saved_lo = ctx->lo;
 	if ((ctx->lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
@@ -219,7 +218,7 @@ void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
 	used = saved_lo & 0x3f;
  
 	if (used) {
-		available = 64 - used;
+		unsigned long available = 64 - used;
  
 		if (size < available) {
 			memcpy(&ctx->buffer[used], data, size);

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _WIN32
+#pragma comment(lib, "mincore_downlevel.lib")   // Support OS older than SDK
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>

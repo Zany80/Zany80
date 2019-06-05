@@ -17,19 +17,23 @@ char *read_line(FILE *file) {
 			continue;
 		}
 		if (i == size) {
-			string = realloc(string, length *= 2);
-			if (!string) {
+			char *_string = realloc(string, length *= 2);
+			if (_string == NULL) {
+				free(string);
 				return NULL;
 			}
+			string = _string;
 		}
 		string[i++] = (char)c;
 		length++;
 	}
 	if (i + 1 != size) {
-		string = realloc(string, length + 1);
-		if (!string) {
+		char *_string = realloc(string, length + 1);
+		if (_string == NULL) {
+			free(string);
 			return NULL;
 		}
+		string = _string;
 	}
 	string[i] = '\0';
 	return string;
@@ -51,19 +55,23 @@ char *read_line_s(const char *input, int *offset) {
 			continue;
 		}
 		if (i == size) {
-			string = realloc(string, length *= 2);
-			if (!string) {
+			char *_string = realloc(string, length *= 2);
+			if (_string == NULL) {
+				free(string);
 				return NULL;
 			}
+			string = _string;
 		}
 		string[i++] = (char)c;
 		length++;
 	}
 	if (i + 1 != size) {
-		string = realloc(string, length + 1);
-		if (!string) {
+		char *_string = realloc(string, length + 1);
+		if (_string == NULL) {
+			free(string);
 			return NULL;
 		}
+		string = _string;
 	}
 	string[i] = '\0';
 	return string;

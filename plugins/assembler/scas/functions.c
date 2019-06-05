@@ -1,7 +1,6 @@
 #include "functions.h"
 #include "objects.h"
 #include "list.h"
-#include "hashtable.h"
 #include "expression.h"
 #include "log.h"
 #include "stringop.h"
