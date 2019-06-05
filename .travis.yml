@@ -5,7 +5,7 @@ matrix:
   include:
     - os: linux
       env:
-        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev" DEPLOY_BUILD="y" FIPS_CONFIG="linux-make-release"
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev libgl1-mesa-dev" DEPLOY_BUILD="y" FIPS_CONFIG="linux-make-release"
       addons:
         apt:
           sources:
@@ -49,7 +49,7 @@ matrix:
             - g++-6
             - libboost-all-dev
       env:
-        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-6 && CXX=g++-6" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev libgl1-mesa-dev && CC=gcc-6 && CXX=g++-6" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
     - os: linux
       addons:
         apt:
@@ -60,7 +60,7 @@ matrix:
             - g++-7
             - libboost-all-dev
       env:
-        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-7 && CXX=g++-7" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev libgl1-mesa-dev && CC=gcc-7 && CXX=g++-7" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
     - os: linux
       addons:
         apt:
@@ -71,7 +71,7 @@ matrix:
             - g++-8
             - libboost-all-dev
       env:
-        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev && CC=gcc-8 && CXX=g++-8" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
+        - MATRIX_EVAL="sudo apt update && sudo apt install libxrandr-dev libxcursor-dev libxcb-xkb-dev libxinerama-dev libxi-dev libgl1-mesa-dev && CC=gcc-8 && CXX=g++-8" DEPLOY_BUILD="n" FIPS_CONFIG="linux-make-release"
     #~ - os: osx
       #~ osx_image: xcode8
       #~ env:
