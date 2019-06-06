@@ -44,11 +44,14 @@ void Zany80::report_error(const char *error) {
 	this->error = s.GetString();
 }
 
+static TimePoint start;
+
 Zany80::Zany80() {
 	this->is_fullscreen = false;
 	this->error = "";
 	this->show_debug_window = this->hub = true;
-	this->tp = Clock::Now();
+	start = Clock::Now();
+	this->tp = start;
 }
 
 AppState::Code Zany80::OnInit() {
@@ -132,6 +135,7 @@ AppState::Code Zany80::OnInit() {
 	load_plugin("plugins:debug_port");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:display");
+	load_plugin("plugins:limn");
 	this->tp = Clock::Now();
 	return App::OnInit();
 }
@@ -339,4 +343,8 @@ char *zany_root_folder() {
 	if (s.GetSubString(0, 4) == "file")
 		s.Set(s.GetSubString(8, EndOfString));
 	return strdup(s.AsCStr());
+}
+
+double s_zany_elapsed() {
+	return Clock::Since(start).AsSeconds();
 }

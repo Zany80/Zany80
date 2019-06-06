@@ -5,3 +5,5 @@ endif()
 if(ZANY80_BUILD_UNUSED)
 	fips_add_subdirectory(z80)
 endif()
+
+fips_add_subdirectory(limn)

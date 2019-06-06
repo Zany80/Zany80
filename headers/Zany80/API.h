@@ -24,6 +24,8 @@ typedef enum {
 
 ZANY_DLL void zany_log(zany_loglevel level, const char *format, ...);
 
+ZANY_DLL double s_zany_elapsed();
+
 #ifdef __cplusplus
 }
 #endif

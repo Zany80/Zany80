@@ -10,8 +10,8 @@ plugin_t plugin = {
 	.name = "Debug Port"
 };
 
-void output_handler(uint8_t value) {
-	printf("%c", (char)value);
+void output_handler(uint32_t value) {
+	printf("%c", (char)(value & 0xFF));
 }
 
 PLUGIN_EXPORT void init() {

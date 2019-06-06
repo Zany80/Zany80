@@ -15,8 +15,8 @@ extern "C" {
 
 #include <scas/list.h>
 
-typedef uint8_t(*read_handler_t)();
-typedef void(*write_handler_t)(uint8_t);
+typedef uint32_t(*read_handler_t)();
+typedef void(*write_handler_t)(uint32_t);
 
 typedef struct {
 	void (*frame)(float delta);

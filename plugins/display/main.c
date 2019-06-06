@@ -26,15 +26,15 @@ ring_buffer_t *input_buf;
 char *output_buf;
 size_t out_size;
 
-uint8_t read_handler() {
+uint32_t read_handler() {
 	return ring_buffer_read(input_buf);
 }
 
-void output_handler(uint8_t value) {
+void output_handler(uint32_t value) {
 	if (value == 0) {
 		return;
 	}
-	output_buf[out_size++] = (char)value;
+	output_buf[out_size++] = (char)(value & 0xFF);
 	output_buf[out_size] = 0;
 }
 
