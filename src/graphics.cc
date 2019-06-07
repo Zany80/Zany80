@@ -14,7 +14,7 @@ static void render_widget(widget_t *widget) {
 	}
     switch (widget->type) {
         case label:
-            widget->_label.wrapped ? ImGui::TextWrapped("%s", widget->label) : ImGui::Text("%s", widget->label);
+            widget->_label.wrapped ? ImGui::TextWrapped("%s", widget->label) : ImGui::TextUnformatted(widget->label);
             break;
         case button:
             if (ImGui::Button(widget->label)) {

@@ -30,17 +30,20 @@ uint32_t read_handler() {
 	return ring_buffer_read(input_buf);
 }
 
+void clear() {
+	out_size = 0;
+	output_buf[0] = 0;
+}
+
 void output_handler(uint32_t value) {
 	if (value == 0) {
 		return;
 	}
+	if (out_size > 1024 * 1024 * 1023) {
+		clear();
+	}
 	output_buf[out_size++] = (char)(value & 0xFF);
 	output_buf[out_size] = 0;
-}
-
-void clear() {
-	out_size = 0;
-	output_buf[0] = 0;
 }
 
 bool cpu_handler(int index) {
@@ -141,7 +144,7 @@ PLUGIN_EXPORT void init() {
 	menu_append(select_cpu, cpus);
 	menu_append(menu, submenu_create(select_cpu));
 	cpu_list = NULL;
-	output_buf = malloc(1024 * 1024);
+	output_buf = malloc(32 * 1024 * 1024);
 	out_size = 0;
 	input_buf = ring_buffer_new(1024);
 	update_cpu();

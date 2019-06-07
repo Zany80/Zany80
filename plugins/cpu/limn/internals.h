@@ -25,6 +25,8 @@ typedef uint32_t limn_register_t;
 #define LIMN_RAM_SIZE 1024 * 1024
 #define LIMN_RAM_SLOTCOUNT 0x1000000
 
+#define LIMN_PLATFORMBOARD 0xF8000800
+
 struct limn_rom_t {
     char *path;
     char *buf;
@@ -32,7 +34,7 @@ struct limn_rom_t {
 };
 
 typedef struct {
-    uint8_t current_data;
+    uint16_t current_data;
     void (*write)(uint32_t data);
     uint32_t (*read)();
 } limn_serial_t;
@@ -55,3 +57,5 @@ struct limn {
     bool running, p_running;
     char *ram;
 };
+
+const char *SR(int r);

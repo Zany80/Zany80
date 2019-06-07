@@ -131,11 +131,11 @@ AppState::Code Zany80::OnInit() {
 	load_plugin("plugins:dummy_assembler");
 	load_plugin("plugins:assembler");
 	load_plugin("plugins:example");
+	load_plugin("plugins:limn");
 	load_plugin("plugins:z80cpp_core");
 	load_plugin("plugins:debug_port");
 	load_plugin("plugins:editor");
 	load_plugin("plugins:display");
-	load_plugin("plugins:limn");
 	this->tp = Clock::Now();
 	return App::OnInit();
 }
@@ -259,7 +259,7 @@ AppState::Code Zany80::OnRunning() {
 						StringBuilder line("\t\t\t\t");
 						for (int i = 0; i < registers->length; i++) {
 							register_value_t *reg = (register_value_t*)registers->items[i];
-							line.AppendFormat(32, "%s = %d,", reg->name, reg->value);
+							line.AppendFormat(32, "%s = %lu (%lx),", reg->name, reg->value, reg->value);
 							if (i % per_line == per_line - 1) {
 								ImGui::Text("%s", line.AsCStr());
 								line.Set("\t\t\t\t");
