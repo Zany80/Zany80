@@ -1,9 +1,47 @@
 #include "internals.h"
 #include <stdlib.h>
-#include <Zany80/API.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
+#include <Zany80/API.h>
+
+#define R(r) cpu->registers[r]
+#define KERNEL_MODE ((R(LIMN_RS) & 0x01) == 0)
+#define USER_MODE ((R(LIMN_RS) & 0x01) == 1)
+#define REG_ALLOWED(r) (r < 32 || KERNEL_MODE)
+#define FORBIDDEN cpu->running = false;LIMN_LOG(cpu, ZL_ERROR, "Access denied! Attempted: "
+#define ALLOWED LIMN_LOG(cpu, ZL_DEBUG,
+#define BUSERR ALLOWED "BUS ERROR!\n");dump_rom(cpu, "buserred.rom");LIMN_LOG(cpu, ZL_ERROR, "Opcode: %d\n\t",current_opcode);LIMN_LOG(cpu, ZL_DEBUG,
+#define CUR_STACK (KERNEL_MODE ? LIMN_SP : LIMN_USP)
+#define CALL(addr) {push(cpu, CUR_STACK, R(LIMN_PC));R(LIMN_PC) = addr;}
+#define BRANCH(condition, str) {\
+                uint32_t imm = pc_long(cpu);\
+            if (condition) {\
+                if (debuggerize) {\
+                    ALLOWED "Branching to %.8x; condition: " str "\n", imm);\
+                }\
+                R(LIMN_PC) = imm;\
+            }\
+            else {\
+                if (debuggerize) {\
+                    ALLOWED "Not branching to %.8x; condition: " str "\n", imm);\
+                }\
+            }\
+}
+
+void dump_rom(limn_t *cpu, const char *path) {
+	FILE *f = fopen(path, "wb");
+	if (f) {
+		fwrite(cpu->ram, 1, LIMN_RAM_SIZE, f);
+		fflush(f);
+		fclose(f);
+		const char *dumped = "\nROM dumped\n";
+		for (size_t i = 0; i < strlen(dumped); i++) {
+			cpu->serial.write(dumped[i]);
+		}
+	}
+}
 
 uint8_t read_ram_board(limn_t *cpu, uint32_t address) {
     switch (address) {
@@ -36,10 +74,11 @@ void LIMN_LOG(limn_t *cpu, zany_loglevel level, const char *format, ...) {
     char buf[1024];
 	vsprintf(buf, format, args);
 	va_end(args);
-    if (debuggerize)
-        zany_log(level, "%s", buf);
+    if (debuggerize) {
+		zany_log(level, "%s", buf);
+	}
     if (cpu && cpu->serial.write) {
-        for (int i = 0; i < strlen(buf); i++) {
+        for (size_t i = 0; i < strlen(buf); i++) {
             cpu->serial.write(buf[i]);
         }
     }
@@ -52,16 +91,16 @@ void serial_handler(limn_t *cpu, uint8_t command) {
                 cpu->serial.write(cpu->serial.current_data);
             }
             else {
-                LIMN_LOG(cpu, ZL_DEBUG, "%c", cpu->serial.current_data);
+                ALLOWED "%c", cpu->serial.current_data);
             }
             break;
-        case LIMN_SERIAL_READ:
+        case LIMN_SERIAL_READ:{
             uint32_t value = 0xFFFF;
             if (cpu->serial.read) {
                 value = cpu->serial.read();
             }
             cpu->serial.current_data = value & 0xFFFF;
-            break;
+            }break;
         default:
             LIMN_LOG(cpu,ZL_ERROR, "Serial controller received unknown command %d\n", command);
             break;
@@ -103,22 +142,18 @@ uint8_t ignore_read(limn_t *cpu, uint32_t address) {
 }
 void ignore_write(limn_t *cpu, uint32_t address,uint8_t value) {}
 
-limn_bus_section_t attachments[6] = {
-    {
-        .start = 0x10000000,
-        .end = 0x10000007,
-        .read_byte = read_ram_board
-    },
-    {
-        .start = 0xFFFE0000,
-        .end = 0xFFFFFFFF,
-        .read_byte = read_rom
-    },
+limn_bus_section_t attachments[7] = {
     {
         .start = 0,
         .end = LIMN_RAM_SIZE,
         .read_byte = read_ram,
         .write_byte = write_ram
+    },
+    {
+        .start = 0x10000000,
+        .end = 0x10000007,
+        .read_byte = read_ram_board,
+        .write_byte = ignore_write
     },
     {
         .start = LIMN_SERIAL_CMD,
@@ -129,14 +164,21 @@ limn_bus_section_t attachments[6] = {
     {
         .start = LIMN_PLATFORMBOARD,
         .end = LIMN_PLATFORMBOARD + 3,
-        .read_byte = read_platboard
+        .read_byte = read_platboard,
+        .write_byte = ignore_write
     },
     {
         .start = 0xF8001000,
-        .end = 0xF8010FFF,
+        .end = 0xFFFE0000,
         .read_byte = ignore_read,
         .write_byte = ignore_write
-    }
+    },
+    {
+        .start = 0xFFFE0000,
+        .end = 0xFFFFFFFF,
+        .read_byte = read_rom,
+        .write_byte = ignore_write
+    },
 };
 
 void limn_reset(limn_t *cpu) {
@@ -153,31 +195,33 @@ void limn_set_speed(limn_t *cpu, size_t speed) {
     cpu->speed = speed;
 }
 
+static int current_opcode;
+
 uint8_t read_byte(limn_t *cpu, uint32_t address) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address <= cpu->attachments[i].end) {
             return cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start);
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
     return -1;
 }
 
 uint16_t read_int(limn_t *cpu, uint32_t address) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address + 1 <= cpu->attachments[i].end) {
             return cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start) 
             | (cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start + 1) << 8);
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
     return -1;
 }
 
 uint32_t read_long(limn_t *cpu, uint32_t address) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address + 3 <= cpu->attachments[i].end) {
             return cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start) 
             | (cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start + 1) << 8)
@@ -185,36 +229,41 @@ uint32_t read_long(limn_t *cpu, uint32_t address) {
             | (cpu->attachments[i].read_byte(cpu, address - cpu->attachments[i].start + 3) << 24);
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
     return -1;
 }
 
 void write_byte(limn_t *cpu, uint32_t address, uint8_t value) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address <= cpu->attachments[i].end) {
             cpu->attachments[i].write_byte(cpu, address - cpu->attachments[i].start, value);
             return;
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
 }
 
 void write_int(limn_t *cpu, uint32_t address, uint16_t value) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address + 1 <= cpu->attachments[i].end) {
             cpu->attachments[i].write_byte(cpu, address - cpu->attachments[i].start, value & 0xFF);
             cpu->attachments[i].write_byte(cpu, address - cpu->attachments[i].start + 1, value >> 8);
             return;
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
 }
 
 void write_long(limn_t *cpu, uint32_t address, uint32_t value) {
-    for (int i = 0; i < cpu->attachment_count; i++) {
+	if (address == 0xFFFFFFFF) {
+		BUSERR "!!! BUSERR/MISALN at %.8x !!!\n\n", address);
+		cpu->running = false;
+		return;
+	}
+    for (size_t i = 0; i < cpu->attachment_count; i++) {
         if (address >= cpu->attachments[i].start && address + 3 <= cpu->attachments[i].end) {
             cpu->attachments[i].write_byte(cpu, address - cpu->attachments[i].start, value & 0xFF);
             cpu->attachments[i].write_byte(cpu, address - cpu->attachments[i].start + 1, (value >> 8) & 0xFF);
@@ -223,7 +272,7 @@ void write_long(limn_t *cpu, uint32_t address, uint32_t value) {
             return;
         }
     }
-    LIMN_LOG(cpu, ZL_DEBUG, "\n\n!!! BUSERR at %.8x !!!\n\n", address);
+    BUSERR "\n\n!!! BUSERR at %.8x !!!\n\n", address);
     cpu->running = false;
 }
 
@@ -293,28 +342,6 @@ const char *SR(int r) {
     return names[r];
 }
 
-#define R(r) cpu->registers[r]
-#define KERNEL_MODE ((R(LIMN_RS) & 0x01) == 0)
-#define USER_MODE ((R(LIMN_RS) & 0x01) == 1)
-#define REG_ALLOWED(r) (r < 32 || KERNEL_MODE)
-#define FORBIDDEN LIMN_LOG(cpu, ZL_ERROR, "Access denied! Attempted: "
-#define CUR_STACK (KERNEL_MODE ? LIMN_SP : LIMN_USP)
-#define CALL(addr) {push(cpu, CUR_STACK, R(LIMN_PC));R(LIMN_PC) = addr;}
-#define BRANCH(condition, str) {\
-                uint32_t imm = pc_long(cpu);\
-            if (condition) {\
-                if (debuggerize) {\
-                    LIMN_LOG(cpu, ZL_DEBUG, "Branching to %.8x; condition: " str "\n", imm);\
-                }\
-                R(LIMN_PC) = imm;\
-            }\
-            else {\
-                if (debuggerize) {\
-                    LIMN_LOG(cpu, ZL_DEBUG, "Not branching to %.8x; condition: " str "\n", imm);\
-                }\
-            }\
-}
-
 void push(limn_t *cpu, int sp, uint32_t value) {
     R(sp) -= 4;
     write_long(cpu, R(sp), value);
@@ -326,21 +353,21 @@ void pop(limn_t *cpu, int sp, int r) {
 }
 
 bool limn_cycle(limn_t *cpu) {
-    bool debuggerize = false;
+    bool debuggerize = true;
     if (debuggerize) {
-        LIMN_LOG(cpu, ZL_DEBUG, "At 0x%.8x, ", R(LIMN_PC));
+        ALLOWED "At 0x%.8x, ", R(LIMN_PC));
     }
-    uint8_t i = pc_byte(cpu);
-    switch (i) {
-        case 0:
-            LIMN_LOG(cpu, ZL_DEBUG, "noping\n");
+    current_opcode = pc_byte(cpu);
+    switch (current_opcode) {
+        case 0x00:
+            ALLOWED "noping\n");
             break;
-        case 1:{ ///LI
+        case 0x01:{ ///LI
             uint8_t r = pc_byte(cpu);
             uint32_t value = pc_long(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Setting register %s to 0x%.8x\n", SR(r), value);
+                    ALLOWED "Setting register %s to 0x%.8x\n", SR(r), value);
                 }
                 //TODO : if (r == LIMN_RS && value & 0x80000000 != 0) reset bus
                 cpu->registers[r] = value;
@@ -354,7 +381,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Setting %s to %.8x@%s\n", SR(R0), R(R1), SR(R1));
+                    ALLOWED "Setting %s to %.8x@%s\n", SR(R0), R(R1), SR(R1));
                 }
                 R(R0) = R(R1);
             }
@@ -368,7 +395,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Swapping %.8x@%s with %.8x@%s\n", R(R0), SR(R0), R(R1), SR(R1));
+                ALLOWED "Swapping %.8x@%s with %.8x@%s\n", R(R0), SR(R0), R(R1), SR(R1));
                 uint32_t t = R(R0);
                 R(R0) = R(R1);
                 R(R1) = t;
@@ -384,7 +411,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t imm = pc_long(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.2x@%.8x into %s\n", read_byte(cpu, imm), imm, SR(r));
+                    ALLOWED "Storing %.2x@%.8x into %s\n", read_byte(cpu, imm), imm, SR(r));
                 }
                 R(r) = read_byte(cpu, imm);
             }
@@ -399,7 +426,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t imm = pc_long(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.4x@%.8x into %s\n", read_int(cpu, imm), imm, SR(r));
+                    ALLOWED "Storing %.4x@%.8x into %s\n", read_int(cpu, imm), imm, SR(r));
                 }
                 R(r) = read_int(cpu, imm);
             }
@@ -413,7 +440,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t addr = pc_long(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Setting register %s to 0x%.8x@0x%.8x\n", SR(r), read_long(cpu, addr), addr);
+                    ALLOWED "Setting register %s to 0x%.8x@0x%.8x\n", SR(r), read_long(cpu, addr), addr);
                 }
                 R(r) = read_long(cpu, addr);
             }
@@ -427,7 +454,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             if (REG_ALLOWED(R0)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.2x@%s into %.8x\n", R(R0) & 0xFF, SR(R0), IMM);
+                    ALLOWED "Storing %.2x@%s into %.8x\n", R(R0) & 0xFF, SR(R0), IMM);
                 }
                 write_byte(cpu, IMM, R(R0) & 0xFF);
             }
@@ -442,7 +469,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             if (REG_ALLOWED(R0)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.4x@%s into %.8x\n", R(R0) & 0xFFFF, SR(R0), IMM);
+                    ALLOWED "Storing %.4x@%s into %.8x\n", R(R0) & 0xFFFF, SR(R0), IMM);
                 }
                 write_int(cpu, IMM, R(R0) & 0xFFFF);
             }
@@ -457,7 +484,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             if (REG_ALLOWED(R0)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.8x@%s into %.8x\n", R(R0), SR(R0), IMM);
+                    ALLOWED "Storing %.8x@%s into %.8x\n", R(R0), SR(R0), IMM);
                 }
                 write_long(cpu, IMM, R(R0));
             }
@@ -472,7 +499,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing 0x%.2x@%s into %s\n", read_byte(cpu, R(R1)), SR(R1), SR(R0));
+                    ALLOWED "Storing 0x%.2x@%s into %s\n", read_byte(cpu, R(R1)), SR(R1), SR(R0));
                 }
                 R(R0) = read_byte(cpu, R(R1));
             }
@@ -487,7 +514,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing 0x%.4x@%s into %s\n", read_int(cpu, R(R1)), SR(R1), SR(R0));
+                    ALLOWED "Storing 0x%.4x@%s into %s\n", read_int(cpu, R(R1)), SR(R1), SR(R0));
                 }
                 R(R0) = read_int(cpu, R(R1));
             }
@@ -502,7 +529,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing 0x%.8x@%s into %s\n", read_long(cpu, R(R1)), SR(R1), SR(R0));
+                    ALLOWED "Storing 0x%.8x@%s into %s\n", read_long(cpu, R(R1)), SR(R1), SR(R0));
                 }
                 R(R0) = read_long(cpu, R(R1));
             }
@@ -515,30 +542,45 @@ bool limn_cycle(limn_t *cpu) {
             // Formula: *R0 = byte R1
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 write_byte(cpu, R(R0), R(R1) & 0xFF);
+                if (debuggerize) {
+					ALLOWED "%.8x@%s = %.2x @ %s\n", R(R0), SR(R0), R(R1) & 0xFF, SR(R1));
+				}
             }
+            else {
+				FORBIDDEN "%.8x@%s = %.2x @ %s\n", R(R0), SR(R0), R(R1) & 0xFF, SR(R1));
+			}
             break;
         }
         case 0x0E: {
             // Formula: *R0 = int R1
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 write_int(cpu, R(R0), R(R1) & 0xFFFF);
+                if (debuggerize) {
+					ALLOWED "%.8x@%s = %.4x @ %s\n", R(R0), SR(R0), R(R1) & 0xFFFF, SR(R1));
+				}
             }
+            else {
+				FORBIDDEN "%.8x@%s = %.4x @ %s\n", R(R0), SR(R0), R(R1) & 0xFFFF, SR(R1));
+			}
             break;
         }
         case 0x0F: {
             // Formula: *R0 = long R1
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 write_long(cpu, R(R0), R(R1));
+                if (debuggerize) {
+					ALLOWED "%.8x@%s = %.8x @ %s\n", R(R0), SR(R0), R(R1), SR(R1));
+				}
             }
+            else {
+				FORBIDDEN "%.8x@%s = %.4x @ %s\n", R(R0), SR(R0), R(R1), SR(R1));
+			}
             break;
         }
         case 0x10: {
@@ -546,7 +588,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t IMM0 = pc_long(cpu);
             uint8_t IMM1 = pc_byte(cpu);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Storing %.2x into %.8x\n", IMM1, IMM0);
+                ALLOWED "Storing %.2x into %.8x\n", IMM1, IMM0);
             }
             write_byte(cpu, IMM0, IMM1);
             break;
@@ -556,7 +598,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t IMM0 = pc_long(cpu);
             uint16_t IMM1 = pc_int(cpu);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Storing %.4x into %.8x\n", IMM1, IMM0);
+                ALLOWED "Storing %.4x into %.8x\n", IMM1, IMM0);
             }
             write_int(cpu, IMM0, IMM1);
             break;
@@ -566,9 +608,37 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t IMM0 = pc_long(cpu);
             uint32_t IMM1 = pc_long(cpu);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Storing %.8x into %.8x\n", IMM1, IMM0);
+                ALLOWED "Storing %.8x into %.8x\n", IMM1, IMM0);
             }
             write_long(cpu, IMM0, IMM1);
+            break;
+        }
+        case 0x13: {
+            uint8_t r = pc_byte(cpu);
+            uint8_t imm = pc_byte(cpu);
+            if (REG_ALLOWED(r)) {
+                if (debuggerize) {
+                    ALLOWED "Storing %.2x to %.8x@%s\n", imm, R(r), SR(r));
+                }
+                write_byte(cpu, R(r), imm);
+            }
+            else {
+                FORBIDDEN "Storing %.2x to %.8x@%s\n", imm, R(r), SR(r));
+            }
+            break;
+        }
+        case 0x14: {
+            uint8_t r = pc_byte(cpu);
+            uint16_t imm = pc_int(cpu);
+            if (REG_ALLOWED(r)) {
+                if (debuggerize) {
+                    ALLOWED "Storing %.4x to %.8x@%s\n", imm, R(r), SR(r));
+                }
+                write_int(cpu, R(r), imm);
+            }
+            else {
+                FORBIDDEN "Storing %.4x to %.8x@%s\n", imm, R(r), SR(r));
+            }
             break;
         }
         case 0x15: {
@@ -576,7 +646,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t imm = pc_long(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Storing %.8x to %.8x@%s\n", imm, R(r), SR(r));
+                    ALLOWED "Storing %.8x to %.8x@%s\n", imm, R(r), SR(r));
                 }
                 write_long(cpu, R(r), imm);
             }
@@ -589,7 +659,7 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t r = pc_byte(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Pushing %.8x@%s to the stack\n", R(r), SR(r));
+                    ALLOWED "Pushing %.8x@%s to the stack\n", R(r), SR(r));
                 }
                 push(cpu, CUR_STACK, R(r));
             }
@@ -601,7 +671,7 @@ bool limn_cycle(limn_t *cpu) {
         case 0x17: {
             uint32_t imm = pc_long(cpu);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Pushing immediate %.8x to stack\n", imm);
+                ALLOWED "Pushing immediate %.8x to stack\n", imm);
             }
             push(cpu, CUR_STACK, imm);
             break;
@@ -610,24 +680,56 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t r = pc_byte(cpu);
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Popping %.8x into %s\n", read_long(cpu, CUR_STACK), SR(r));
+                    ALLOWED "Popping %.8x into %s\n", read_long(cpu, R(CUR_STACK)), SR(r));
                 }
                 pop(cpu, CUR_STACK, r);
             }
             else {
-                FORBIDDEN "Popping %.8x into %s\n", read_long(cpu, CUR_STACK), SR(r));
+                FORBIDDEN "Popping %.8x into %s\n", read_long(cpu, R(CUR_STACK)), SR(r));
             }
             break;
         }
+        case 0x19: {
+			/// pusha
+			ALLOWED "Pushing all general purpose registers to the stack\n");
+			for (int i = 0; i < 32; i++) {
+				push(cpu, CUR_STACK, R(i));
+			}
+			break;
+		}
+        case 0x1A: {
+			/// popa
+			ALLOWED "Popping all general purpose registers from the stack\n");
+			for (int i = 31; i >= 0; i--) {
+				pop(cpu, CUR_STACK, i);
+			}
+			break;
+		}
         case 0x1B:
             BRANCH(true, "True");
             break;
+        case 0x1C: {
+			uint8_t r = pc_byte(cpu);
+			if (REG_ALLOWED(r)) {
+				if (debuggerize) {
+					ALLOWED "Branching to %.8x@%s\n", R(r), SR(r));
+				}
+				R(LIMN_PC) = R(r);
+			}
+			else {
+				FORBIDDEN "Branching to %.8x@%s\n", R(r), SR(r));
+			}
+			break;
+		}
         case 0x1D:
             BRANCH((R(LIMN_RF) & 0x01) == 0x01, "equal to");
             break;
         case 0x1E:
             BRANCH((R(LIMN_RF) & 0x01) != 0x01, "not equal to");
             break;
+        case 0x1F:
+			BRANCH((R(LIMN_RF) & 0x02) == 0x02, "greater than");
+			break;
         case 0x20: {
             BRANCH((R(LIMN_RF) & 0x03) == 0, "less than");
             break;
@@ -643,7 +745,7 @@ bool limn_cycle(limn_t *cpu) {
         case 0x23: {
             uint32_t imm = pc_long(cpu);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Calling %.8x\n", imm);
+                ALLOWED "Calling %.8x\n", imm);
             }
             CALL(imm);
             break;
@@ -651,7 +753,7 @@ bool limn_cycle(limn_t *cpu) {
         case 0x24: {
             pop(cpu, CUR_STACK, LIMN_PC);
             if (debuggerize) {
-                LIMN_LOG(cpu, ZL_DEBUG, "Returning to %.8x\n", R(LIMN_PC));
+                ALLOWED "Returning to %.8x\n", R(LIMN_PC));
             }
             break;
         }
@@ -662,7 +764,7 @@ bool limn_cycle(limn_t *cpu) {
             bool g = R(R0) > R(R1);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "CMP: %s, %s\n", e ? "equal" : "not equal", g? "greater" : "not greater");
+                    ALLOWED "CMP: %s, %s\n", e ? "equal" : "not equal", g? "greater" : "not greater");
                 }
                 R(LIMN_RF) = (R(LIMN_RF) & 0xFFFFFFFC) | e ? 0x01 : 0x00 | g ? 0x02 : 0x00;
             }
@@ -678,7 +780,7 @@ bool limn_cycle(limn_t *cpu) {
             bool g = R(r) > imm;
             if (REG_ALLOWED(r)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "CMPI: %s, %s\n", e ? "equal" : "not equal", g? "greater" : "not greater");
+                    ALLOWED "CMPI: %s, %s\n", e ? "equal" : "not equal", g? "greater" : "not greater");
                 }
                 R(LIMN_RF) = (R(LIMN_RF) & 0xFFFFFFFC) | e ? 0x01 : 0x00 | g ? 0x02 : 0x00;
             }
@@ -692,10 +794,15 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t R2 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1) && REG_ALLOWED(R2)) {
                 R(R0) = R(R1) + R(R2);
+                if (debuggerize) {
+					ALLOWED "%s = %.8x (%.8x@%s + %.8x@%s)\n", SR(R0), R(R0), R(R1), SR(R1), R(R2), SR(R2));
+				}
             }
+            else {
+				FORBIDDEN "%s = %.8x (%.8x@%s + %.8x@%s)\n", SR(R0), R(R0), R(R1), SR(R1), R(R2), SR(R2));
+			}
             break;
         }
         case 0x28: {
@@ -704,7 +811,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t IMM = pc_long(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Adding %.8x and %.8x@%s and storing the result of %.8x in %s\n", IMM, R(R1), SR(R1), IMM + R(R1), SR(R0));
+                    ALLOWED "Adding %.8x and %.8x@%s and storing the result of %.8x in %s\n", IMM, R(R1), SR(R1), IMM + R(R1), SR(R0));
                 }
                 R(R0) = R(R1) + IMM;
             }
@@ -718,10 +825,15 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t R2 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1) && REG_ALLOWED(R2)) {
                 R(R0) = R(R1) - R(R2);
+				if (debuggerize) {
+					ALLOWED "Subtracting %.8x@%s from %.8x@%s and storing the result of %.8x in %s\n", R(R1), SR(R1), R(R2), SR(R2), R(R1) - R(R2), SR(R0));
+				}
             }
+            else {
+				FORBIDDEN "Subtracting %.8x@%s from %.8x@%s and storing the result of %.8x in %s\n", R(R1), SR(R1), R(R2), SR(R2), R(R1) - R(R2), SR(R0));
+			}
             break;
         }
         case 0x2A: {
@@ -730,7 +842,7 @@ bool limn_cycle(limn_t *cpu) {
             uint32_t IMM = pc_long(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 if (debuggerize) {
-                    LIMN_LOG(cpu, ZL_DEBUG, "Subtracting %.8x from %.8x@%s and storing the result of %.8x in %s\n", IMM, R(R1), SR(R1), R(R1) - IMM, SR(R0));
+                    ALLOWED "Subtracting %.8x from %.8x@%s and storing the result of %.8x in %s\n", IMM, R(R1), SR(R1), R(R1) - IMM, SR(R0));
                 }
                 R(R0) = R(R1) - IMM;
             }
@@ -739,74 +851,155 @@ bool limn_cycle(limn_t *cpu) {
             }
             break;
         }
+        case 0x2B: {
+			uint8_t R0 = pc_byte(cpu);
+			uint8_t R1 = pc_byte(cpu);
+			uint8_t R2 = pc_byte(cpu);
+			if (REG_ALLOWED(R0) && REG_ALLOWED(R1) && REG_ALLOWED(R2)) {
+				if (debuggerize) {
+					ALLOWED "Multiplying %.8x@%s and %.8x@%s into %s\n", R(R1), SR(R1), R(R2), SR(R2), SR(R0));
+				}
+				R(R0) = R(R2) * R(R1);
+			}
+			else {
+				FORBIDDEN "Multiplying %.8x@%s and %.8x@%s into %s\n", R(R1), SR(R1), R(R2), SR(R2), SR(R0));
+			}
+			break;
+		}
+		case 0x2C: {
+			// muli r0, r1, imm; r0 = r1 * imm
+			uint8_t R0 = pc_byte(cpu);
+			uint8_t R1 = pc_byte(cpu);
+			uint32_t imm = pc_long(cpu);
+			if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
+				if (debuggerize) {
+					ALLOWED "Multiplying %.8x@%s and %.8x@IMM into %s\n", R(R1), SR(R1), imm, SR(R0));
+				}
+				R(R0) = imm * R(R1);
+			}
+			else {
+				FORBIDDEN "Multiplying %.8x@%s and %.8x@IMM into %s\n", R(R1), SR(R1), imm, SR(R0));
+			}
+			break;
+		}
         case 0x31: {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 R(R0) = ~R(R1);
+                ALLOWED "Setting %s to %.8x, the inverse of %.8x@%s\n", SR(R0), ~R(R1), R(R1), SR(R1));
             }
+            else {
+				FORBIDDEN "Setting %s to %.8x, the inverse of %.8x@%s\n", SR(R0), ~R(R1), R(R1), SR(R1));
+			}
             break;
         }
         case 0x32: {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t R2 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1) && REG_ALLOWED(R2)) {
                 R(R0) = R(R1) | R(R2);
+                if (debuggerize) {
+					ALLOWED "Setting %s to %.8x@%s | %.8x@%s = %.8x\n", SR(R0), R(R1), SR(R1), R(R2), SR(R2), R(R1) | R(R2));
+				}
             }
+            else {
+				FORBIDDEN "Setting %s to %.8x@%s | %.8x@%s = %.8x\n", SR(R0), R(R1), SR(R1), R(R2), SR(R2), R(R1) | R(R2));
+			}
             break;
         }
         case 0x38: {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t R2 = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1) && REG_ALLOWED(R2)) {
                 R(R0) = R(R1) & R(R2);
+                if (debuggerize) {
+					ALLOWED "Setting %s to %.8x@%s & %.8x@%s = %.8x\n", SR(R0), R(R1), SR(R1), R(R2), SR(R2), R(R1) & R(R2));
+				}
             }
+            else {
+				FORBIDDEN "Setting %s to %.8x@%s & %.8x@%s = %.8x\n", SR(R0), R(R1), SR(R1), R(R2), SR(R2), R(R1) & R(R2));
+			}
             break;
         }
         case 0x39: {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint32_t IMM = pc_long(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 R(R0) = R(R1) & IMM;
+                if (debuggerize) {
+					ALLOWED "Setting %s to %.8x@%s & %.8x = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) & IMM);
+				}
             }
+            else {
+				FORBIDDEN "Setting %s to %.8x@%s & %.8x = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) & IMM);
+			}
             break;
         }
+        case 0x41: {
+			// BSETI R0, R1, byte IMM; R0 = R1 | 1 << IMM
+            uint8_t R0 = pc_byte(cpu);
+            uint8_t R1 = pc_byte(cpu);
+            uint8_t IMM = pc_byte(cpu);
+            if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
+				if (debuggerize) {
+					ALLOWED "%s = %s | 1 << %d\n", SR(R0), SR(R1), IMM);
+				}
+				R0 = R1 | 1 << IMM;
+			}
+			else {
+				FORBIDDEN "%s = %s | 1 << %d\n", SR(R0), SR(R1), IMM);
+			}
+			break;
+		}
         case 0x3F: {
             // Formula: R0 = R1 >> IMM
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t IMM = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
+                if (debuggerize) {
+					ALLOWED "%s = %.8x@%s >> %.2x = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) >> IMM);
+				}
                 R(R0) = R(R1) >> IMM;
             }
+            else {
+				FORBIDDEN "%s = %.8x@%s >> %.2x = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) >> IMM);
+			}
             break;
         }
         case 0x43: {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             uint8_t IMM = pc_byte(cpu);
-            // TODO: log
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
+                if (debuggerize) {
+					ALLOWED "%s = %.8x@%s ^ (1 << %.2x) = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) ^ (1 << IMM));
+				}
                 R(R0) = R(R1) ^ (1 << IMM);
             }
+            else {
+				FORBIDDEN "%s = %.8x@%s ^ (1 << %.2x) = %.8x\n", SR(R0), R(R1), SR(R1), IMM, R(R1) ^ (1 << IMM));
+			}
             break;
         }
         case 0x45:
-            LIMN_LOG(cpu,ZL_WARN, "CLI: Interrupts not yet implemented!\n");
+            LIMN_LOG(cpu, ZL_WARN, "CLI: Interrupts not yet implemented!\n");
             break;
         case 0x4C: {
             // TODO: log
             if (KERNEL_MODE) {
                 R(0) = 0x80010000;
+                if (debuggerize) {
+					ALLOWED "R0 = CPUID\n");
+				}
             }
+            else {
+				FORBIDDEN "R0 = CPUID\n");
+			}
             break;
         }
         case 0x4F: {
@@ -815,13 +1008,13 @@ bool limn_cycle(limn_t *cpu) {
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
+				ALLOWED "");
                 R(R0) -= 4;
                 write_long(cpu, R(R0), R(R1));
             }
             break;
         }
         case 0x50: {
-            // TODO: log
             // R0 = R0 - 4; *R0 = long IMM
             uint8_t R0 = pc_byte(cpu);
             uint32_t IMM = pc_long(cpu);
@@ -832,18 +1025,23 @@ bool limn_cycle(limn_t *cpu) {
             break;
         }
         case 0x51: {
-            // TODO: log
             // R1 = *R0; R0 = R0 + 4
             uint8_t R0 = pc_byte(cpu);
             uint8_t R1 = pc_byte(cpu);
             if (REG_ALLOWED(R0) && REG_ALLOWED(R1)) {
                 R(R1) = read_long(cpu, R(R0));
+				if (debuggerize) {
+					ALLOWED "%s = %.8x@%.8x@%s; %s += 4\n", SR(R1), R(R1), R(R0), SR(R0), SR(R0));
+				}
                 R(R0) += 4;
             }
+            else {
+				FORBIDDEN "%s = %.8x@%s; %s += 4\n", SR(R1), R(R0), SR(R0), SR(R0));
+			}
             break;
         }
         default:
-            LIMN_LOG(cpu,ZL_ERROR, "Unimplemented opcode: 0x%.2x / %c\n\tBreaking...\n", i, i);
+            LIMN_LOG(cpu,ZL_ERROR, "Unimplemented opcode: 0x%.2x / %c\n\tBreaking...\n", current_opcode, current_opcode);
             cpu->running = false;
             return false;
     }

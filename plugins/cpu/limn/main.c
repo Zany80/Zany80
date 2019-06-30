@@ -1,5 +1,7 @@
 #include "limn.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 #include <Zany80/Plugin.h>
 #include <Zany80/API/graphics.h>
 
@@ -11,7 +13,7 @@ bool running;
 
 void frame(float delta) {
     static char buf[64];
-    sprintf(buf, "%s, current speed: %lluHz", running ? "Running" : "Paused",speed);
+    sprintf(buf, "%s, current speed: %luHz", running ? "Running" : "Paused",speed);
     widget_set_label(label, buf);
     limn_execute(cpu);
 }
@@ -22,7 +24,7 @@ bool supports(const char *type) {
 }
 
 void execute(uint32_t cycles) {
-    for (int i = 0; i < cycles; i++) {
+    for (uint32_t i = 0; i < cycles; i++) {
         limn_cycle(cpu);
     }
 }
@@ -85,6 +87,9 @@ void max_speed() {
 
 PLUGIN_EXPORT void init() {
     cpu = limn_create(limn_rom_load("data/antecedent.rom"));
+    if (cpu == NULL) {
+        return;
+    }
     limn_set_running(cpu, running = true);
     limn_set_speed(cpu, speed = 1000000);
     window_append_menu(get_root(), menu = menu_create("LIMN1k"));
@@ -96,10 +101,15 @@ PLUGIN_EXPORT void init() {
 }
 
 PLUGIN_EXPORT plugin_t *get_interface() {
+    if (cpu == NULL) {
+        return NULL;
+    }
     return &plugin;
 }
 
 PLUGIN_EXPORT void cleanup() {
+    if (cpu == NULL)
+        return;
     limn_destroy(cpu);
     window_remove_menu(get_root(), menu);
     menu_destroy_all(menu);
