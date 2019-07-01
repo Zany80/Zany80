@@ -56,6 +56,7 @@ struct limn {
     double running_time, last_time;
     bool running, p_running;
     char *ram;
+    uint32_t *call_stack;
 };
 
 const char *SR(int r);

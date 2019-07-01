@@ -39,7 +39,7 @@ void output_handler(uint32_t value) {
 	if (value == 0) {
 		return;
 	}
-	if (out_size > 1024 * 1024 * 1023) {
+	if (out_size >= 1024 * 1024 * 32) {
 		clear();
 	}
 	output_buf[out_size++] = (char)(value & 0xFF);
@@ -77,6 +77,9 @@ void gen_radio_list(widget_t *group, list_t *list, int *current, void(*handler)(
 
 void update_cpu() {
 	list_t *current_cpus = get_plugins("CPU");
+	if (current_cpus == NULL) {
+		current_cpus = create_list();
+	}
 	list_insert(current_cpus, 0, &disabled);
 	if (cpu_list) {
 		list_free(cpu_list);
