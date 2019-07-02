@@ -153,7 +153,7 @@ uint8_t read_platboard(limn_t *cpu, uint32_t address) {
 }
 
 uint8_t ignore_read(limn_t *cpu, uint32_t address) {
-    return 0;
+    return -1;
 }
 void ignore_write(limn_t *cpu, uint32_t address,uint8_t value) {}
 

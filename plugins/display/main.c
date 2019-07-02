@@ -115,14 +115,21 @@ plugin_t plugin = {
 
 void input_handler(widget_t *input) {
 	char *msg = input_get_text(input);
+	{
+		char *m = malloc(strlen(msg + 2));
+		if (m == NULL) {
+			puts("Failed to allocate memory");
+			exit(1);
+		}
+		strcat(strcpy(m, msg), "\n");
+		free(msg);
+		msg = m;
+	}
 	for (size_t i = 0; i < strlen(msg); i++) {
 		ring_buffer_append(input_buf, msg + i, 1);
 		if (cpu->cpu && cpu->cpu->fire_interrupt) {
 			cpu->cpu->fire_interrupt(1);
 			cpu->cpu->fire_interrupt(2);
-		}
-		else {
-			puts("NO IN");
 		}
 	}
 	free(msg);
