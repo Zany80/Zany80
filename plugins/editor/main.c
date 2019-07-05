@@ -184,9 +184,10 @@ void cpu_handler(int index) {
 }
 
 void asm_handler(int index) {
-	if (index < toolchain_list->length) {
-		assembler = (plugin_t*)(toolchain_list->items[index]);
+	if (index >= toolchain_list->length) {
+		current_assembler = index = 0;
 	}
+	assembler = (plugin_t*)(toolchain_list->items[index]);
 }
 
 void gen_radio_list(widget_t *group, list_t *list, int *current, void(*handler)(int index)) {
@@ -202,6 +203,12 @@ void update_tool_info() {
 	widget_set_label(tool_info, tool);
 	list_t *current_cpus = get_plugins("CPU");
 	list_t *current_asms = get_plugins("Toolchain");
+	if (current_cpus == NULL) {
+		current_cpus = create_list();
+	}
+	if (current_asms == NULL) {
+		current_asms = create_list();
+	}
 	list_insert(current_cpus, 0, &disabled);
 	list_insert(current_asms, 0, &disabled);
 	if (cpu_list) {
@@ -312,60 +319,97 @@ char *get_output_name() {
 }
 
 void build() {
-	if (path)
+	if (path) {
 		save_file();
+	}
 	clear_errors();
 	if (assembler != &disabled) {
-		list_t *conversions = assembler->toolchain->get_conversions();
-		for (int i = 0; i < conversions->length; i++) {
-			toolchain_conversion_t *conversion = conversions->items[i];
-			if (!strcmp(conversion->source_ext, ".asm") && !strcmp(conversion->target_ext, ".o")) {
-				// Attempt conversion
-				list_t *sources = create_list();
-				char *name;
-				if (path) {
-					list_add(sources, strdup(path));
-				}
-				else {
-					// Dump to a temporary file
-					name = tmpnam(NULL);
-					path = name;
-					save_file();
-					path = NULL;
-					list_add(sources, strdup(name));
-				}
-				if (stdlib) {
-					char *root = zany_root_folder();
-					char *buf = malloc(strlen(root) + 15);
-					strcpy(buf, root);
-					free(root);
-					strcat(buf, "/lib/stdlib.o");
-					list_add(sources, strdup(buf));
-					free(buf);
-				}
-				char *out;
-				char *output_name = get_output_name();
-				int ret = assembler->toolchain->convert(sources, output_name, &out);
-				if (ret == 0) {
-					editor_log("Assembled successfully!\n");
-				}
-				if (ret != 0 || always_log) {
-					editor_log(out);
-				}
-				free(out);
-				if (!path) {
-					remove(name);
-				}
-				free(output_name);
-				free_flat_list(sources);
-			}
+		list_t *sources = create_list();
+		char *name;
+		if (path) {
+			list_add(sources, strdup(path));
 		}
-		list_free(conversions);
-	}
-	else {
-		editor_log("No assembler selected! Please select an assembler in the Tools menu!");
+		else {
+			// Dump to a temporary file
+			name = tmpnam(NULL);
+			path = name;
+			save_file();
+			path = NULL;
+			list_add(sources, strdup(name));
+		}
+		char *out;
+		char *output_name = get_output_name();
+		int ret = assembler->toolchain->convert(sources, output_name, &out);
+		if (ret == 0) {
+			editor_log("Assembled successfully!\n");
+		}
+		if (ret != 0 || always_log) {
+			editor_log(out);
+		}
+		free(out);
+		if (!path) {
+			remove(name);
+		}
+		free(output_name);
+		free_flat_list(sources);
 	}
 }
+
+//~ void build() {
+	//~ if (path)
+		//~ save_file();
+	//~ clear_errors();
+	//~ if (assembler != &disabled) {
+		//~ list_t *conversions = assembler->toolchain->get_conversions();
+		//~ for (int i = 0; i < conversions->length; i++) {
+			//~ toolchain_conversion_t *conversion = conversions->items[i];
+			//~ if (!strcmp(conversion->source_ext, ".asm") && !strcmp(conversion->target_ext, ".o")) {
+				//~ // Attempt conversion
+				//~ list_t *sources = create_list();
+				//~ char *name;
+				//~ if (path) {
+					//~ list_add(sources, strdup(path));
+				//~ }
+				//~ else {
+					//~ // Dump to a temporary file
+					//~ name = tmpnam(NULL);
+					//~ path = name;
+					//~ save_file();
+					//~ path = NULL;
+					//~ list_add(sources, strdup(name));
+				//~ }
+				//~ if (stdlib) {
+					//~ char *root = zany_root_folder();
+					//~ char *buf = malloc(strlen(root) + 15);
+					//~ strcpy(buf, root);
+					//~ free(root);
+					//~ strcat(buf, "/lib/stdlib.o");
+					//~ list_add(sources, strdup(buf));
+					//~ free(buf);
+				//~ }
+				//~ char *out;
+				//~ char *output_name = get_output_name();
+				//~ int ret = assembler->toolchain->convert(sources, output_name, &out);
+				//~ if (ret == 0) {
+					//~ editor_log("Assembled successfully!\n");
+				//~ }
+				//~ if (ret != 0 || always_log) {
+					//~ editor_log(out);
+				//~ }
+				//~ free(out);
+				//~ if (!path) {
+					//~ remove(name);
+				//~ }
+				//~ free(output_name);
+				//~ free_flat_list(sources);
+			//~ }
+		//~ }
+		//~ list_free(conversions);
+	//~ }
+	//~ else {
+		//~ editor_log("No assembler selected! Please select an assembler in the Tools menu!");
+	//~ }
+//~ }
 
 void execute() {
 	clear_errors();
@@ -432,12 +476,9 @@ PLUGIN_EXPORT void init() {
 	new_file();
 	errors = malloc(1024 * 1024);
 	window_append(message_log, error_label = label_create(""));
-	label_set_wrapped(error_label, true);
 	update_tool_info();
-	asm_handler(2);
-	cpu_handler(1);
-	current_assembler = 2;
-	current_cpu = 1;
+	asm_handler(current_assembler = 1);
+	cpu_handler(current_cpu = 1);
 }
 
 PLUGIN_EXPORT plugin_t *get_interface() {

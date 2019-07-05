@@ -81,8 +81,12 @@ void toggle_running() {
 }
 
 void max_speed() {
-    speed = 1000000;
-    limn_set_speed(cpu, 1000000);
+    speed = 100000;
+    limn_set_speed(cpu, 100000);
+}
+
+void reset() {
+	limn_reset(cpu);
 }
 
 PLUGIN_EXPORT void init() {
@@ -91,13 +95,14 @@ PLUGIN_EXPORT void init() {
         return;
     }
     limn_set_running(cpu, running = true);
-    limn_set_speed(cpu, speed = 1000000);
+    limn_set_speed(cpu, speed = 100 KHz);
     window_append_menu(get_root(), menu = menu_create("LIMN1k"));
     menu_append(menu, label = label_create(""));
-    menu_append(menu, button_create("Decrease", slow_down));
-    menu_append(menu, button_create("Increase", speed_up));
-    menu_append(menu, button_create("Straight to max", max_speed));
-    menu_append(menu, button_create("Play/Pause", toggle_running));
+    menu_append(menu, menuitem_create("Decrease", slow_down));
+    menu_append(menu, menuitem_create("Increase", speed_up));
+    menu_append(menu, menuitem_create("Straight to max", max_speed));
+    menu_append(menu, menuitem_create("Play/Pause", toggle_running));
+    menu_append(menu, menuitem_create("Reset", reset));
 }
 
 PLUGIN_EXPORT plugin_t *get_interface() {

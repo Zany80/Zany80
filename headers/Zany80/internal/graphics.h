@@ -61,13 +61,28 @@ typedef enum {
     // fills up all space available to it
     button, menu_item, checkbox, radio, label, 
     group, submenu,
-    editor, input, 
+    editor, input,
+    image, frame_buffer, 
     custom
 } widget_type;
 
+typedef struct {
+    menu_t *menu;
+    bool collapsed;
+} submenu_t;
+
+typedef struct {
+	uint8_t *buf;
+	size_t width, height;
+	bool stream;
+	/// implementation-independent texture ID.
+	/// For the current Oryol implementation, this is a Gfx ID
+	void *id;
+} image_t;
+
 struct widget_t {
     widget_type type;
-    const char *label;
+    char *label;
     union {
         button_t button;
         checkbox_t checkbox;
@@ -77,14 +92,15 @@ struct widget_t {
         editor_t editor;
         input_t input;
         customwidget_t custom;
-        menu_t *menu;
+        submenu_t menu;
+        image_t image;
     };
     bool visible;
 };
 
 struct menu_t {
     widget_t **widgets;
-    const char *label;
+    char *label;
 };
 
 struct window_t {

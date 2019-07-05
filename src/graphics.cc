@@ -7,6 +7,10 @@
 #include <IMUI/IMUI.h>
 #include <Gfx/Gfx.h>
 using Oryol::Gfx;
+using Oryol::TextureSetup;
+using Oryol::PixelFormat;
+
+static widget_t **awaiting_handling = NULL;
 
 static void render_widget(widget_t *widget) {
 	if (!widget->visible) {
@@ -19,33 +23,42 @@ static void render_widget(widget_t *widget) {
         case button:
             if (ImGui::Button(widget->label)) {
                 if (widget->button.handler != NULL) {
-                    widget->button.handler();
+                    sb_push(awaiting_handling, widget);
                 }
             }
             break;
         case menu_item:
             if (ImGui::MenuItem(widget->label)) {
                 if (widget->button.handler != NULL) {
-                    widget->button.handler();
+                    sb_push(awaiting_handling, widget);
                 }
             }
             break;
         case checkbox:
             if (ImGui::Checkbox(widget->label, widget->checkbox.value)) {
                 if (widget->checkbox.handler != NULL) {
-                    widget->checkbox.handler();
+                    sb_push(awaiting_handling, widget);
                 }
             }
             break;
         case radio:
 			if (ImGui::RadioButton(widget->label, widget->radio.current, widget->radio.index)) {
-				widget->radio.handler(widget->radio.index);
+                if (widget->radio.handler != NULL) {
+                    sb_push(awaiting_handling, widget);
+                }
 			}
 			break;
         case submenu:
-			if (ImGui::BeginMenu(widget->menu->label)) {
-				for (int j = 0; j < sb_count(widget->menu->widgets); j++) {
-					render_widget(widget->menu->widgets[j]);
+            if (widget->menu.collapsed) {
+                if (ImGui::CollapsingHeader(widget->menu.menu->label)) {
+                    for (int j = 0; j < sb_count(widget->menu.menu->widgets); j++) {
+                        render_widget(widget->menu.menu->widgets[j]);
+                    }
+                }
+            }
+			else if (ImGui::BeginMenu(widget->menu.menu->label)) {
+				for (int j = 0; j < sb_count(widget->menu.menu->widgets); j++) {
+					render_widget(widget->menu.menu->widgets[j]);
 				}
 				ImGui::EndMenu();
 			}
@@ -60,7 +73,9 @@ static void render_widget(widget_t *widget) {
             break;
         case input:
 			if (ImGui::InputText(widget->label, widget->input.buf, widget->input.capacity, ImGuiInputTextFlags_EnterReturnsTrue)) {
-				widget->input.handler(widget);
+                if (widget->input.handler) {
+                    sb_push(awaiting_handling, widget);
+                }
 			}
 			break;
         case editor:
@@ -104,9 +119,6 @@ void render_window(window_t *window) {
         if (window->initialX != -1 && window->initialY != -1) {
             ImGui::SetWindowSize(ImVec2(window->initialX, window->initialY), ImGuiCond_FirstUseEver);
         }
-        if (window == get_root()) {
-            ImGui::PopStyleVar(2);
-        }
         if (sb_count(window->menus)) {
             if (ImGui::BeginMenuBar()) {
                 for (int i = 0; i < sb_count(window->menus); i++) {
@@ -120,12 +132,39 @@ void render_window(window_t *window) {
                 ImGui::EndMenuBar();
             }
         }
+        if (window == get_root()) {
+            ImGui::NewLine();
+        }
         for (int i = 0; i < sb_count(window->widgets); i++) {
             render_widget(window->widgets[i]);
         }
     }
     window->minimized = minimized;
     ImGui::End();
+    for (int i = 0; i < sb_count(awaiting_handling); i++) {
+        widget_t *w = awaiting_handling[i];
+        switch(w->type) {
+            case button:
+            case menu_item:
+                w->button.handler();
+                break;
+            case checkbox:
+                w->checkbox.handler();
+                break;
+            case radio:
+                puts("Calling RADIO handler");
+                w->radio.handler(w->radio.index);
+                break;
+            case input:
+                w->input.handler(w);
+                break;
+        }
+    }
+    if (window == get_root()) {
+        ImGui::PopStyleVar(2);
+    }
+    sb_free(awaiting_handling);
+    awaiting_handling = NULL;
 }
 
 void window_get_pos(window_t *window, float *x, float *y) {
@@ -167,4 +206,24 @@ char *editor_get_text(widget_t *widget) {
 
 void editor_destroy(TextEditor *editor) {
 	delete editor;
+}
+
+widget_t *image_create(uint8_t *buf, size_t width, size_t h) {
+	widget_t *w = widget_new(NULL);
+	w->type = image;
+	w->image.buf = buf;
+	w->image.width = width;
+	w->image.height = h;
+	w->image.stream = false;
+	TextureSetup tex_setup = TextureSetup::FromPixelData2D(width, h, 1, PixelFormat::RGBA8);
+	tex_setup.ImageData.Sizes[0][0] = width * h * 4;
+	w->image.id = new Oryol::Id;
+	*(Oryol::Id*)w->image.id = Gfx::CreateResource(tex_setup);
+	return w;
+}
+
+widget_t *framebuffer_create(uint8_t *buf, size_t width, size_t h) {
+	widget_t *w = image_create(buf, width, h);
+	w->image.stream = true;
+	return w;
 }

@@ -128,14 +128,24 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
-	load_plugin("plugins:dummy_assembler");
-	load_plugin("plugins:assembler");
-	load_plugin("plugins:example");
-	load_plugin("plugins:limn");
-	load_plugin("plugins:z80cpp_core");
-	load_plugin("plugins:debug_port");
-	load_plugin("plugins:editor");
-	load_plugin("plugins:display");
+	//~ load_plugin("plugins:limn");
+	//~ load_plugin("plugins:display");
+	//~ load_plugin("plugins:dragonfruit");
+    IO::Load("root:plugins.txt", [](IO::LoadResult res) {
+        char *buf = new char[res.Data.Size() + 1];
+        strncpy(buf, (char*)res.Data.Data(), res.Data.Size());
+        buf[res.Data.Size()] = 0;
+        printf("Original string: %s\n", buf);
+        char *t = strtok(buf, "\r\n");
+        while (t) {
+            printf("Tokenized: %s\n", t);
+            load_plugin(t);
+            t = strtok(NULL, "\r\n");
+        }
+        delete[] buf;
+	}, [](const URL& url, IOStatus::Code ioStatus) {
+		//~ zany_report_error("Error loading plugins.txt!");
+	});
 	this->tp = Clock::Now();
 	return App::OnInit();
 }
@@ -215,7 +225,12 @@ AppState::Code Zany80::OnRunning() {
 			list_t *plugins = get_all_plugins();
 			for (int i = 0; i < plugins->length; i++) {
 				plugin_t *plugin = (plugin_t*)(plugins->items[i]);
-				ImGui::Text("\t%s", plugin->name);
+                if (plugin->version) {
+                    ImGui::Text("\t%s (%d.%d.%d/%s)", plugin->name, plugin->version->major, plugin->version->minor, plugin->version->patch, plugin->version->str);
+                }
+                else {
+                    ImGui::Text("\t%s", plugin->name);
+                }
 				StringBuilder features;
 				bool any = false;
 				for (const char *tag : listed_tags) {
@@ -259,7 +274,7 @@ AppState::Code Zany80::OnRunning() {
 						StringBuilder line("\t\t\t\t");
 						for (int i = 0; i < registers->length; i++) {
 							register_value_t *reg = (register_value_t*)registers->items[i];
-							line.AppendFormat(32, "%s = %lu (%lx),", reg->name, reg->value, reg->value);
+							line.AppendFormat(32, "%s = %u (%x),", reg->name, reg->value, reg->value);
 							if (i % per_line == per_line - 1) {
 								ImGui::Text("%s", line.AsCStr());
 								line.Set("\t\t\t\t");

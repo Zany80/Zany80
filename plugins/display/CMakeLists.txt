@@ -1,5 +1,5 @@
 fips_begin_sharedlib(display)
-fips_files(main.c ring_buffer.c)
+fips_files(main.c)
 fips_deps(zany80)
 fips_include_directories(${CMAKE_CURRENT_BINARY_DIR})
 fips_end_sharedlib()

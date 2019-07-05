@@ -19,7 +19,13 @@ list_t *plugins = nullptr;
 
 void invalid_plugin(const char *path, liblib::Library *invalid) {
 	if ((*invalid)["get_interface"]) {
-		fprintf(stderr, "Error loading plugin '%s' at path '%s'\n", ((plugin_t*(*)())((*invalid)["get_interface"]))()->name,path);
+        plugin_t *i = ((plugin_t*(*)())((*invalid)["get_interface"]))();
+        if (i) {
+            fprintf(stderr, "Error loading plugin '%s' at path '%s'\n", ((plugin_t*(*)())((*invalid)["get_interface"]))()->name,path);
+        }
+        else {
+            fprintf(stderr, "Error loading plugin at path '%s'\n", path);
+        }
 	}
 	else {
 		fprintf(stderr, "Error loading plugin at path '%s'\n", path);

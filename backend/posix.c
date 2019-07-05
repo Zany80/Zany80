@@ -5,9 +5,10 @@
 #include <stdio.h>
 
 list_t *zany_read_directory(const char *path) {
-	DIR *dir;
-	if ((dir = opendir(path)) != NULL) {
-		list_t *contents = create_list();
+	DIR *dir = opendir(path);
+	list_t *contents;
+	if (dir != NULL) {
+		contents = create_list();
 		struct dirent *entry;
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.')
@@ -17,10 +18,9 @@ list_t *zany_read_directory(const char *path) {
 			list_add(contents, name);
 		}
 		closedir(dir);
-		return contents;
 	}
 	else {
 		fprintf(stderr, "Error opening directory: %s\n", path);
-		return NULL;
 	}
+    return contents;
 }

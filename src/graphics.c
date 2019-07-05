@@ -80,6 +80,10 @@ void window_remove_menu(window_t *window, menu_t *menu) {
     sb_remove((void***)&window->menus, menu);
 }
 
+void window_remove(window_t *window, widget_t *widget) {
+    sb_remove((void***)&window->widgets, widget);
+}
+
 window_t *get_root() {
     return &root;
 }
@@ -102,15 +106,20 @@ bool window_is_minimized(window_t *window) {
 menu_t *menu_create(const char *name) {
     menu_t *m = malloc(sizeof(menu_t));
     m->widgets = NULL;
-    m->label = name;
+    m->label = strdup(name);
     return m;
 }
 
 widget_t *submenu_create(menu_t *menu) {
 	widget_t *w = widget_new(NULL);
 	w->type = submenu;
-	w->menu = menu;
+	w->menu.menu = menu;
+    w->menu.collapsed = false;
 	return w;
+}
+
+void submenu_set_collapsed(widget_t *widget, bool collapsed) {
+    widget->menu.collapsed = collapsed;
 }
 
 void menu_append(menu_t *menu, widget_t *widget) {
@@ -119,6 +128,7 @@ void menu_append(menu_t *menu, widget_t *widget) {
 
 void menu_destroy(menu_t *menu) {
     sb_free(menu->widgets);
+    free(menu->label);
     free(menu);
 }
 
@@ -130,7 +140,7 @@ void menu_destroy_all(menu_t *menu) {
 
 widget_t *widget_new(const char *label) {
     widget_t *w = malloc(sizeof(widget_t));
-    w->label = label;
+    w->label = label ? strdup(label) : NULL;
     w->visible = true;
     return w;
 }
@@ -214,7 +224,10 @@ void label_set_wrapped(widget_t *widget, bool wrapped) {
 }
 
 void widget_set_label(widget_t *widget, const char *label) {
-    widget->label = label;
+    if (widget->label) {
+        free(widget->label);
+    }
+    widget->label = label ? strdup(label) : NULL;
 }
 
 void widget_set_visible(widget_t *widget, bool visible) {
@@ -234,7 +247,8 @@ void widget_destroy(widget_t *widget) {
 			break;
 		default:
 			break;
-	}	
+	}
+    free(widget->label);
     free(widget);
 }
 
