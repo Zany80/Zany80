@@ -16,8 +16,10 @@ void compiler_error(const char *format_str, ...) __attribute__((format(printf, 1
 void compiler_warning(const char *format_str, ...) __attribute__((format(printf, 1, 2)));
 bool have_const(const char *name);
 char *get_const(const char *name);
-void map_line();
 void add_var(char *name);
+
+extern char *current_file;
+extern int current_line;
 
 struct lexer_t {
 	ring_buffer_t *buffer;

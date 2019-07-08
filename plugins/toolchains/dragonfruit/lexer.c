@@ -31,8 +31,35 @@ lexer_t *lexer_new(const char *src) {
 
 char lexer_extract_char(lexer_t *lexer) {
 	char c = ring_buffer_read(lexer->buffer);
-	if (c == '\n') {
-		map_line();
+	if (c == '\n' && current_file != NULL) {
+		char buf[16];
+		sprintf(buf, "%d", ++current_line);
+		// Check if there's already a map present - if so, just
+		// modify it instead of inserting new tokens.
+		int prev_index = lexer->current_index - 3;
+		if (prev_index >= 0 && prev_index <= lexer->tokens->length
+				&& *(lexer_token_t*)lexer->types->items[prev_index] == map) {
+			if (strcmp((char*)lexer->tokens->items[prev_index + 1], current_file)) {
+				free(lexer->tokens->items[prev_index + 1]);
+				lexer->tokens->items[prev_index + 1] = strdup(current_file);
+			}
+			free(lexer->tokens->items[prev_index + 2]);
+			lexer->tokens->items[prev_index + 2] = strdup(buf);
+		}
+		else {
+			lexer_token_t *type = malloc(sizeof(lexer_token_t));
+			*type = map;
+			list_insert(lexer->types, lexer->current_index, type);
+			list_insert(lexer->tokens, lexer->current_index++, strdup("map"));
+			type = malloc(sizeof(lexer_token_t));
+			*type = string;
+			list_insert(lexer->types, lexer->current_index, type);
+			list_insert(lexer->tokens, lexer->current_index++, strdup(current_file));
+			type = malloc(sizeof(lexer_token_t));
+			*type = number;
+			list_insert(lexer->types, lexer->current_index, type);
+			list_insert(lexer->tokens, lexer->current_index++, strdup(buf));
+		}
 	}
 	return c;
 }
@@ -51,10 +78,7 @@ bool peek_getchar(lexer_t *lexer, char *c) {
 
 bool extract_getchar(lexer_t *lexer, char *c) {
 	if (ring_buffer_available(lexer->buffer) > 0) {
-		*c = ring_buffer_read(lexer->buffer);
-		if (*c == '\n') {
-			map_line();
-		}
+		*c = lexer_extract_char(lexer);
 		return true;
 	}
 	return false;
@@ -189,7 +213,7 @@ static void lexer_generic_extract(lexer_t *lexer, char **token, lexer_token_t *t
 
 void lexer_insert(lexer_t *lexer, const char *str) {
 	ring_buffer_prepend_buf(lexer->buffer, str, strlen(str));
-	int offset = 0;
+	int o_index =lexer->current_index;
 	while (true) {
 		char *token;
 		lexer_token_t *type = malloc(sizeof(lexer_token_t));
@@ -198,11 +222,11 @@ void lexer_insert(lexer_t *lexer, const char *str) {
 			free(type);
 			break;
 		}
-		list_insert(lexer->tokens, lexer->current_index + offset, token);
-		list_insert(lexer->types, lexer->current_index + offset, type);
+		list_insert(lexer->tokens, lexer->current_index, token);
+		list_insert(lexer->types, lexer->current_index++, type);
 		//~ printf("New token inserted at index %d, offset %d\n", lexer->current_index + offset, offset);
-		offset++;
 	}
+	lexer->current_index = o_index;
 }
 
 void lexer_peek(lexer_t *lexer, char **token, lexer_token_t *type) {
@@ -210,7 +234,7 @@ void lexer_peek(lexer_t *lexer, char **token, lexer_token_t *type) {
 		type = &type_dump;
 	}
 	if (lexer->current_index < lexer->tokens->length) {
-		*token = strdup((char*)(lexer->tokens->items[lexer->current_index]));
+		*token = (char*)(lexer->tokens->items[lexer->current_index]);
 		*type = *((lexer_token_t*)lexer->types->items[lexer->current_index]);
 	}
 	else {

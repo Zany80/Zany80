@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 #include <stretchy_buffer.h>
 #include "lexer.h"
-#include "optimizer.h"
 #include "backends.h"
 #include "internals.h"
 
@@ -18,6 +18,8 @@ static char **local_strings;
 static char *base_dir;
 
 static char *read_file(char *path);
+
+static int error_count;
 
 void print(const char *string) {
 	//~ puts(string);
@@ -57,13 +59,9 @@ static void new_const(char *dest) {
 }
 
 char *append_str(char *target, const char *str) {
-	if (target != NULL) {
-		sb_pop(target, 1);
-	}
 	for (size_t i = 0; i < strlen(str); i++) {
 		sb_push(target, str[i]);
 	}
-	sb_push(target, 0);
 	return target;
 }
 
@@ -86,11 +84,12 @@ void append_data(const char *str) {
 	compiled_data = append_str(compiled_data, str);
 }
 
-static char *current_file;
-static int current_line;
+char *current_file;
+int current_line;
 static compiler_backend_t *compiler_backend;
 
 void compiler_error(const char *format_str, ...) {
+	error_count++;
 	char buf[1024];
 	int index = 0;
 	if (current_file != NULL) {
@@ -118,24 +117,34 @@ void compiler_warning(const char *format_str, ...) {
 	print(buf);
 }
 
-void map_line() {
+void compile_map() {
 	c_map_printed = d_map_printed = false;
 	if (current_map != NULL) {
 		free(current_map);
 	}
-	current_map = malloc(7 + strlen(current_file) + 32 + 1);
-	sprintf(current_map, ".map %s, %d\n", current_file, ++current_line);
+	char *file;
+	char *line;
+	lexer_token_t type;
+	extract(&file, &type);
+	assert(type == string);
+	extract(&line, &type);
+	assert(type == number);
+	current_map = malloc(8 + strlen(file) + strlen(line) + 1);
+	sprintf(current_map, ".map %s, %s\n", file, line);
 }
 
 static lexer_t *lexer;
-static optimizer_t *optimizer;
 
 void extract(char **token, lexer_token_t *type) {
-	optimizer == NULL ? lexer_extract(lexer, token, type) : optimizer_extract(optimizer, token, type);
+	lexer_extract(lexer, token, type);
+	while (type != NULL && *type == map) {
+		compile_map();
+		lexer_extract(lexer, token, type);
+	}
 }
 
 void peek(char **token, lexer_token_t *type) {
-	optimizer == NULL ? lexer_peek(lexer, token, type) : optimizer_peek(optimizer, token, type);
+	lexer_peek(lexer, token, type);
 }
 
 lexer_token_t peek_type() {
@@ -394,7 +403,7 @@ void compile_const(char *name, char *value, lexer_token_t type) {
 			rvalue = label;
 		}
 	}
-	compiler_backend->append_const(name, value);
+	compiler_backend->append_const(name, rvalue);
 	sb_push(consts, name);
 	sb_push(const_values, value);
 }
@@ -728,9 +737,9 @@ void compile_number(char *token) {
 void compile_block(const char *end) {
 	char *token;
 	lexer_token_t type;
-	while (peek_type() != finished) {
+	while (true) {
 		extract(&token, &type);
-		if (end && !strcmp(token, end)) {
+		if (type == finished || (end && !strcmp(token, end))) {
 			break;
 		}
 		switch (type) {
@@ -754,6 +763,7 @@ void compile_block(const char *end) {
 }
 
 void startup() {
+	error_count = 0;
 	compiled = NULL;
 	compiled_data = NULL;
 	current_str = current_branch = current_const = 0;
@@ -783,7 +793,6 @@ void finish_up() {
 	// also takes care of consts
 	clean_vars();
 	(*buffer)[--buffer_size] = 0;
-	optimizer_destroy(optimizer);
 	lexer_destroy(lexer);
 	free_flat_sb(local_strings);
 }
@@ -831,29 +840,27 @@ int compile(list_t *sources, const char *target, char **_buffer) {
 		return 2;
 	}
 	lexer = lexer_new(buf);
-	optimizer = NULL;
 	free(buf);
 	for (int i = 1; i < sources->length; i++) {
 		const char *file_name = (const char *)(sources->items[i]);
-		if (!strcmp(file_name, "-O")) {
-			optimizer = lexer_optimizer(lexer);
-		}
-		else {
+		//~ if (!strcmp(file_name, "-O")) {
+		
+		//~ }
+		//~ else {
 			char *buf = malloc(12 + strlen(file_name) + 1);
 			sprintf(buf, "#include \"%s\"\n", file_name);
 			lexer_insert(lexer, buf);
 			free(buf);
-		}
+		//~ }
 	}
-	map_line();
 	compile_block(NULL);
 	append_compiled("\n\n");
-	if (compiled_data != NULL) {
-		append_compiled(compiled_data);
-	}
 	FILE *destination = fopen(target, "w");
 	if (destination) {
-		fwrite(compiled, 1, strlen(compiled), destination);
+		fwrite(compiled, 1, sb_count(compiled), destination);
+		if (compiled_data != NULL) {
+			fwrite(compiled_data, 1, sb_count(compiled_data), destination);
+		}
 		fflush(destination);
 		fclose(destination);
 	}
@@ -861,5 +868,5 @@ int compile(list_t *sources, const char *target, char **_buffer) {
 		print("Error opening destination file for saving!");
 	}
 	finish_up();
-	return -1;
+	return error_count;
 }
