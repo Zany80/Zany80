@@ -1,23 +1,19 @@
-#include "lexer.h"
 #include <stddef.h>
 #include <stdlib.h>
-#include <ring_buffer.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stretchy_buffer.h>
 #include <stdbool.h>
 
-void print(const char *string);
-void map_line();
+#include <3rd-party/scas/stringop.h>
 
-struct lexer_t {
-	ring_buffer_t *buffer;
-};
+#include "lexer.h"
+#include "internals.h"
 
 const char *get_token_str(lexer_token_t token) {
 	static const char *strings[TOKEN_COUNT] = {
-		"keyc", "error", "string", "number", "tag", "finished"
+		"keyc", "error", "string", "number", "tag", "finished", "map"
 	};
 	return strings[token];
 }
@@ -26,12 +22,11 @@ lexer_t *lexer_new(const char *src) {
 	lexer_t *l = malloc(sizeof(lexer_t));
 	// Capacity starts at 1MB. The ring buffer will automatically grow as needed
 	l->buffer = ring_buffer_new(1024 * 1024);
+	l->current_index = 0;
+	l->tokens = create_list();
+	l->types = create_list();
 	lexer_insert(l, src);
 	return l;
-}
-
-void lexer_insert(lexer_t *lexer, const char *str) {
-	ring_buffer_prepend_buf(lexer->buffer, str, strlen(str));
 }
 
 char lexer_extract_char(lexer_t *lexer) {
@@ -42,7 +37,7 @@ char lexer_extract_char(lexer_t *lexer) {
 	return c;
 }
 
-char *kc = "!@#()[]";
+const char *const kc = "!@#()[]";
 
 static size_t peek_index = 0;
 
@@ -74,11 +69,8 @@ static bool isnumber(const char *t) {
 static lexer_token_t type_dump;
 
 static void lexer_generic_extract(lexer_t *lexer, char **token, lexer_token_t *type, getchar_t getchar) {
-	if (type == NULL) {
-		type = &type_dump;
-	}
 	peek_index = 0;
-	char c[2];
+	char c[5];
 	c[1] = 0;
 	do {
 		if (!getchar(lexer, c)) {
@@ -120,6 +112,7 @@ static void lexer_generic_extract(lexer_t *lexer, char **token, lexer_token_t *t
 						break;
 					default:
 						sb_push(t, c[0]);
+						c[0] = 0;
 						break;
 				}
 			}
@@ -159,6 +152,7 @@ static void lexer_generic_extract(lexer_t *lexer, char **token, lexer_token_t *t
 					return;
 				}
 			}
+			sprintf(c, "%d", c[0]);
 			char dump;
 			if (getchar(lexer, &dump)) {
 				if (dump == '\'') {
@@ -193,26 +187,65 @@ static void lexer_generic_extract(lexer_t *lexer, char **token, lexer_token_t *t
 	*type = isnumber(*token) ? number : tag;
 }
 
+void lexer_insert(lexer_t *lexer, const char *str) {
+	ring_buffer_prepend_buf(lexer->buffer, str, strlen(str));
+	int offset = 0;
+	while (true) {
+		char *token;
+		lexer_token_t *type = malloc(sizeof(lexer_token_t));
+		lexer_generic_extract(lexer, &token, type, extract_getchar);
+		if (*type == finished) {
+			free(type);
+			break;
+		}
+		list_insert(lexer->tokens, lexer->current_index + offset, token);
+		list_insert(lexer->types, lexer->current_index + offset, type);
+		//~ printf("New token inserted at index %d, offset %d\n", lexer->current_index + offset, offset);
+		offset++;
+	}
+}
+
 void lexer_peek(lexer_t *lexer, char **token, lexer_token_t *type) {
-	lexer_generic_extract(lexer, token, type, peek_getchar);
+	if (type == NULL) {
+		type = &type_dump;
+	}
+	if (lexer->current_index < lexer->tokens->length) {
+		*token = strdup((char*)(lexer->tokens->items[lexer->current_index]));
+		*type = *((lexer_token_t*)lexer->types->items[lexer->current_index]);
+	}
+	else {
+		*type = finished;
+	}
 }
 
 void lexer_extract(lexer_t *lexer, char **token, lexer_token_t *type) {
-	lexer_generic_extract(lexer, token, type, extract_getchar);
+	if (type == NULL) {
+		type = &type_dump;
+	}
+	if (lexer->current_index < lexer->tokens->length) {
+		*token = (char*)(lexer->tokens->items[lexer->current_index]);
+		*type = *((lexer_token_t*)lexer->types->items[lexer->current_index]);
+		lexer->current_index++;
+	}
+	else {
+		*type = finished;
+	}
 }
 
 void lexer_destroy(lexer_t *lexer) {
-	size_t ring_buffer_size = ring_buffer_available(lexer->buffer);
-	char *buf = malloc(ring_buffer_size + 128);
-	if (!buf) {
-		fputs("OOM\n", stderr);
-		exit(1);
-	}
-	int size = sprintf(buf, "Remaining in lexer buffer at destruction: 0x%lx/%lu. Buffer contents: \"", ring_buffer_available(lexer->buffer), ring_buffer_available(lexer->buffer));
-	ring_buffer_read_buf(lexer->buffer, buf + size, ring_buffer_size);
-	buf[size + ring_buffer_size] = 0;
-	strcat(buf + size + ring_buffer_size, "\"");
-	print(buf);
+	//~ size_t ring_buffer_size = ring_buffer_available(lexer->buffer);
+	//~ char *buf = malloc(ring_buffer_size + 128);
+	//~ if (!buf) {
+		//~ fputs("OOM\n", stderr);
+		//~ exit(1);
+	//~ }
+	//~ int size = sprintf(buf, "Remaining in lexer buffer at destruction: 0x%lx/%lu. Buffer contents: \"", ring_buffer_available(lexer->buffer), ring_buffer_available(lexer->buffer));
+	//~ ring_buffer_read_buf(lexer->buffer, buf + size, ring_buffer_size);
+	//~ buf[size + ring_buffer_size] = 0;
+	//~ strcat(buf + size + ring_buffer_size, "\"");
+	//~ print(buf);
+	free_flat_list(lexer->tokens);
+	free_flat_list(lexer->types);
 	ring_buffer_free(lexer->buffer);
 	free(lexer);
 }

@@ -5,13 +5,22 @@
 #include <stdarg.h>
 #include <stretchy_buffer.h>
 #include "lexer.h"
+#include "optimizer.h"
 #include "backends.h"
+#include "internals.h"
 
-char **buffer;
-size_t buffer_size, buffer_capacity;
+static char **buffer;
+static size_t buffer_size, buffer_capacity;
+
+// Since c
+static char **local_strings;
+
+static char *base_dir;
+
+static char *read_file(char *path);
 
 void print(const char *string) {
-	puts(string);
+	//~ puts(string);
 	size_t size = strlen(string);
 	if (buffer_size + size >= buffer_capacity) {
 		char *new_buffer = realloc(*buffer, buffer_capacity *= 2);
@@ -47,7 +56,7 @@ static void new_const(char *dest) {
 	sprintf(dest, "__dragonfruit_const_%d", current_const++);
 }
 
-char * append_str(char *target, const char *str) {
+char *append_str(char *target, const char *str) {
 	if (target != NULL) {
 		sb_pop(target, 1);
 	}
@@ -58,19 +67,28 @@ char * append_str(char *target, const char *str) {
 	return target;
 }
 
+static bool c_map_printed, d_map_printed;
+static char *current_map = NULL;
+
 void append_compiled(const char *str) {
+	if (!c_map_printed && current_map != NULL) {
+		c_map_printed = true;
+		compiled = append_str(compiled, current_map);
+	}
 	compiled = append_str(compiled, str);
 }
 
 void append_data(const char *str) {
+	if (!d_map_printed && current_map != NULL) {
+		d_map_printed = true;
+		compiled_data = append_str(compiled_data, current_map);
+	}
 	compiled_data = append_str(compiled_data, str);
 }
 
 static char *current_file;
 static int current_line;
 static compiler_backend_t *compiler_backend;
-
-void compiler_error(const char *format_str, ...) __attribute__((format(printf, 1, 2)));
 
 void compiler_error(const char *format_str, ...) {
 	char buf[1024];
@@ -101,24 +119,29 @@ void compiler_warning(const char *format_str, ...) {
 }
 
 void map_line() {
-	char *buf = malloc(7 + strlen(current_file) + 32 + 1);
-	sprintf(buf, ".map %s, %d\n", current_file, ++current_line);
-	append_compiled(buf);
-	free(buf);
+	c_map_printed = d_map_printed = false;
+	if (current_map != NULL) {
+		free(current_map);
+	}
+	current_map = malloc(7 + strlen(current_file) + 32 + 1);
+	sprintf(current_map, ".map %s, %d\n", current_file, ++current_line);
 }
 
 static lexer_t *lexer;
+static optimizer_t *optimizer;
 
 void extract(char **token, lexer_token_t *type) {
-	lexer_extract(lexer, token, type);
+	optimizer == NULL ? lexer_extract(lexer, token, type) : optimizer_extract(optimizer, token, type);
+}
+
+void peek(char **token, lexer_token_t *type) {
+	optimizer == NULL ? lexer_peek(lexer, token, type) : optimizer_peek(optimizer, token, type);
 }
 
 lexer_token_t peek_type() {
 	char *token = NULL;
 	lexer_token_t type;
 	lexer_peek(lexer, &token, &type);
-	if (token)
-		free(token);
 	return type;
 }
 
@@ -130,20 +153,16 @@ typedef struct {
 void directive_include() {
 	char *path = NULL;
 	lexer_token_t type;
-	lexer_extract(lexer, &path, &type);
+	extract(&path, &type);
 	if (type != string) {
 		compiler_error("Expected string as include path, received %s", get_token_str(type));
 	}
 	else {
-		FILE *f = fopen(path, "r");
-		if (f) {
-			fseek(f, 0, SEEK_END);
-			long size = ftell(f);
-			rewind(f);
-			char *buf = malloc(size + 1);
-			fread(buf, 1, size, f);
-			fclose(f);
-			buf[size] = 0;
+		char *full_path = malloc(strlen(base_dir) + strlen(path) + 2);
+		strcat(strcat(strcpy(full_path, base_dir), "/"), path);
+		char *buf = read_file(full_path);
+		sb_push(local_strings, full_path);
+		if (buf) {
 			char *b2 = malloc(21 + strlen(path) + 1 + strlen(buf) + strlen(current_file) + 10 + 1);
 			sprintf(b2, "#path \"%s\" %d\n%s\n#path \"%s\" %d\n", path, 0, buf, current_file, current_line);
 			lexer_insert(lexer, b2);
@@ -151,38 +170,29 @@ void directive_include() {
 			free(b2);
 		}
 		else {
-			compiler_error("Error opening included file %s", path);
+			compiler_error("Error opening included file %s", full_path);
 		}
-	}
-	if (path != NULL) {
-		free(path);
 	}
 }
 
 void directive_path() {
 	char *token = NULL;
 	lexer_token_t type;
-	lexer_extract(lexer, &token, &type);
+	extract(&token, &type);
 	if (type != string) {
 		compiler_error("Unexpected %s received as parameter 0 to path, expected string", get_token_str(type));
 	}
 	else {
 		char *_file = token;
-		token = NULL;
-		lexer_extract(lexer, &token, &type);
+		extract(&token, &type);
 		if (type != number) {
 			compiler_error("Unexpected %s received as parameter 1 to path, expected number", get_token_str(type));
 		}
 		else {
-			if (current_file) {
-				free(current_file);
-			}
 			current_file = _file;
 			current_line = strtol(token, NULL, 0);
+			c_map_printed = d_map_printed = false;
 		}
-	}
-	if (token != NULL) {
-		free(token);
 	}
 }
 
@@ -208,6 +218,19 @@ directive_t *find_directive(const char *name) {
 
 char **vars;
 
+void add_var(char *name) {
+	sb_push(vars, name);
+}
+
+bool have_var(char *name) {
+	for (int i = 0; i < sb_count(vars); i++) {
+		if (!strcmp(name, vars[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void instruction_var() {
 	char *name = NULL, *initv = NULL;
 	lexer_token_t name_type, initv_type;
@@ -226,9 +249,7 @@ void instruction_var() {
 	append_data(":\n\t.dl ");
 	append_data(initv);
 	append_data("\n");
-	// transfers ownership of name to vars. Avoids an unneeded strdup/free pair
-	sb_push(vars, name);
-	free(initv);
+	add_var(name);
 }
 
 static char **auto_names;
@@ -251,7 +272,7 @@ void instruction_auto() {
 			return;
 		}
 	}
-	sb_push(auto_names, strdup(name));
+	sb_push(auto_names, name);
 	sb_push(autos, compiler_backend->get_auto());
 }
 
@@ -265,7 +286,7 @@ void free_flat_sb(void *_sb) {
 }
 
 void clean_autos() {
-	free_flat_sb(auto_names);
+	sb_free(auto_names);
 	free_flat_sb(autos);
 	auto_names = NULL;
 	autos = NULL;
@@ -306,9 +327,6 @@ void instruction_while() {
 	if (token == NULL || token[0] != '(') {
 		compiler_error("malformed while");
 	}
-	if (token != NULL) {
-		free(token);
-	}
 	char cond_branch[32];
 	char exit_branch[32];
 	new_branch(cond_branch);
@@ -335,9 +353,6 @@ void instruction_if() {
 	if (token == NULL || token[0] != '(') {
 		compiler_error("malformed if");
 	}
-	if (token != NULL) {
-		free(token);
-	}
 	char false_branch[32];
 	new_branch(false_branch);
 	compile_block(")");
@@ -345,7 +360,6 @@ void instruction_if() {
 	compile_block("end");
 	lexer_peek(lexer, &token, NULL);
 	if (token != NULL && !strcmp(token, "else")) {
-		free(token);
 		extract(&token, NULL);
 		char exit_branch[32];
 		new_branch(exit_branch);
@@ -357,41 +371,32 @@ void instruction_if() {
 	else {
 		compiler_backend->append_branch(false_branch);
 	}
-	if (token != NULL) {
-		free(token);
-	}
 }
 
 char **consts, **const_values;
 
 void clean_vars() {
-	for (int i = 0; i < sb_count(consts); i++) {
-		compiler_warning("Const %d of %d: %s = %s", i + 1, sb_count(consts), consts[i], const_values[i]);
-	}
-	free_flat_sb(consts);
-	free_flat_sb(const_values);
-	free_flat_sb(vars);
+	sb_free(consts);
+	sb_free(const_values);
+	sb_free(vars);
 }
 
-// value should be a pointer to a dynamically allocated string. It may be 
-// reallocated by compile_const.
-// exception: if type is known to be a number, value can be statically allocated
-void compile_const(char *name, char **value, lexer_token_t type) {
+void compile_const(char *name, char *value, lexer_token_t type) {
+	char *rvalue = value;
+	char label[32];
 	if (type != number) {
 		if (type != string) {
 			compiler_error("Unexpected %s at const value", get_token_str(type));
 		}
 		else {
-			char label[32];
 			new_const(label);
-			compiler_backend->append_string(label, *value);
-			free(*value);
-			*value = strdup(label);
+			compiler_backend->append_string(label, value);
+			rvalue = label;
 		}
 	}
-	compiler_backend->append_const(name, *value);
-	sb_push(consts, strdup(name));
-	sb_push(const_values, strdup(*value));
+	compiler_backend->append_const(name, value);
+	sb_push(consts, name);
+	sb_push(const_values, value);
 }
 
 void instruction_const() {
@@ -403,9 +408,7 @@ void instruction_const() {
 	}
 	char *initv;
 	extract(&initv, &type);
-	compile_const(name, &initv, type);
-	free(name);
-	free(initv);
+	compile_const(name, initv, type);
 }
 
 bool have_const(const char *name) {
@@ -426,6 +429,14 @@ int find_const(const char *name) {
 	return -1;
 }
 
+char *get_const(const char *name) {
+	int index = find_const(name);
+	if (index == -1) {
+		return NULL;
+	}
+	return const_values[index];
+}
+
 void instruction_struct() {
 	char *name;
 	lexer_token_t type;
@@ -442,19 +453,14 @@ void instruction_struct() {
 			break;
 		}
 		if (!strcmp(token, "endstruct")) {
-			free(token);
 			break;
 		}
 		if (type != number) {
 			if (type == tag && have_const(token)) {
-				char *ntoken = strdup(const_values[find_const(token)]);
-				free(token);
-				token = ntoken;
+				token = get_const(token);
 			}
 			else {
 				compiler_error("expected number or const in struct, received %s: %s", get_token_str(type), token);
-				free(token);
-				free(name);
 				return;
 			}
 		}
@@ -462,30 +468,28 @@ void instruction_struct() {
 		extract(&member, &type);
 		if (type != tag) {
 			compiler_error("expected tag in struct, received %s", get_token_str(type));
-			free(name);
-			free(token);
 			return;
 		}
 		char *buf = malloc(strlen(name) + 1 + strlen(member) + 1);
 		sprintf(buf, "%s_%s", name, member);
 		// on stack with cast to avoid unneeded heap allocation and fre
-		char off_buf[32];
-		char *o = off_buf;
-		sprintf(off_buf, "%d", offset);
+		char *o = malloc(32);
+		sprintf(o, "%d", offset);
 		offset += strtol(token, NULL, 0);
-		compile_const(buf, &o, number);
-		free(buf);
-		free(token);
+		compile_const(buf, o, number);
+		// transfers ownership of buf and o to local_strings
+		sb_push(local_strings, buf);
+		sb_push(local_strings, o);
 	}
 	char *buf = malloc(strlen(name) + 8 + 1);
 	sprintf(buf, "%s_SIZEOF", name);
 	// on stack with cast to avoid unneeded heap allocation and fre
-	char off_buf[32];
-	char *o = off_buf;
-	sprintf(off_buf, "%d", offset);
-	compile_const(buf, &o, number);
-	free(buf);
-	free(name);
+	char *o = malloc(32);
+	sprintf(o, "%d", offset);
+	compile_const(buf, o, number);
+	// transfers ownership of buf and o to local_strings
+	sb_push(local_strings, buf);
+	sb_push(local_strings, o);
 }
 
 void instruction_table() {
@@ -497,7 +501,7 @@ void instruction_table() {
 	}
 	// transfers ownership of name to the vars array. It will be freed by clean_vars
 	compiler_backend->table_header(name);
-	sb_push(vars, name);
+	add_var(name);
 	while (true) {
 		char *token = NULL;
 		extract(&token, &type);
@@ -506,7 +510,6 @@ void instruction_table() {
 			break;
 		}
 		if (!strcmp(token, "endtable")) {
-			free(token);
 			break;
 		}
 		if (type == number) {
@@ -522,7 +525,6 @@ void instruction_table() {
 				}
 				if (fname != NULL) {
 					compiler_backend->table_value(fname);
-					free(fname);
 				}
 			}
 			else {
@@ -543,7 +545,6 @@ void instruction_table() {
 		else {
 			compiler_error("Expected const, number, string, or function pointer, received value of type %s", get_token_str(type));
 		}
-		free(token);
 	}
 	compiler_backend->table_finish();
 }
@@ -557,9 +558,6 @@ void instruction_pointerof() {
 	}
 	else {
 		compiler_backend->stack(name);
-	}
-	if (name != NULL) {
-		free(name);
 	}
 }
 
@@ -632,7 +630,7 @@ void compile_keyc(char *token) {
 			return;
 		}
 		token = NULL;
-		lexer_extract(lexer, &token, NULL);
+		extract(&token, NULL);
 		if (token == NULL) {
 			compiler_error("error processing directive");
 			return;
@@ -644,7 +642,6 @@ void compile_keyc(char *token) {
 		else {
 			compiler_error("No directive found");
 		}
-		free(token);
 	}
 	else {
 		instruction_t *instruction = find_instruction(token);
@@ -702,8 +699,12 @@ void compile_word(char *token) {
 	if (instruction != NULL) {
 		instruction->handler();
 	}
-	else if (have_const(token)) {
+	else if (have_var(token)) {
 		compiler_backend->stack(token);
+	}
+	else if (have_const(token)) {
+		char *c = get_const(token);
+		compiler_backend->stack(c);
 	}
 	else if (have_auto(token)) {
 		compile_auto(token);
@@ -728,7 +729,7 @@ void compile_block(const char *end) {
 	char *token;
 	lexer_token_t type;
 	while (peek_type() != finished) {
-		lexer_extract(lexer, &token, &type);
+		extract(&token, &type);
 		if (end && !strcmp(token, end)) {
 			break;
 		}
@@ -749,7 +750,6 @@ void compile_block(const char *end) {
 				compiler_warning("Unhandled token type: %s", get_token_str(type));
 				break;
 		}
-		free(token);
 	}
 }
 
@@ -769,28 +769,33 @@ void startup() {
 	consts = NULL;
 	const_values = NULL;
 	vars = NULL;
+	local_strings = NULL;
 }
 
 void finish_up() {
+	if (current_map != NULL) {
+		free(current_map);
+	}
+	free(base_dir);
 	sb_free(compiled_data);
 	sb_free(compiled);
 	clean_autos();
 	// also takes care of consts
 	clean_vars();
-	free(current_file);
 	(*buffer)[--buffer_size] = 0;
+	optimizer_destroy(optimizer);
+	lexer_destroy(lexer);
+	free_flat_sb(local_strings);
 }
 
-char *read_file(const char *path) {
+char *read_file(char *path) {
 	FILE *f = fopen(path, "r");
 	if (f == NULL) {
-		compiler_error("opening source file %s", path);
+		compiler_error("Error opening source file %s", path);
 		return NULL;
 	}
-	if (current_file != NULL) {
-		free(current_file);
-	}
-	current_file = strdup(path);
+	current_file = path;
+	current_line = 0;
 	fseek(f, 0, SEEK_END);
 	long length = ftell(f);
 	rewind(f);
@@ -809,29 +814,52 @@ int compile(list_t *sources, const char *target, char **_buffer) {
 		print("Must pass in at least one source and a target file!");
 		return 1;
 	}
-	char *buf = read_file((const char *)(sources->items[0]));
+	{
+		char *path = strdup((char *)(sources->items[0]));
+		char *last_slash = rindex(path, '/');
+		if (last_slash) {
+			*last_slash = 0;
+			base_dir = path;
+		}
+		else {
+			base_dir = strdup(".");
+			free(path);
+		}
+	}
+	char *buf = read_file((char *)(sources->items[0]));
 	if (!buf) {
 		return 2;
 	}
 	lexer = lexer_new(buf);
+	optimizer = NULL;
 	free(buf);
 	for (int i = 1; i < sources->length; i++) {
 		const char *file_name = (const char *)(sources->items[i]);
-		char *buf = malloc(12 + strlen(file_name) + 1);
-		sprintf(buf, "#include \"%s\"\n", file_name);
-		lexer_insert(lexer, buf);
-		free(buf);
+		if (!strcmp(file_name, "-O")) {
+			optimizer = lexer_optimizer(lexer);
+		}
+		else {
+			char *buf = malloc(12 + strlen(file_name) + 1);
+			sprintf(buf, "#include \"%s\"\n", file_name);
+			lexer_insert(lexer, buf);
+			free(buf);
+		}
 	}
 	map_line();
 	compile_block(NULL);
-	lexer_destroy(lexer);
 	append_compiled("\n\n");
 	if (compiled_data != NULL) {
 		append_compiled(compiled_data);
 	}
-	print("Final compiled output: ");
-	print(compiled);
-	//~ puts(compiled);
+	FILE *destination = fopen(target, "w");
+	if (destination) {
+		fwrite(compiled, 1, strlen(compiled), destination);
+		fflush(destination);
+		fclose(destination);
+	}
+	else {
+		print("Error opening destination file for saving!");
+	}
 	finish_up();
 	return -1;
 }

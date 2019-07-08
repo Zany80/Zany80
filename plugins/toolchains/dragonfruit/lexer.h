@@ -5,7 +5,7 @@
 typedef struct lexer_t lexer_t;
 
 typedef enum {
-	keyc, error, string, number, tag, finished,
+	keyc, error, string, number, tag, finished, map,
 	TOKEN_COUNT
 } lexer_token_t;
 

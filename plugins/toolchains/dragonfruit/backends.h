@@ -1,6 +1,6 @@
 #pragma once
 
-#define INSTRUCTION_COUNT 5
+#define INSTRUCTION_COUNT 40
 #include "lexer.h"
 
 typedef struct auto_t auto_t;
@@ -41,11 +41,3 @@ typedef struct {
 } compiler_backend_t;
 
 extern compiler_backend_t limn;
-
-void print(const char *string);
-void append_compiled(const char *str);
-void append_data(const char *str);
-char * append_str(char *target, const char *str);
-lexer_token_t peek_type();
-void extract(char **token, lexer_token_t *type);
-void compile_block(const char *end);
