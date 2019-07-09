@@ -18,4 +18,5 @@ void lexer_insert(lexer_t *lexer, const char *str);
 char lexer_extract_char(lexer_t *lexer);
 void lexer_peek(lexer_t *lexer, char **token, lexer_token_t *type);
 void lexer_extract(lexer_t *lexer, char **token, lexer_token_t *type);
+void lexer_rewind(lexer_t *lexer, int count);
 void lexer_destroy(lexer_t *lexer);

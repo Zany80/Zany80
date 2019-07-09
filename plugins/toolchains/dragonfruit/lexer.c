@@ -33,7 +33,7 @@ char lexer_extract_char(lexer_t *lexer) {
 	char c = ring_buffer_read(lexer->buffer);
 	if (c == '\n' && current_file != NULL) {
 		char buf[16];
-		sprintf(buf, "%d", ++current_line);
+		sprintf(buf, "%d", current_line++);
 		// Check if there's already a map present - if so, just
 		// modify it instead of inserting new tokens.
 		int prev_index = lexer->current_index - 3;
@@ -227,6 +227,10 @@ void lexer_insert(lexer_t *lexer, const char *str) {
 		//~ printf("New token inserted at index %d, offset %d\n", lexer->current_index + offset, offset);
 	}
 	lexer->current_index = o_index;
+}
+
+void lexer_rewind(lexer_t *lexer, int count) {
+	lexer->current_index -= count;
 }
 
 void lexer_peek(lexer_t *lexer, char **token, lexer_token_t *type) {

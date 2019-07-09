@@ -43,6 +43,9 @@ void print(const char *string) {
 static char *compiled;
 // used for e.g. strings
 static char *compiled_data;
+// instead of a complicated, slow insert at the beginning of compiled, preamble
+// gets its own separate string.
+static char *preamble;
 
 static int current_str, current_branch, current_const;
 
@@ -129,15 +132,21 @@ void compile_map() {
 	assert(type == string);
 	extract(&line, &type);
 	assert(type == number);
-	current_map = malloc(8 + strlen(file) + strlen(line) + 1);
-	sprintf(current_map, ".map %s, %s\n", file, line);
+	current_map = malloc(10 + strlen(file) + strlen(line) + 1);
+	sprintf(current_map, "\n.map %s, %s\n\n", file, line);
+	current_file = file;
+	current_line = strtol(line, NULL, 0);
 }
 
 static lexer_t *lexer;
 
 void extract(char **token, lexer_token_t *type) {
+	static lexer_token_t dump;
+	if (type == NULL) {
+		type = &dump;
+	}
 	lexer_extract(lexer, token, type);
-	while (type != NULL && *type == map) {
+	while (*type == map) {
 		compile_map();
 		lexer_extract(lexer, token, type);
 	}
@@ -319,7 +328,10 @@ void instruction_asm() {
 	lexer_token_t type;
 	extract(&token, &type);
 	if (type == tag && !strcmp(token, "preamble")) {
-		compiler_warning("Preamble not yet supported");
+		preamble = append_str(preamble, "; preamble block\n");
+		extract(&token, &type);
+		preamble = append_str(preamble, token);
+		preamble = append_str(preamble, "\n");
 	}
 	else {
 		append_compiled("; asm block\n");
@@ -367,9 +379,9 @@ void instruction_if() {
 	compile_block(")");
 	compiler_backend->conditional_branch_equal(0, false_branch);
 	compile_block("end");
-	lexer_peek(lexer, &token, NULL);
+	lexer_token_t type;
+	extract(&token, &type);
 	if (token != NULL && !strcmp(token, "else")) {
-		extract(&token, NULL);
 		char exit_branch[32];
 		new_branch(exit_branch);
 		compiler_backend->unconditional_branch(exit_branch);
@@ -378,6 +390,7 @@ void instruction_if() {
 		compiler_backend->append_branch(exit_branch);
 	}
 	else {
+		lexer_rewind(lexer, 1);
 		compiler_backend->append_branch(false_branch);
 	}
 }
@@ -766,6 +779,7 @@ void startup() {
 	error_count = 0;
 	compiled = NULL;
 	compiled_data = NULL;
+	preamble = NULL;
 	current_str = current_branch = current_const = 0;
 	auto_names = NULL;
 	autos = NULL;
@@ -857,9 +871,14 @@ int compile(list_t *sources, const char *target, char **_buffer) {
 	append_compiled("\n\n");
 	FILE *destination = fopen(target, "w");
 	if (destination) {
+		if (preamble != NULL) {
+			fwrite(preamble, 1, sb_count(preamble), destination);
+			fflush(destination);
+		}
 		fwrite(compiled, 1, sb_count(compiled), destination);
 		if (compiled_data != NULL) {
 			fwrite(compiled_data, 1, sb_count(compiled_data), destination);
+			fflush(destination);
 		}
 		fflush(destination);
 		fclose(destination);
