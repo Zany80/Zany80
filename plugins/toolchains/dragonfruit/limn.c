@@ -150,7 +150,7 @@ static void limn_right_shift() {
 }
 
 static void limn_left_shift() {
-	append_compiled("\tpopv r5, r0\n\tpopv r5, r1\n\tlsh r0, r0, r1\n\tpushv r5, r0\n");
+	append_compiled("\tpopv r5, r0\n\tpopv r5, r1\n\tlsh r0, r1, r0\n\tpushv r5, r0\n");
 }
 
 static void limn_dup() {
@@ -390,6 +390,7 @@ static void table_value(const char *value) {
 }
 
 static void table_finish() {
+	sb_push(table_buf, 0);
 	append_data(table_buf);
 	sb_free(table_buf);
 	table_buf = NULL;
