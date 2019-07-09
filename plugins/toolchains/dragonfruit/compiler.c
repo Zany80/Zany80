@@ -801,6 +801,7 @@ void finish_up() {
 		free(current_map);
 	}
 	free(base_dir);
+	sb_free(preamble);
 	sb_free(compiled_data);
 	sb_free(compiled);
 	clean_autos();
