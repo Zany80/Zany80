@@ -2,7 +2,6 @@ set(VERSION 2.0.0.0)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/scas_version.h)
 
 fips_begin_sharedlib(scas)
-fips_deps(zany80)
 fips_src(.)
 fips_include_directories(${CMAKE_CURRENT_BINARY_DIR})
 fips_end_sharedlib()

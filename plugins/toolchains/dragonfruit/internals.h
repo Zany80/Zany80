@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
-#include <ring_buffer.h>
-#include <3rd-party/scas/list.h>
+#include <Zany80/ring_buffer.h>
+#include <Zany80/3rd-party/scas/list.h>
 #include "lexer.h"
 
 void print(const char *string);

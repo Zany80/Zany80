@@ -1,7 +1,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 #include <stdbool.h>
-#include "3rd-party/scas/list.h"
+#include "list.h"
 #include "linker.h"
 #include "enums.h"
 

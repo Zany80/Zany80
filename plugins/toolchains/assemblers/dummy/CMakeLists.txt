@@ -1,7 +1,6 @@
 set(VERSION 1.0.0.0)
 
 fips_begin_sharedlib(dummy_assembler)
-fips_deps(zany80)
 fips_files(dummy.c)
 fips_end_sharedlib()
 

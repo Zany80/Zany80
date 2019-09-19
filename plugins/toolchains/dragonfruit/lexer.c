@@ -6,7 +6,7 @@
 #include <stretchy_buffer.h>
 #include <stdbool.h>
 
-#include <3rd-party/scas/stringop.h>
+#include <Zany80/3rd-party/scas/stringop.h>
 
 #include "lexer.h"
 #include "internals.h"

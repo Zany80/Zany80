@@ -1,5 +1,6 @@
 #include "stringop.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* Note: This returns 8 characters for trimmed_start per tab character. */
 char *strip_whitespace(char *_str, int *trimmed_start) {

@@ -1,6 +1,6 @@
 #ifndef OBJECT_H
 #define OBJECT_H
-#include "3rd-party/scas/list.h"
+#include "list.h"
 #include "expression.h"
 #include <stdint.h>
 #include <stdio.h>

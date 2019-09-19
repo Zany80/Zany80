@@ -1,6 +1,6 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
-#include "3rd-party/scas/list.h"
+#include "list.h"
 #include "stack.h"
 #include <stdint.h>
 #include <stdio.h>

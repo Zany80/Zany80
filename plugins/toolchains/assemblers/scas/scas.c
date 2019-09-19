@@ -6,7 +6,8 @@
 #include <Zany80/Plugin.h>
 
 // Override 
-#include <3rd-party/scas/list.h>
+#include "list.h"
+#include "stringop.h"
 
 #include "log.h"
 #include "runtime.h"

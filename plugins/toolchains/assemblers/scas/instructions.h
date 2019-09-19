@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "3rd-party/scas/list.h"
+#include "list.h"
 
 enum {
     IMM_TYPE_ABSOLUTE = 0,

@@ -1,6 +1,6 @@
 #ifndef LINKER_H
 #define LINKER_H
-#include "3rd-party/scas/list.h"
+#include "list.h"
 #include "objects.h"
 #include <stdio.h>
 #include <stdint.h>
