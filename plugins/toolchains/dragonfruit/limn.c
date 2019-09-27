@@ -276,9 +276,9 @@ static void limn_buffer() {
 	}
 	add_var(name);
 	append_data(name);
-	append_data(":\n\t.bytes ");
+	append_data(":\n\t.fill ");
 	append_data(size);
-	append_data(" 0x00\n");
+	append_data(", 0x00\n");
 }
 
 static void function_call(const char *name) {
@@ -338,25 +338,36 @@ static void append_branch(const char *name) {
 }
 
 static void append_string(const char *name, const char *str) {
-	append_data(name);
-	append_data(":\n\t.ds ");
+	// cleanup string
 	char buf[2];
 	buf[1] = 0;
+	append_data(name);
+	append_data(":\n\t.asciiz \"");
 	for (size_t i = 0; i < strlen(str); i++) {
-		if (str[i] == '\n') {
-			append_data("\n\t.db 0x0A\n\t.ds ");
-		}
-		else {
+		if (str[i] != '\n') {
 			buf[0] = str[i];
 			append_data(buf);
 		}
 	}
-	append_data("\n\t.db 0x00\n");
+	append_data("\"\n");
+	//~ char buf[2];
+	//~ buf[1] = 0;
+	//~ for (size_t i = 0; i < strlen(str); i++) {
+		//~ if (str[i] == '\n') {
+			//~ append_data("\n\t.db 0x0A\n\t.ds ");
+		//~ }
+		//~ else {
+			//~ buf[0] = str[i];
+			//~ append_data(buf);
+		//~ }
+	//~ }
+	//~ append_data("\n\t.db 0x00\n");
 }
 
 static void append_const(const char *name, const char *value) {
+	append_data(".equ ");
 	append_data(name);
-	append_data(" === ");
+	append_data(", ");
 	append_data(value);
 	append_data("\n");
 }

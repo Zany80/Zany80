@@ -132,8 +132,8 @@ void compile_map() {
 	assert(type == string);
 	extract(&line, &type);
 	assert(type == number);
-	current_map = malloc(10 + strlen(file) + strlen(line) + 1);
-	sprintf(current_map, "\n.map %s, %s\n\n", file, line);
+	current_map = malloc(26 + 10 + strlen(file) + strlen(line) + 1);
+	sprintf(current_map, "\n.map \"%s\", %s, \"(see original file!)\"\n\n", file, line);
 	current_file = file;
 	current_line = strtol(line, NULL, 0);
 }
