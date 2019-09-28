@@ -30,6 +30,32 @@ int strcasecmp(const char* s1, const char* s2)
 }
 #endif
 
+/* Note: This returns 8 characters for trimmed_start per tab character. */
+char *strip_whitespace(char *_str, int *trimmed_start) {
+	*trimmed_start = 0;
+	if (*_str == '\0')
+		return _str;
+	char *strold = _str;
+	while (*_str == ' ' || *_str == '\t') {
+		if (*_str == '\t') {
+			*trimmed_start += 8;
+		} else {
+			*trimmed_start += 1;
+		}
+		_str++;
+	}
+	char *str = malloc(strlen(_str) + 1);
+	strcpy(str, _str);
+	free(strold);
+	int i;
+	for (i = 0; str[i] != '\0'; ++i);
+	do {
+		i--;
+	} while (i >= 0 && (str[i] == ' ' || str[i] == '\t'));
+	str[i + 1] = '\0';
+	return str;
+}
+
 char *strip_comments(char *str) {
 	int in_string = 0, in_character = 0;
 	int i = 0;
@@ -51,8 +77,7 @@ char *strip_comments(char *str) {
 
 list_t *split_string(const char *str, const char *delims) {
 	list_t *res = create_list();
-	int i, j;
-	for (i = 0, j = 0; i < strlen(str) + 1; ++i) {
+	for (size_t i = 0, j = 0; i < strlen(str) + 1; ++i) {
 		if (strchr(delims, str[i]) || i == strlen(str)) {
 			if (i - j == 0) {
 				continue;
@@ -113,40 +138,41 @@ int unescape_string(char *string) {
 	for (i = 0; string[i]; ++i) {
 		if (string[i] == '\\') {
 			--len;
-			switch (string[i + 1]) {
+			switch (string[++i]) {
 			case '0':
-				string[i] = '\0';
+				string[i - 1] = '\0';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'a':
-				string[i] = '\a';
+				string[i - 1] = '\a';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'b':
-				string[i] = '\b';
+				string[i - 1] = '\b';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 't':
-				string[i] = '\t';
+				string[i - 1] = '\t';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'n':
-				string[i] = '\n';
+				string[i - 1] = '\n';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'v':
-				string[i] = '\v';
+				string[i - 1] = '\v';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'f':
-				string[i] = '\f';
+				string[i - 1] = '\f';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'r':
-				string[i] = '\r';
+				string[i - 1] = '\r';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			}
+			i--;
 		}
 	}
 	return len;
