@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "../internal/dllports.h"
 
@@ -26,6 +27,7 @@ ZANY_DLL void menu_destroy_all(menu_t *menu);
 ZANY_DLL window_t *window_create(const char *name);
 ZANY_DLL void window_min_size(window_t *window, float x, float y);
 ZANY_DLL void window_max_size(window_t *window, float x, float y);
+ZANY_DLL void window_auto_size(window_t *window, bool auto_size);
 ZANY_DLL void window_initial_size(window_t *window, float x, float y);
 ZANY_DLL void window_set_titlebar(window_t *window, bool titlebar);
 ZANY_DLL void window_set_pos(window_t *window, float x, float y);
@@ -47,11 +49,18 @@ ZANY_DLL widget_t *radio_create(const char *label, int *current, int index, void
 ZANY_DLL widget_t *label_create(const char *label);
 ZANY_DLL widget_t *editor_create(const char *label);
 ZANY_DLL widget_t *input_create(const char *label, size_t capacity, void (*handler)(widget_t *input));
+/// RGBA buffer, buf MUST have a size of at least width*height*4
+ZANY_DLL widget_t *image_create(uint8_t *buf, size_t width, size_t height);
+/// RGBA buffer, buf MUST have a size of at least width*height*4. buf must remain alive
+/// until this widget is destroyed!
+ZANY_DLL widget_t *framebuffer_create(uint8_t *buf, size_t width, size_t height);
+/// This SCALES the image, it does NOT affect framebuffer size!
+ZANY_DLL void image_set_size(widget_t *image, float w, float h);
 ZANY_DLL widget_t *customwidget_create(void (*render)());
 ZANY_DLL void widget_set_label(widget_t *widget, const char *label);
 ZANY_DLL void widget_set_visible(widget_t *widget, bool visible);
 ZANY_DLL void widget_destroy(widget_t *widget);
-ZANY_DLL void label_set_wrapped(widget_t *widget, bool wrapped);
+ZANY_DLL widget_t* label_set_wrapped(widget_t *widget, bool wrapped);
 ZANY_DLL void input_set_text(widget_t *widget, const char *text);
 /// Allocated via malloc, MUST BE free()d BY CALLER
 ZANY_DLL char *input_get_text(widget_t *widget);
@@ -64,6 +73,7 @@ ZANY_DLL void group_clear(widget_t *group, bool f);
 ZANY_DLL void group_setorientation(widget_t *group, group_orientation_t orientation);
 
 ZANY_DLL widget_t *submenu_create(menu_t *menu);
+ZANY_DLL void submenu_set_collapsed(widget_t *widget, bool collapsed);
 
 ZANY_DLL void render_window(window_t *window);
 

@@ -59,10 +59,6 @@ uint8_t read_ram_board(limn_t *cpu, uint32_t address) {
     }
 }
 
-uint8_t read_rom(limn_t *cpu, uint32_t address) {
-    return address < cpu->rom->rom_size ? cpu->rom->buf[address] : -1;
-}
-
 uint8_t read_ram(limn_t *cpu, uint32_t address) {
     return cpu->ram[address];
 }
@@ -79,9 +75,6 @@ void LIMN_LOG(limn_t *cpu, zany_loglevel level, const char *format, ...) {
     char buf[1024];
 	vsprintf(buf, format, args);
 	va_end(args);
-    if (debuggerize) {
-		zany_log(level, "%s", buf);
-	}
     if (cpu && cpu->serial.write) {
         for (size_t i = 0; i < strlen(buf); i++) {
             cpu->serial.write(buf[i]);
@@ -103,19 +96,13 @@ void dump_backtrace(limn_t *cpu) {
 
 void serial_handler(limn_t *cpu, uint8_t command) {
     switch (command) {
-        case LIMN_SERIAL_WRITE:{
-			bool p_d = debuggerize;
-			debuggerize = true;
+        case LIMN_SERIAL_WRITE:
             ALLOWED "%c", cpu->serial.current_data);
-            debuggerize = p_d;}
             break;
-        case LIMN_SERIAL_READ:{
-            uint32_t value = 0xFFFF;
-            if (cpu->serial.read) {
-                value = cpu->serial.read();
-            }
-            cpu->serial.current_data = value & 0xFFFF;
-            }break;
+        case LIMN_SERIAL_READ:
+			cpu->serial.current_data = cpu->serial.read != NULL ? 
+				(cpu->serial.read() & 0xFFFF) : 0xFFFF;
+			break;
         default:
             LIMN_LOG(cpu,ZL_ERROR, "Serial controller received unknown command %d\n", command);
             break;
@@ -133,7 +120,7 @@ void write_serial(limn_t *cpu, uint32_t address, uint8_t value) {
             cpu->serial.current_data = value;
             break;
         default:
-            zany_log(ZL_DEBUG, "Write to unexpected address in serial chip\n");
+            //~ zany_log(ZL_DEBUG, "Write to unexpected address in serial chip: %8x = %2x\n", address, value);
             break;
     }
 }
@@ -148,16 +135,16 @@ uint8_t read_serial(limn_t *cpu, uint32_t address) {
     return 0;
 }
 
-uint8_t read_platboard(limn_t *cpu, uint32_t address) {
-    return address % 2 == 0 ? 1 : 0;
-}
+uint8_t read_platboard(limn_t *cpu, uint32_t address);
+void write_platboard(limn_t *cpu, uint32_t address,uint8_t value);
 
 uint8_t ignore_read(limn_t *cpu, uint32_t address) {
     return -1;
 }
 void ignore_write(limn_t *cpu, uint32_t address,uint8_t value) {}
 
-limn_bus_section_t attachments[7] = {
+#define ATTACHMENT_COUNT 6
+limn_bus_section_t attachments[ATTACHMENT_COUNT] = {
     {
         .start = 0,
         .end = LIMN_RAM_SIZE,
@@ -178,15 +165,9 @@ limn_bus_section_t attachments[7] = {
     },
     {
         .start = LIMN_PLATFORMBOARD,
-        .end = LIMN_PLATFORMBOARD + 3,
+        .end = LIMN_PLATFORMBOARD + 0x07FFFFFF,
         .read_byte = read_platboard,
-        .write_byte = ignore_write
-    },
-    {
-        .start = 0xC0000000,
-        .end = 0xFFFDFFFF,
-        .read_byte = ignore_read,
-        .write_byte = ignore_write
+        .write_byte = write_platboard
     },
     {
 		.start = 0x38000000,
@@ -195,26 +176,12 @@ limn_bus_section_t attachments[7] = {
 		.write_byte = ignore_write
 	},
     {
-        .start = 0xFFFE0000,
+        .start = 0xC0000000,
         .end = 0xFFFFFFFF,
-        .read_byte = read_rom,
+        .read_byte = ignore_read,
         .write_byte = ignore_write
     },
 };
-
-void limn_reset(limn_t *cpu) {
-    cpu->running = true;
-    cpu->p_running = false;
-    cpu->ticks = 0;
-    cpu->running_time = 0;
-    for (int i = 31; i < 42; i++) {
-        cpu->registers[i] = 0;
-    }
-    if (cpu->call_stack) {
-		sb_free(cpu->call_stack);
-	}
-    cpu->call_stack = NULL;
-}
 
 void limn_set_speed(limn_t *cpu, size_t speed) {
     cpu->speed = speed;
@@ -315,6 +282,22 @@ uint32_t pc_long(limn_t *cpu) {
     uint32_t l = read_long(cpu, cpu->registers[LIMN_PC]);
     cpu->registers[LIMN_PC] += 4;
     return l;
+}
+
+void limn_reset(limn_t *cpu) {
+    cpu->running = true;
+    cpu->p_running = false;
+    cpu->ticks = 0;
+    cpu->running_time = 0;
+    for (int i = 31; i < 42; i++) {
+        cpu->registers[i] = 0;
+    }
+    if (cpu->call_stack) {
+		sb_free(cpu->call_stack);
+	}
+    cpu->call_stack = NULL;
+	cpu->registers[LIMN_PC] = read_long(cpu, 0xFFFE0000);
+	LIMN_LOG(cpu, ZL_DEBUG, "Initial address: %.8lx\n", cpu->registers[LIMN_PC]);
 }
 
 const char *SR(int r) {
@@ -1095,7 +1078,7 @@ bool limn_cycle(limn_t *cpu) {
             break;
         }
         case 0x45:
-            LIMN_LOG(cpu, ZL_WARN, "CLI: Interrupts not yet implemented!\n");
+            //~ LIMN_LOG(cpu, ZL_WARN, "CLI: Interrupts not yet implemented!\n");
             break;
         case 0x4C: {
             // TODO: log
@@ -1153,13 +1136,10 @@ bool limn_cycle(limn_t *cpu) {
 			}
             break;
         }
-        case 0xF1: {
-			bool p_d = debuggerize;
-			debuggerize = true;
-            ALLOWED "%c", R(0));
-            debuggerize = p_d;
+        case 0xF1:
+			printf("%c", R(0));
+            //~ ALLOWED "%c", R(0));
 			break;
-		}
         default:
             LIMN_LOG(cpu,ZL_ERROR, "Unimplemented opcode: 0x%.2x / %c\n\tBreaking...\n", current_opcode, current_opcode);
             cpu->running = false;
@@ -1223,11 +1203,9 @@ limn_t *limn_create(limn_rom_t *rom) {
         l->serial.read = NULL;
         l->serial.write = NULL;
         l->attachments = attachments;
-        l->attachment_count = 7;
+        l->attachment_count = ATTACHMENT_COUNT;
         l->call_stack = NULL;
         limn_reset(l);
-        l->registers[LIMN_PC] = read_long(l, 0xFFFE0000);
-        LIMN_LOG(l, ZL_DEBUG, "Initial address: %.8lx\n", l->registers[LIMN_PC]);
     }
     else {
         LIMN_LOG(NULL, ZL_ERROR, "Attempt to create a VM without a valid ROM!\n");

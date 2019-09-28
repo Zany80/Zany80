@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-struct limn;
 typedef struct limn limn_t;
-struct limn_rom_t;
 typedef struct limn_rom_t limn_rom_t;
 
 #define Hz * 1

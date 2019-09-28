@@ -7,3 +7,4 @@ if(ZANY80_BUILD_UNUSED)
 endif()
 
 fips_add_subdirectory(limn)
+fips_add_subdirectory(z80cpp_core)

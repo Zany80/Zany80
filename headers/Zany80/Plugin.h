@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include <scas/list.h>
+#include <Zany80/3rd-party/scas/list.h>
 
 typedef uint32_t(*read_handler_t)();
 typedef void(*write_handler_t)(uint32_t);

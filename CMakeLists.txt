@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 set(FIPS_EMSCRIPTEN_USE_CWRAP ON CACHE BOOL "" FORCE)
 
 # Load in FIPS
-get_filename_component(FIPS_ROOT_DIR "./build/fips" ABSOLUTE)
+get_filename_component(FIPS_ROOT_DIR "../fips" ABSOLUTE)
 include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
 macro(configure_msvc_runtime)
@@ -49,9 +49,9 @@ endmacro()
 
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.1.0.0)
+project(Zany80 VERSION 0.1.1.0)
 set(VERSION_PREFIX "")
-set(VERSION_SUFFIX "-RC2")
+set(VERSION_SUFFIX "")
 
 # TODO: get this working on native Windows compilation
 # TODO: and also mingw cross-compilation
@@ -68,7 +68,7 @@ elseif(FIPS_OSX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -undefined dynamic_lookup")
 endif()
 
-fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/3rd-party" "${PROJECT_BINARY_DIR}")
+fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/Zany80/3rd-party" "${PROJECT_BINARY_DIR}")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
 fips_begin_app(zany80 cmdline)
@@ -91,6 +91,8 @@ if (ORYOL_OPENGL AND (FIPS_MACOS OR FIPS_WINDOWS OR FIPS_LINUX))
 	fips_files(glfw.cc)
 elseif(ORYOL_D3D11)
 	fips_files(d3d11.cc)
+elseif(FIPS_EMSCRIPTEN)
+    fips_files(emsc.cc)
 endif()
 fips_end_app()
 target_compile_definitions(zany80 PRIVATE ZANY_EXPORT=1)

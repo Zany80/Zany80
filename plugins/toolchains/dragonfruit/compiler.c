@@ -671,7 +671,7 @@ void compile_keyc(char *token) {
 			instruction->handler();
 		}
 		else {
-			compiler_warning("Unknown keyc received for processing");
+			compiler_warning("Unknown keyc received for processing: %s", token);
 		}
 	}
 }

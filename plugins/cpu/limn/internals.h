@@ -25,7 +25,7 @@ typedef uint32_t limn_register_t;
 #define LIMN_RAM_SIZE 1024 * 1024
 #define LIMN_RAM_SLOTCOUNT 0x1000000
 
-#define LIMN_PLATFORMBOARD 0xF8000800
+#define LIMN_PLATFORMBOARD 0xF8000000
 
 struct limn_rom_t {
     char *path;

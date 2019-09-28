@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include <scas/list.h>
+#include "3rd-party/scas/list.h"
 #include "internal/dllports.h"
 
 #include "API/graphics.h"

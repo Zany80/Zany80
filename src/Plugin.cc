@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <setjmp.h>
+#include <sys/stat.h>
 
 #include <scas/list.h>
 #include <scas/stringop.h>
@@ -19,7 +20,13 @@ list_t *plugins = nullptr;
 
 void invalid_plugin(const char *path, liblib::Library *invalid) {
 	if ((*invalid)["get_interface"]) {
-		fprintf(stderr, "Error loading plugin '%s' at path '%s'\n", ((plugin_t*(*)())((*invalid)["get_interface"]))()->name,path);
+        plugin_t *i = ((plugin_t*(*)())((*invalid)["get_interface"]))();
+        if (i) {
+            fprintf(stderr, "Error loading plugin '%s' at path '%s'\n", ((plugin_t*(*)())((*invalid)["get_interface"]))()->name,path);
+        }
+        else {
+            fprintf(stderr, "Error loading plugin at path '%s'\n", path);
+        }
 	}
 	else {
 		fprintf(stderr, "Error loading plugin at path '%s'\n", path);
@@ -43,7 +50,43 @@ Array<jmp_buf*> envs;
 // List of plugins that we are currently attempting to load
 Array<String> attempting;
 
+#if ORYOL_EMSCRIPTEN
+bool _load_plugin(const char *path);
 bool load_plugin(const char *path) {
+    if (path == NULL || strlen(path) == 0) {
+        return false;
+    }
+    static int lib_index = 0;
+    StringBuilder s(path);
+    #ifdef FIPS_WASM
+    s.Append(".wasm");
+    #else
+    s.Append(".js");
+    #endif
+    IO::Load(s.AsCStr(), [](IO::LoadResult res) {
+        mkdir("/plugins", S_IROTH | S_IWOTH | S_IXOTH);
+        StringBuilder local_path("/plugins/");
+        local_path.AppendFormat(32, "%d.so", lib_index++);
+        FILE *f = fopen(local_path.AsCStr(), "wb");
+        if (f) {
+            fwrite(res.Data.Data(), res.Data.Size(), 1, f);
+            fwrite("", 1, 1, f);
+            fflush(f);
+            fclose(f);
+            _load_plugin(local_path.AsCStr());
+        }
+    }, [](const URL& url, IOStatus::Code ioStatus) {
+        char buf[128];
+        snprintf(buf, 127, "Error preloading plugin %s!", url.AsCStr());
+		zany_report_error(buf);
+	});
+    return false;
+}
+
+bool _load_plugin(const char *path) {
+#else
+bool load_plugin(const char *path) {
+#endif
 	fprintf(stderr, "Attempting load of %s\n", path);
 	bool success = false;
 	attempting.Add(path);

@@ -1134,6 +1134,7 @@ struct directive directives[] = {
 	{ "rmb", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "rs", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "section", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "static", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "strs", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "strz", handle_asciiz, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "undef", handle_undef, DELIM_WHITESPACE },

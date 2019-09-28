@@ -16,8 +16,8 @@ public:
 	AppState::Code OnRunning();
 	AppState::Code OnCleanup();
 	void report_error(const char *errorMessage);
-private:
 	void ToggleFullscreen();
+private:
 	bool is_fullscreen;
 	bool show_debug_window, hub;
 	TimePoint tp;

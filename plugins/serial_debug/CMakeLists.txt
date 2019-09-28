@@ -1,7 +1,6 @@
 fips_begin_sharedlib(debug_port)
 fips_files(main.c)
 fips_include_directories(${CMAKE_CURRENT_BINARY_DIR})
-fips_deps(zany80)
 fips_end_sharedlib()
 
 set_target_properties(debug_port PROPERTIES PREFIX "")

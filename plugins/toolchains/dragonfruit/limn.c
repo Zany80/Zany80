@@ -348,6 +348,9 @@ static void append_string(const char *name, const char *str) {
 			buf[0] = str[i];
 			append_data(buf);
 		}
+		else {
+			append_data("\\n");
+		}
 	}
 	append_data("\"\n");
 	//~ char buf[2];

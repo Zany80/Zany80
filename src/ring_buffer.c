@@ -1,13 +1,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
-typedef struct {
+#include "Zany80/ring_buffer.h"
+
+struct ring_buffer_t {
 	size_t capacity;
 	char *buf;
 	char *begin;
 	size_t size;
-} ring_buffer_t;
+};
 
 static char *end(ring_buffer_t *buffer) {
 	char *e = buffer->begin + buffer->size;
@@ -38,7 +41,41 @@ size_t ring_buffer_available(ring_buffer_t *buffer) {
 	return buffer->size;
 }
 
+void ring_buffer_resize(ring_buffer_t *buf) {
+	char *new_buf = realloc(buf->buf, buf->capacity *= 2);
+	if (new_buf == NULL) {
+		fputs("[RingBuffer] Out of memory!\n", stderr);
+		exit(1);
+	}
+	buf->begin = buf->begin - buf->buf + new_buf;
+	buf->buf = new_buf;
+}
+
+void ring_buffer_prepend(ring_buffer_t *buf, char c) {
+	if (buf->size + 1 >= buf->capacity) {
+		ring_buffer_resize(buf);
+	}
+	buf->size++;
+	buf->begin--;
+	if (buf->begin < buf->buf) {
+		buf->begin += buf->capacity;
+	}
+	*buf->begin = c;
+}
+
+void ring_buffer_prepend_buf(ring_buffer_t *ringbuf, const char *buf, size_t length) {
+	size_t old_size;
+	char *old_contents = malloc(old_size = ring_buffer_available(ringbuf));
+	ring_buffer_read_buf(ringbuf, old_contents, old_size);
+	ring_buffer_append(ringbuf, buf, length);
+	ring_buffer_append(ringbuf, old_contents, old_size);
+	free(old_contents);
+}
+
 bool ring_buffer_append(ring_buffer_t *buf, const char *c, size_t length) {
+	if (length + buf->size >= buf->capacity) {
+		ring_buffer_resize(buf);
+	}
 	while (buf->size < buf->capacity && length > 0) {
 		*end(buf) = *c++;
 		buf->size++;
@@ -68,4 +105,8 @@ size_t ring_buffer_read_buf(ring_buffer_t *buffer, char *out, size_t length) {
 		r++;
 	}
 	return r;
+}
+
+char ring_buffer_peek(ring_buffer_t *buffer, int offset) {
+	return *(buffer->begin + offset);
 }

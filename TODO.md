@@ -9,11 +9,11 @@
 * Add version info to plugin interface
 * Documentation. Lots of it.
 * Re-do imGuiTextEditor fips fork to use a subproject for ease of upgrading
-* Non-debug display (32x20 character LCD)
 * PortableApps Windows version
 
 ## Slightly less short-term
 
+* Configurable performant static for console screen when no program is running
 * Lua plugin wrapper
 * C support
 	* Lua support via eLua. Will need to add KCC support to eLua, then z80 support.
@@ -28,7 +28,7 @@
 * GPU plugin
 	* ~~Expose low-level graphics API (from Oryol) to CPU~~
 		* Revisit in the future, not worth it right now
-	* Simple pixel framebuffer
+	* ~~Simple pixel framebuffer~~ (simple CPU-controlled display)
 * Add z80e core
 * Use backtrace/stackwalker to find module names in logging functions
 
@@ -36,8 +36,7 @@
 
 * Replace Oryol with Sokol as primary backend, remove C++ dependency entirely
 	* Support alternative backends in addition to Sokol (SFML, SDL, etc)
-* Add other CPUs (e.g. 6809, AVR)
-* LIMNVM support?
+* Add other CPUs (e.g. 6809, AVR, 68k)
 * Sound support
 * KnightOS support
 * Write a dynamic recompiler for x86_64
@@ -58,3 +57,7 @@ with performance as KCC and Scas won't have to be installed for the builds)~~
 * ~~Remove dependency on C++~~
 	* ~~Rework plugin system to not use classes~~
 		* Plugins can now be in standard C, no C++ required whatsoever
+* ~~LIMNVM support?~~
+	* Custom fast DragonFruit compiler implemented
+	* LIMN1k CPU implemented, hooks up to serial display for simple I/O
+	* a3x functional

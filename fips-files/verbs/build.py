@@ -22,7 +22,10 @@ def run(fips_dir, proj_dir, args) :
         cfg_name = settings.get(proj_dir, 'config')
     project.build(fips_dir, proj_dir, cfg_name)
     deploy_dir = util.get_deploy_dir(fips_dir, util.get_project_name_from_dir(proj_dir), cfg_name)
-    makedirs('{}/plugins'.format(deploy_dir), exist_ok = True)
+    try:
+        makedirs('{}/plugins'.format(deploy_dir))
+    except OSError:
+        pass
     plugin_extension = None
     if 'emsc' in cfg_name:
         plugin_extension = 'js'
@@ -37,10 +40,16 @@ def run(fips_dir, proj_dir, args) :
             name = basename(i)
             log.info(log.YELLOW + 'Copying {} into {}/plugins/'.format(i, deploy_dir) + log.DEF)
             copy(i, '{}/plugins/{}'.format(deploy_dir,name))
-    makedirs('{}/data'.format(deploy_dir), exist_ok = True)
-    makedirs('{}/lib'.format(deploy_dir), exist_ok = True)
-    log.info(log.YELLOW + 'Copying {}/misc/stdlib.o into {}/lib/'.format(proj_dir, deploy_dir) + log.DEF)
-    copy('{}/misc/stdlib.o'.format(proj_dir), '{}/lib/stdlib.o'.format(deploy_dir))
+    try:
+        makedirs('{}/data'.format(deploy_dir))
+    except OSError:
+        pass
+    # ~ try:
+        # ~ makedirs('{}/lib'.format(deploy_dir))
+    # ~ except OSError:
+        # ~ pass
+    # ~ log.info(log.YELLOW + 'Copying {}/misc/stdlib.o into {}/lib/'.format(proj_dir, deploy_dir) + log.DEF)
+    # ~ copy('{}/misc/stdlib.o'.format(proj_dir), '{}/lib/stdlib.o'.format(deploy_dir))
 
 #-------------------------------------------------------------------------------
 def help() :

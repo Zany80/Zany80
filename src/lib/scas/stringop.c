@@ -113,37 +113,37 @@ int unescape_string(char *string) {
 	for (i = 0; string[i]; ++i) {
 		if (string[i] == '\\') {
 			--len;
-			switch (string[++i]) {
+			switch (string[i + 1]) {
 			case '0':
-				string[i - 1] = '\0';
+				string[i] = '\0';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'a':
-				string[i - 1] = '\a';
+				string[i] = '\a';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'b':
-				string[i - 1] = '\b';
+				string[i] = '\b';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 't':
-				string[i - 1] = '\t';
+				string[i] = '\t';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'n':
-				string[i - 1] = '\n';
+				string[i] = '\n';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'v':
-				string[i - 1] = '\v';
+				string[i] = '\v';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'f':
-				string[i - 1] = '\f';
+				string[i] = '\f';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			case 'r':
-				string[i - 1] = '\r';
+				string[i] = '\r';
 				memmove(string + i, string + i + 1, len - i);
 				break;
 			}

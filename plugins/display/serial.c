@@ -1,8 +1,8 @@
 #include <Zany80/Plugin.h>
 #include <Zany80/API/graphics.h>
 #include <string.h>
-#include <3rd-party/scas/stringop.h>
-#include "ring_buffer.h"
+#include <Zany80/3rd-party/scas/stringop.h>
+#include <Zany80/ring_buffer.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -138,9 +138,9 @@ void input_handler(widget_t *input) {
 
 PLUGIN_EXPORT void init() {
 	window = window_create("Serial Monitor");
-	// Window starts at 300x200, minimal size of 200x160
 	window_min_size(window, 200, 160);
-	window_initial_size(window, 300, 200);
+	window_set_pos(window, 0, 20);
+	window_initial_size(window, 450, 700);
 	menu = menu_create("Control");
 	menu_append(menu, menuitem_create("Clear", clear));
 	window_append_menu(window, menu);
