@@ -1,8 +1,6 @@
-#include <scas/list.h>
-#include <scas/stringop.h>
-
-#include <Zany80/Plugin.h>
-#include <Zany80/Zany80.h>
+#include <SIMPLE/Plugin.h>
+#include <SIMPLE/API.h>
+#include <Zany80.h>
 
 #include <Gfx/Gfx.h>
 #include <IMUI/IMUI.h>
@@ -16,7 +14,6 @@
 #include <LocalFS/LocalFileSystem.h>
 #endif
 
-#include <Zany80/API.h>
 #include <sstream>
 
 #include <config.h>
@@ -163,24 +160,6 @@ AppState::Code Zany80::OnInit() {
     inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
-	//~ load_plugin("plugins:limn");
-	//~ load_plugin("plugins:display");
-	//~ load_plugin("plugins:dragonfruit");
-    IO::Load("root:plugins.txt", [](IO::LoadResult res) {
-        char *buf = new char[res.Data.Size() + 1];
-        strncpy(buf, (char*)res.Data.Data(), res.Data.Size());
-        buf[res.Data.Size()] = 0;
-        char *t = strtok(buf, "\r\n");
-        while (t) {
-            if (strlen(t) && t[0] != '#') {
-                load_plugin(t);
-            }
-            t = strtok(NULL, "\r\n");
-        }
-        delete[] buf;
-	}, [](const URL& url, IOStatus::Code ioStatus) {
-		zany_report_error("Error loading plugins.txt!");
-	});
 	this->tp = Clock::Now();
 	return App::OnInit();
 }
@@ -215,109 +194,7 @@ AppState::Code Zany80::OnRunning() {
 		}
 		ImGui::End();
 	}
-	if (this->hub) {
-		static bool show_loaded_plugins = true;
-		static bool show_available_plugins = true;
-		ImGui::SetNextWindowSizeConstraints(ImVec2(100,50), ImVec2(FLT_MAX, FLT_MAX));
-		ImGui::SetNextWindowPos(ImVec2(400,300), ImGuiCond_FirstUseEver);
-		ImGui::Begin("Plugin Hub", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar);
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("View")) {
-				ImGui::Checkbox("Show loaded plugins", &show_loaded_plugins);
-				ImGui::Checkbox("Show available plugins", &show_available_plugins);
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
-		}
-		if (show_loaded_plugins) {
-			constexpr const char *listed_tags[] = {
-				"CPU", "Perpetual", "Shell", "z80", "Toolchain"
-			};
-			ImGui::Text("Plugins");
-			list_t *plugins = get_all_plugins();
-			for (int i = 0; i < plugins->length; i++) {
-				plugin_t *plugin = (plugin_t*)(plugins->items[i]);
-                if (plugin->version) {
-                    ImGui::Text("\t%s (%d.%d.%d/%s)", plugin->name, plugin->version->major, plugin->version->minor, plugin->version->patch, plugin->version->str);
-                }
-                else {
-                    ImGui::Text("\t%s", plugin->name);
-                }
-				StringBuilder features;
-				bool any = false;
-				for (const char *tag : listed_tags) {
-					if (plugin->supports(tag)) {
-						features.AppendFormat(32, "%s, ", tag);
-						any = true;
-					}
-				}
-				if (any) {
-					features.PopBack();
-					features.PopBack();
-					ImGui::Text("\t\tKnown features: %s", features.AsCStr());
-				}
-				if (plugin->supports("Shell")) {
-					//~ Array<String> commands = dynamic_cast<ShellPlugin*>(plugins.ValueAtIndex(i))->getCommands();
-					//~ StringBuilder c;
-					//~ for (String _c : commands)
-						//~ c.AppendFormat(512, "%s ", _c.AsCStr());
-					//~ if (c.Length()) {
-						//~ c.PopBack();
-						//~ ImGui::Text("\t\t\tShell Commands: %s", c.AsCStr());
-					//~ }
-					//~ ImGui::Text("\t\tSend a command to the shell: ");
-					//~ static char buf[128];
-					//~ if (ImGui::InputText("", buf, 128, ImGuiInputTextFlags_EnterReturnsTrue)) {
-						//~ dynamic_cast<ShellPlugin*>(plugins.ValueAtIndex(i))->execute(buf);
-						//~ strcpy(buf, "");
-					//~ }
-				}
-				if (plugin->supports("CPU")) {
-					list_t *registers;
-					if (plugin->cpu->get_registers && (registers = plugin->cpu->get_registers())) {
-						ImGui::Text("\t\t\tRegisters:");
-						int per_line = 1;
-						for (int i = 5; i > 1; i--) {
-							if (registers->length % i == 0) {
-								per_line = i;
-								break;
-							}
-						}
-						StringBuilder line("\t\t\t\t");
-						for (int i = 0; i < registers->length; i++) {
-							register_value_t *reg = (register_value_t*)registers->items[i];
-							line.AppendFormat(32, "%s = %u (%x),", reg->name, reg->value, reg->value);
-							if (i % per_line == per_line - 1) {
-								ImGui::Text("%s", line.AsCStr());
-								line.Set("\t\t\t\t");
-							}
-						}
-						list_free(registers);
-					}
-					else {
-						ImGui::Text("\t\t\tThis CPU does not expose its registers");
-					}
-				}
-				if (plugin->supports("Toolchain")) {
-					//~ ImGui::Text("\t\t\tTransforms:");
-					//~ Map<String, Array<String>> transforms = dynamic_cast<ToolchainPlugin*>(plugins.ValueAtIndex(i))->supportedTransforms();
-					//~ for (int i = 0; i < transforms.Size(); i++) {
-						//~ StringBuilder line("\t\t\t\t");
-						//~ line.Append(transforms.KeyAtIndex(i));
-						//~ line.Append(" -> ");
-						//~ for (String s : transforms.ValueAtIndex(i)) {
-							//~ line.Append(s);
-							//~ line.Append(", ");
-						//~ }
-						//~ ImGui::Text("%s", line.GetSubString(0, line.Length() - 2).AsCStr());
-					//~ }
-				}
-			}
-			list_free(plugins);
-		}
-		ImGui::End();
-	}
-	list_t *perpetuals = get_plugins("Perpetual");
+	list_t *perpetuals = h_get_plugins("Perpetual");
 	list_foreach(perpetuals, [](void *plugin) {
 		((plugin_t*)plugin)->perpetual->frame(delta.AsSeconds());
 	});
@@ -351,12 +228,12 @@ AppState::Code Zany80::OnCleanup() {
 }
 
 #if _DEBUG
-static zany_loglevel current_level = ZL_DEBUG;
+static int current_level = SL_DEBUG;
 #else
-static zany_loglevel current_level = ZL_INFO;
+static int current_level = SL_INFO;
 #endif
 
-void zany_log(zany_loglevel level, const char *format, ...) {
+void simple_log(int level, const char *format, ...) {
 	if (level < current_level) {
 		return;
 	}
@@ -367,13 +244,13 @@ void zany_log(zany_loglevel level, const char *format, ...) {
 	va_end(args);
 }
 
-char *zany_root_folder() {
+char *simple_root_folder() {
 	StringBuilder s = IO::ResolveAssigns("root:");
 	if (s.GetSubString(0, 4) == "file")
 		s.Set(s.GetSubString(8, EndOfString));
 	return strdup(s.AsCStr());
 }
 
-double s_zany_elapsed() {
+double s_simple_elapsed() {
 	return Clock::Since(start).AsSeconds();
 }

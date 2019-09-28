@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <Zany80/internal/dllports.h>
 
-ZANY_DLL list_t *zany_read_directory(const char *path) {
+ZANY_DLL list_t *simple_read_directory(const char *path) {
 	WIN32_FIND_DATA data;
 	char *full_path = malloc(strlen(path) + 3);
 	strcpy(full_path, path);

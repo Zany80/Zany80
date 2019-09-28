@@ -4,12 +4,14 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 
+extern "C" {
 #include <scas/list.h>
 #include <scas/stringop.h>
+}
 
 #include <liblib/liblib.hpp>
-#include <Zany80/API.h>
-#include <Zany80/Plugin.h>
+#include <SIMPLE/API.h>
+#include <SIMPLE/Plugin.h>
 
 #include <Core/Containers/Array.h>
 #include <Core/Containers/Map.h>
@@ -147,14 +149,14 @@ void unload_all_plugins() {
 	}
 }
 
-list_t *get_all_plugins() {
+list_t *h_get_all_plugins() {
 	list_t *p = create_list();
 	if (plugins != nullptr)
 		list_cat(p, plugins);
 	return p;
 }
 
-list_t *get_plugins(const char *type) {
+list_t *h_get_plugins(const char *type) {
 	if (plugins == nullptr)
 		return nullptr;
 	list_t *found = create_list();
@@ -178,7 +180,7 @@ plugin_t *require_plugin(const char *type) {
 	}
 	// Try to load
 	String uri = IO::ResolveAssigns("plugins:");
-	list_t *libraries = zany_read_directory(uri.AsCStr() + 8);
+	list_t *libraries = simple_read_directory(uri.AsCStr() + 8);
 	plugin_t *plugin;
 	bool loaded = false;
 	for (int i = 0; i < libraries->length; i++) {

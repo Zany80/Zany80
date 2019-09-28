@@ -70,11 +70,11 @@ typedef struct {
 	plugin_version_t *version;
 } plugin_t;
 
-ZANY_DLL list_t *get_plugins(const char *type);
-ZANY_DLL list_t *get_all_plugins();
-ZANY_DLL plugin_t *require_plugin(const char *type);
-ZANY_DLL bool load_plugin(const char *path);
-ZANY_DLL void unload_plugin(plugin_t *plugin);
+SIMPLE_DLL list_t *h_get_plugins(const char *type);
+SIMPLE_DLL list_t *h_get_all_plugins();
+SIMPLE_DLL plugin_t *require_plugin(const char *type);
+SIMPLE_DLL bool load_plugin(const char *path);
+SIMPLE_DLL void unload_plugin(plugin_t *plugin);
 
 #ifdef __cplusplus
 }

@@ -1,10 +1,10 @@
 #include <dirent.h>
 #include <string.h>
-#include <Zany80/3rd-party/scas/list.h>
+#include <scas/list.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-list_t *zany_read_directory(const char *path) {
+list_t *simple_read_directory(const char *path) {
 	DIR *dir = opendir(path);
 	list_t *contents = NULL;
 	if (dir != NULL) {

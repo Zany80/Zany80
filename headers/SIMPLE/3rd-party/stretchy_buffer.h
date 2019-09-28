@@ -208,7 +208,7 @@
 #ifdef __cplusplus
 extern "C"
 #endif
-ZANY_DLL void * stb__sbgrowf(void *arr, int increment, int itemsize);
+SIMPLE_DLL void * stb__sbgrowf(void *arr, int increment, int itemsize);
 #endif // STB_STRETCHY_BUFFER_H_INCLUDED
 
 

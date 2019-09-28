@@ -1,14 +1,14 @@
 #pragma once
 
 #ifdef _WIN32
-#ifdef ZANY_EXPORT
-#define ZANY_DLL __declspec(dllexport)
+#ifdef SIMPLE_EXPORT
+#define SIMPLE_DLL __declspec(dllexport)
 #else
-#define ZANY_DLL __declspec(dllimport)
+#define SIMPLE_DLL __declspec(dllimport)
 #endif
 #define PLUGIN_EXPORT __declspec(dllexport)
 #else
-#define ZANY_DLL
+#define SIMPLE_DLL
 #ifdef ORYOL_EMSCRIPTEN
 #include <emscripten.h>
 #define PLUGIN_EXPORT EMSCRIPTEN_KEEPALIVE

@@ -9,7 +9,7 @@ include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 macro(configure_msvc_runtime)
   if(MSVC)
 
-    # Default to statically-linked runtime.
+    # Default to dynamically-linked runtime.
     if("${MSVC_RUNTIME}" STREQUAL "")
       set(MSVC_RUNTIME "dynamic")
     endif()
@@ -49,7 +49,7 @@ endmacro()
 
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.1.1.0)
+project(Zany80 VERSION 0.1.2.0)
 set(VERSION_PREFIX "")
 set(VERSION_SUFFIX "")
 
@@ -68,7 +68,7 @@ elseif(FIPS_OSX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -undefined dynamic_lookup")
 endif()
 
-fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/Zany80/3rd-party" "${PROJECT_BINARY_DIR}")
+fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/SIMPLE/3rd-party" "${PROJECT_BINARY_DIR}")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
 fips_begin_app(zany80 cmdline)
@@ -98,7 +98,13 @@ fips_end_app()
 target_compile_definitions(zany80 PRIVATE ZANY_EXPORT=1)
 set_property(TARGET zany80 PROPERTY ENABLE_EXPORTS TRUE)
 
-fips_add_subdirectory(plugins)
+if(MSVC)
+  target_compile_options(zany80 PRIVATE /W4 /WX)
+else()
+  target_compile_options(zany80 PRIVATE -Wall -Wextra -Werror)
+endif()
+
+#~ fips_add_subdirectory(plugins)
 
 fips_finish()
 
