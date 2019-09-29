@@ -1,13 +1,13 @@
-#include <Zany80/Zany80.h>
+#include <SIMPLE.h>
+#include <SIMPLE/internal/glfw_icon.h>
 #include <GLFW/glfw3.h>
-#include <Zany80/internal/glfw_icon.h>
 #include <Gfx/private/displayMgr.h>
 
 void SetupIcon() {
 	glfwSetWindowIcon(Oryol::_priv::glfwDisplayMgr::glfwWindow, 1, &icon);
 }
 
-void Zany80::ToggleFullscreen() {
+void SIMPLE::ToggleFullscreen() {
 	static glm::vec4 windowed_position;
 	int monitor_count;
 	GLFWmonitor **monitors = glfwGetMonitors(&monitor_count);

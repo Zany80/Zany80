@@ -1,6 +1,6 @@
 #include <SIMPLE/Plugin.h>
 #include <SIMPLE/API.h>
-#include <Zany80.h>
+#include <SIMPLE.h>
 
 #include <Gfx/Gfx.h>
 #include <IMUI/IMUI.h>
@@ -19,13 +19,9 @@
 #include <config.h>
 #include <liblib/liblib.hpp>
 
-//~ #include <scas/stringop.h>
+SIMPLE *zany;
 
-unsigned long plugin_instances;
-
-Zany80 *zany;
-
-OryolMain(Zany80);
+OryolMain(SIMPLE);
 
 Array<String> available_plugins;
 
@@ -37,7 +33,7 @@ extern "C" void zany_report_error(const char *error_message) {
 	zany->report_error(error_message);
 }
 
-void Zany80::report_error(const char *error) {
+void SIMPLE::report_error(const char *error) {
 	StringBuilder s(this->error);
 	if (s.Length())
 		s.Append('\n');
@@ -48,45 +44,18 @@ void Zany80::report_error(const char *error) {
 static TimePoint start;
 static menu_t *options_menu;
 
-Zany80::Zany80() {}
+SIMPLE::SIMPLE() {}
 
-AppState::Code Zany80::OnInit() {
+AppState::Code SIMPLE::OnInit() {
     this->is_fullscreen = false;
 	this->error = "";
 	this->show_debug_window = this->hub = false;
 	start = Clock::Now();
 	this->tp = start;
-    window_t *w = get_root();
     options_menu = menu_create("Options");
-    window_append_menu(w, options_menu);
+    window_append_menu(get_root(), options_menu);
     menu_append(options_menu, checkbox_create("Show Debug Window", &this->show_debug_window, NULL));
-    menu_append(options_menu, checkbox_create("Show Plugin Hub", &this->hub, NULL));
     menu_append(options_menu, checkbox_create("Toggle Fullscreen", &this->is_fullscreen, tf));
-	//~ if (ImGui::BeginMainMenuBar()) {
-		//~ if (ImGui::BeginMenu("Options")) {
-			//~ if (ImGui::BeginMenu("Set Log Level")) {
-				//~ ImGui::Text("Current: %d", (int)Log::GetLogLevel());
-				//~ if (ImGui::Button("Debug (All information)"))
-					//~ Log::SetLogLevel(Log::Level::Dbg);
-				//~ if (ImGui::Button("Info (Ignore debug info)"))
-					//~ Log::SetLogLevel(Log::Level::Info);
-				//~ if (ImGui::Button("Warn (Only show warnings and errors)"))
-					//~ Log::SetLogLevel(Log::Level::Warn);
-				//~ if (ImGui::Button("Error (Only show errors)"))
-					//~ Log::SetLogLevel(Log::Level::Error);
-				//~ if (ImGui::Button("Mute (Surpress all logging)"))
-					//~ Log::SetLogLevel(Log::Level::None);
-				//~ ImGui::EndMenu();
-			//~ }
-			//~ ImGui::Checkbox("Show Debug Window", &this->show_debug_window);
-			//~ ImGui::Checkbox("Show Plugin Hub", &this->hub);
-			//~ if (ImGui::Checkbox("Fullscreen Mode", &this->is_fullscreen))
-				//~ this->ToggleFullscreen();
-			//~ ImGui::EndMenu();
-		//~ }
-		//~ ImGui::EndMainMenuBar();
-	//~ }
-	plugin_instances = 0;
 	zany = this;
 	IOSetup ioSetup;
 	GfxSetup gfxSetup = GfxSetup::WindowMSAA4(800, 600, "SIMPLE Platform (Native Edition) v" PROJECT_VERSION);
@@ -121,35 +90,16 @@ AppState::Code Zany80::OnInit() {
 #elif ORYOL_EMSCRIPTEN
 #ifdef FIPS_EMSCRIPTEN_LOCALIZE
 	IO::SetAssign("root:", "http://localhost:8000/");
-	IO::SetAssign("lib:", "/");
 #elif FIPS_EMSCRIPTEN_USE_WASM
 	IO::SetAssign("root:", "https://zany80.github.io/native/wasm/");
-	IO::SetAssign("lib:", "/native/wasm/");
 #else
 	IO::SetAssign("root:", "https://zany80.github.io/native/emscripten/");
-	IO::SetAssign("lib:", "/lib/");
 #endif
 #endif
 	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
 #ifdef ORYOL_EMSCRIPTEN
     IO::SetAssign("root:", "https://pixelherodev.github.io/asl_build/");
-	// Preload stdlib.o
-	//~ IO::Load("root:stdlib.o", [](IO::LoadResult res) {
-		 //~ mkdir("/lib", 0700);
-		 //~ FILE *file = fopen("/lib/stdlib.o", "w");
-		 //~ if (file) {
-			 //~ fwrite(res.Data.Data(), 1, res.Data.Size(), file);
-			 //~ fflush(file);
-			 //~ fclose(file);
-			 //~ puts("stdlib.o preloaded");
-		 //~ }
-		 //~ else {
-	 		//~ ::zany_report_error("Error opening /lib/stdlib.o for writing!");
-		 //~ }
-	//~ }, [](const URL& url, IOStatus::Code ioStatus) {
-		//~ ::zany_report_error("Error loading stdlib!");
-	//~ });
 #endif
 	Log::Dbg("Application URL: %s\n", IO::ResolveAssigns("root:").AsCStr());
 	Log::Dbg("Plugin URL: %s\n", IO::ResolveAssigns("plugins:").AsCStr());
@@ -166,7 +116,7 @@ AppState::Code Zany80::OnInit() {
 
 static Duration delta;
 
-AppState::Code Zany80::OnRunning() {
+AppState::Code SIMPLE::OnRunning() {
 	delta = Clock::LapTime(this->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
@@ -174,7 +124,7 @@ AppState::Code Zany80::OnRunning() {
 	if (this->show_debug_window) {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
-		ImGui::Text("Zany80 version: " PROJECT_VERSION);
+		ImGui::Text("SIMPLE version: " PROJECT_VERSION);
 		ImGui::Text("Framerate: %.1f", 
 		//~ ImGui::GetIO().Framerate > 60 ? 60 : 
 				ImGui::GetIO().Framerate);
@@ -215,7 +165,7 @@ AppState::Code Zany80::OnRunning() {
 
 void unload_all_plugins();
 
-AppState::Code Zany80::OnCleanup() {
+AppState::Code SIMPLE::OnCleanup() {
 	unload_all_plugins();
     menu_destroy_all(options_menu);
     menu_destroy(options_menu);

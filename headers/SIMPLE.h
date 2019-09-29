@@ -9,9 +9,9 @@
 
 using namespace Oryol;
 
-class Zany80 : public App {
+class SIMPLE : public App {
 public:
-	Zany80();
+	SIMPLE();
 	AppState::Code OnInit();
 	AppState::Code OnRunning();
 	AppState::Code OnCleanup();
@@ -23,6 +23,6 @@ private:
 	TimePoint tp;
 	String error;
 };
-extern Zany80 *zany;
+extern SIMPLE *zany;
 
 void SetupIcon();

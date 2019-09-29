@@ -71,7 +71,7 @@ endif()
 fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/headers/SIMPLE/3rd-party" "${PROJECT_BINARY_DIR}")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
-fips_begin_app(zany80 cmdline)
+fips_begin_app(SIMPLE cmdline)
 fips_deps(Gfx IMUI lib imguitexteditor)
 if (FIPS_EMSCRIPTEN)
 	fips_deps(HttpFS)
@@ -95,13 +95,13 @@ elseif(FIPS_EMSCRIPTEN)
     fips_files(emsc.cc)
 endif()
 fips_end_app()
-target_compile_definitions(zany80 PRIVATE ZANY_EXPORT=1)
-set_property(TARGET zany80 PROPERTY ENABLE_EXPORTS TRUE)
+target_compile_definitions(SIMPLE PRIVATE SIMPLE_EXPORT=1)
+set_property(TARGET SIMPLE PROPERTY ENABLE_EXPORTS TRUE)
 
 if(MSVC)
-  target_compile_options(zany80 PRIVATE /W4 /WX)
+  target_compile_options(SIMPLE PRIVATE /W4 /WX)
 else()
-  target_compile_options(zany80 PRIVATE -Wall -Wextra -Werror)
+  target_compile_options(SIMPLE PRIVATE -Wall -Wextra -Werror)
 endif()
 
 #~ fips_add_subdirectory(plugins)
@@ -110,17 +110,16 @@ fips_finish()
 
 if(FIPS_WINDOWS)
 	set(CPACK_GENERATOR "NSIS")
-	install (TARGETS zany80
+	install (TARGETS SIMPLE
 		RUNTIME DESTINATION .
 		LIBRARY DESTINATION .
 	)
-	install (FILES misc/stdlib.o DESTINATION lib)
 elseif(FIPS_LINUX)
 	set(CPACK_GENERATOR "TGZ;DEB")
 	install (FILES misc/zany80.desktop DESTINATION share/applications)
 	install (FILES misc/zany80.png DESTINATION share/pixmaps)
 	install (FILES misc/stdlib.o DESTINATION share/zany80/lib)
-	install (TARGETS zany80
+	install (TARGETS SIMPLE
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 	)
@@ -129,7 +128,7 @@ elseif (FIPS_OSX)
 	set(CPACK_BUNDLE_NAME "Zany80")
 	set(CPACK_BUNDLE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/misc/zany80.png")
 	set(CPACK_BUNDLE_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/misc/zany80.plist")
-	install(TARGETS zany80 DESTINATION .)
+	install(TARGETS SIMPLE DESTINATION .)
 endif()
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/headers/ DESTINATION include)
