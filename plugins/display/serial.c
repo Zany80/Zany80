@@ -1,10 +1,10 @@
-#include <Zany80/Plugin.h>
-#include <Zany80/API/graphics.h>
 #include <string.h>
-#include <Zany80/3rd-party/scas/stringop.h>
-#include <Zany80/ring_buffer.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <SIMPLE/Plugin.h>
+#include <SIMPLE/API/graphics.h>
+#include <SIMPLE/scas/stringop.h>
+#include <SIMPLE/ring_buffer.h>
 
 bool connected;
 plugin_t *cpu;
@@ -56,7 +56,7 @@ bool cpu_handler(int index) {
 		cpu->cpu->attach_output(1, output_handler);
 	}
 	else {
-		widget_set_label(output, "ERRORR!");
+		widget_set_label(output, "ERROR!");
 		return false;
 	}
 	clear();
@@ -76,7 +76,7 @@ void gen_radio_list(widget_t *group, list_t *list, int *current, void(*handler)(
 }
 
 void update_cpu() {
-	list_t *current_cpus = get_plugins("CPU");
+	list_t *current_cpus = h_get_plugins("CPU");
 	if (current_cpus == NULL) {
 		current_cpus = create_list();
 	}

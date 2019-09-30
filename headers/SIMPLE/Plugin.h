@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include <Zany80/3rd-party/scas/list.h>
+#include <SIMPLE/scas/list.h>
 
 typedef uint32_t(*read_handler_t)();
 typedef void(*write_handler_t)(uint32_t);
@@ -64,17 +64,51 @@ typedef struct {
 	void *library;
 	char *path;
 	bool (*supports)(const char *functionality);
+	plugin_version_t *version;
 	perpetual_plugin_t *perpetual;
 	cpu_plugin_t *cpu;
 	toolchain_plugin_t *toolchain;
-	plugin_version_t *version;
 } plugin_t;
 
 SIMPLE_DLL list_t *h_get_plugins(const char *type);
 SIMPLE_DLL list_t *h_get_all_plugins();
-SIMPLE_DLL plugin_t *require_plugin(const char *type);
-SIMPLE_DLL bool load_plugin(const char *path);
 SIMPLE_DLL void unload_plugin(plugin_t *plugin);
+// This function can't be reasonably called from any plugin - doing so would
+// result in itself being unloaded, and returning from this function would crash
+void unload_all_plugins();
+
+// Only the path is strictly mandatory! This allows for easy manual editing of
+// the config file, and makes it easier to use e.g. local plugins or avoid
+// updating
+typedef struct {
+	char *name;
+	char *path;
+	char *version;
+	// needed so that we know where to check for updates and where to direct bug
+	// reports, etc
+	char *repo;
+	// plugin-specific settings managed by SIMPLE. Stored as key1,value1,key2,
+	// value2,...keyn,valuen
+	char **settings;
+} plugin_descriptor_t;
+
+typedef struct plugin_config {
+	size_t known_plugins;
+	plugin_descriptor_t *plugins;
+} *plugin_config_t;
+
+// Explicitly *not* set with SIMPLE_DLL - on Windows, that means these cannot be
+// called from plugins; should probably find a way to accomplish the same under
+// Linux
+// Or, possibly, just allow plugins to add other plugins. There's not really
+// much harm that can be added from these functions alone; these are still
+// native plugins and as such capable of widespread damage, giving them the
+// ability to register other plugins is actually quite harmless.
+plugin_config_t config_load();
+void config_free(plugin_config_t c);
+void config_save(plugin_config_t c);
+void register_plugin(const char *const plugin_path, const char *const repo_path, const char *const version);
+void generate_plugin_manager();
 
 #ifdef __cplusplus
 }

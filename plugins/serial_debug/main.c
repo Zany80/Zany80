@@ -1,4 +1,4 @@
-#include <Zany80/Plugin.h>
+#include <SIMPLE/Plugin.h>
 #include <stdio.h>
 
 bool supports(const char *feature) {

@@ -1,10 +1,10 @@
-#include <direct.h>
 #include <string.h>
-#include <scas/list.h>
-#include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <Zany80/internal/dllports.h>
+#include <SIMPLE/scas/list.h>
+#include <SIMPLE/internal/dllports.h>
+#include <direct.h>
+#include <windows.h>
 
 ZANY_DLL list_t *simple_read_directory(const char *path) {
 	WIN32_FIND_DATA data;

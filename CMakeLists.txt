@@ -72,7 +72,7 @@ fips_include_directories("${PROJECT_SOURCE_DIR}/headers" "${PROJECT_SOURCE_DIR}/
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" "${PROJECT_BINARY_DIR}/config.h")
 fips_begin_app(SIMPLE cmdline)
-fips_deps(Gfx IMUI lib imguitexteditor)
+fips_deps(Gfx IMUI dl imguitexteditor git2)
 if (FIPS_EMSCRIPTEN)
 	fips_deps(HttpFS)
 	#~ simple_shell)
@@ -104,7 +104,7 @@ else()
   target_compile_options(SIMPLE PRIVATE -Wall -Wextra -Werror)
 endif()
 
-#~ fips_add_subdirectory(plugins)
+fips_add_subdirectory(plugins)
 
 fips_finish()
 

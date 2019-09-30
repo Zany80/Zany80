@@ -68,8 +68,7 @@ SIMPLE_DLL char *input_get_text(widget_t *widget);
 SIMPLE_DLL widget_t *group_create();
 SIMPLE_DLL void group_add(widget_t *group, widget_t *widget);
 SIMPLE_DLL void group_remove(widget_t *group, widget_t *widget);
-/// If f is set, all widgets in the group are destroyed
-SIMPLE_DLL void group_clear(widget_t *group, bool f);
+SIMPLE_DLL void group_clear(widget_t *group, bool destroy_contained);
 SIMPLE_DLL void group_setorientation(widget_t *group, group_orientation_t orientation);
 
 SIMPLE_DLL widget_t *submenu_create(menu_t *menu);

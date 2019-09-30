@@ -18,3 +18,43 @@ void * stb__sbgrowf(void *arr, int increment, int itemsize) {
 	  exit(100);
    }
 }
+
+void sb_remove(void ***array, void *item) {
+    if (!(*array))
+        return;
+    void **new_array = NULL;
+    int c = sb_count(*array);
+    for (int i = 0; i < c; i++) {
+        if ((*array)[i] == item) {
+            for (int j = 0; j < i; j++) {
+                sb_push(new_array, (*array)[j]);
+            }
+            for (int j = i + 1; j < c; j++) {
+                sb_push(new_array, (*array)[j]);
+            }
+            sb_free(*array);
+            *array = new_array;
+            break;
+        }
+    }
+}
+
+void sb_remove_i(void ***array, int index) {
+    if (!(*array))
+        return;
+    void **new_array = NULL;
+    int c = sb_count(*array);
+    for (int i = 0; i < c; i++) {
+        if (i == index) {
+            for (int j = 0; j < i; j++) {
+                sb_push(new_array, (*array)[j]);
+            }
+            for (int j = i + 1; j < c; j++) {
+                sb_push(new_array, (*array)[j]);
+            }
+            sb_free(*array);
+            *array = new_array;
+            break;
+        }
+    }
+}

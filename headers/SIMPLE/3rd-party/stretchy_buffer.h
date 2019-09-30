@@ -206,9 +206,14 @@
 #include <stdlib.h>
 
 #ifdef __cplusplus
-extern "C"
+extern "C" {
 #endif
 SIMPLE_DLL void * stb__sbgrowf(void *arr, int increment, int itemsize);
+SIMPLE_DLL void sb_remove(void ***arr, void *item);
+SIMPLE_DLL void sb_remove_i(void ***arr, int index);
+#ifdef __cplusplus
+}
+#endif
 #endif // STB_STRETCHY_BUFFER_H_INCLUDED
 
 

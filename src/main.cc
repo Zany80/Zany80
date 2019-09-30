@@ -1,5 +1,6 @@
 #include <SIMPLE/Plugin.h>
 #include <SIMPLE/API.h>
+
 #include <SIMPLE.h>
 
 #include <Gfx/Gfx.h>
@@ -17,7 +18,8 @@
 #include <sstream>
 
 #include <config.h>
-#include <liblib/liblib.hpp>
+
+#include <git2.h>
 
 SIMPLE *zany;
 
@@ -29,7 +31,7 @@ static void tf() {
     zany->ToggleFullscreen();
 }
 
-extern "C" void zany_report_error(const char *error_message) {
+extern "C" void simple_report_error(const char *error_message) {
 	zany->report_error(error_message);
 }
 
@@ -43,7 +45,13 @@ void SIMPLE::report_error(const char *error) {
 
 static TimePoint start;
 static menu_t *options_menu;
+static window_t *plugin_manager;
+static widget_t *pm_group;
 
+extern "C"
+widget_t *get_plugin_manager() {
+	return pm_group;
+}
 SIMPLE::SIMPLE() {}
 
 AppState::Code SIMPLE::OnInit() {
@@ -111,16 +119,28 @@ AppState::Code SIMPLE::OnInit() {
 	Input::Setup(inputSetup);
 	IMUI::Setup();
 	this->tp = Clock::Now();
+	plugin_manager = window_create("Plugin Manager");
+	window_set_pos(plugin_manager, 0, 30);
+	window_min_size(plugin_manager, 200, 50);
+	window_auto_size(plugin_manager, true);
+	pm_group = group_create();
+	window_append(plugin_manager, pm_group);
+	generate_plugin_manager();
 	return App::OnInit();
 }
 
 static Duration delta;
 
+extern "C"
+void process_threads();
+
 AppState::Code SIMPLE::OnRunning() {
+	process_threads();
 	delta = Clock::LapTime(this->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
 	render_window(get_root());
+	render_window(plugin_manager);
 	if (this->show_debug_window) {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
@@ -163,12 +183,13 @@ AppState::Code SIMPLE::OnRunning() {
 	return Gfx::QuitRequested() ? AppState::Cleanup : AppState::Running;
 }
 
-void unload_all_plugins();
-
 AppState::Code SIMPLE::OnCleanup() {
 	unload_all_plugins();
     menu_destroy_all(options_menu);
     menu_destroy(options_menu);
+    group_clear(pm_group, true);
+    widget_destroy(pm_group);
+    window_destroy(plugin_manager);
     window_destroy(get_root());
 	IMUI::Discard();
 	Input::Discard();

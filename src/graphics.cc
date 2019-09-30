@@ -1,8 +1,8 @@
-#include <Zany80/API/graphics.h>
-#include "stretchy_buffer.h"
 #include <stdio.h>
 
-#include "Zany80/internal/graphics.h"
+#include "SIMPLE/API/graphics.h"
+#include "SIMPLE/3rd-party/stretchy_buffer.h"
+#include "SIMPLE/internal/graphics.h"
 
 #include <IMUI/IMUI.h>
 #include <Gfx/Gfx.h>

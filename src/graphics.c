@@ -1,9 +1,9 @@
-#include <Zany80/API/graphics.h>
-#include "stretchy_buffer.h"
 #include <stdio.h>
 #include <string.h>
 
-#include "Zany80/internal/graphics.h"
+#include "SIMPLE/API/graphics.h"
+#include "SIMPLE/3rd-party/stretchy_buffer.h"
+#include "SIMPLE/internal/graphics.h"
 
 static window_t root = {
     .widgets = NULL,
@@ -64,26 +64,6 @@ void window_append(window_t *window, widget_t *widget) {
 
 void window_append_menu(window_t *window, menu_t *menu) {
     sb_push(window->menus, menu);
-}
-
-static void sb_remove(void ***array, void *item) {
-    if (!(*array))
-        return;
-    void **new_array = NULL;
-    int c = sb_count(*array);
-    for (int i = 0; i < c; i++) {
-        if ((*array)[i] == item) {
-            for (int j = 0; j < i; j++) {
-                sb_push(new_array, (*array)[j]);
-            }
-            for (int j = i + 1; j < c; j++) {
-                sb_push(new_array, (*array)[j]);
-            }
-            sb_free(*array);
-            *array = new_array;
-            break;
-        }
-    }
 }
 
 void window_remove_menu(window_t *window, menu_t *menu) {

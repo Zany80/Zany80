@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "Zany80/ring_buffer.h"
+#include "SIMPLE/ring_buffer.h"
 
 struct ring_buffer_t {
 	size_t capacity;

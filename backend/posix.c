@@ -1,8 +1,8 @@
-#include <dirent.h>
 #include <string.h>
-#include <scas/list.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <SIMPLE/scas/list.h>
+#include <dirent.h>
 
 list_t *simple_read_directory(const char *path) {
 	DIR *dir = opendir(path);

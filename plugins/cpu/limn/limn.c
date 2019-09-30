@@ -4,16 +4,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <Zany80/API.h>
-#include <stretchy_buffer.h>
+#include <SIMPLE/API.h>
+#include <SIMPLE/3rd-party/stretchy_buffer.h>
 
 #define R(r) cpu->registers[r]
 #define KERNEL_MODE ((R(LIMN_RS) & 0x01) == 0)
 #define USER_MODE ((R(LIMN_RS) & 0x01) == 1)
 #define REG_ALLOWED(r) (r < 32 || KERNEL_MODE)
-#define FORBIDDEN cpu->running = false;LIMN_LOG(cpu, ZL_ERROR, "Access denied! Attempted: "
-#define ALLOWED LIMN_LOG(cpu, ZL_DEBUG,
-#define BUSERR ALLOWED "BUS ERROR!\n");dump_rom(cpu, "buserred.rom");LIMN_LOG(cpu, ZL_ERROR, "Opcode: %d\n\t",current_opcode);LIMN_LOG(cpu, ZL_DEBUG,"\n\n!!! BUSERR at %.8x !!!\n\n", address);dump_backtrace(cpu);
+#define FORBIDDEN cpu->running = false;LIMN_LOG(cpu, SL_ERROR, "Access denied! Attempted: "
+#define ALLOWED LIMN_LOG(cpu, SL_DEBUG,
+#define BUSERR ALLOWED "BUS ERROR!\n");dump_rom(cpu, "buserred.rom");LIMN_LOG(cpu, SL_ERROR, "Opcode: %d\n\t",current_opcode);LIMN_LOG(cpu, SL_DEBUG,"\n\n!!! BUSERR at %.8x !!!\n\n", address);dump_backtrace(cpu);
 #define CUR_STACK (KERNEL_MODE ? LIMN_SP : LIMN_USP)
 #define CALL(addr) {sb_push(cpu->call_stack, R(LIMN_PC));push(cpu, CUR_STACK, R(LIMN_PC));R(LIMN_PC) = addr;}
 #define BRANCH(condition, str) {\
@@ -69,7 +69,7 @@ void write_ram(limn_t *cpu, uint32_t address, uint8_t value) {
 
 static bool debuggerize = false;
 
-void LIMN_LOG(limn_t *cpu, zany_loglevel level, const char *format, ...) {
+void LIMN_LOG(limn_t *cpu, int level, const char *format, ...) {
 	va_list args;
 	va_start(args, format);
     char buf[1024];
@@ -104,7 +104,7 @@ void serial_handler(limn_t *cpu, uint8_t command) {
 				(cpu->serial.read() & 0xFFFF) : 0xFFFF;
 			break;
         default:
-            LIMN_LOG(cpu,ZL_ERROR, "Serial controller received unknown command %d\n", command);
+            LIMN_LOG(cpu, SL_ERROR, "Serial controller received unknown command %d\n", command);
             break;
     }
 }
@@ -120,7 +120,7 @@ void write_serial(limn_t *cpu, uint32_t address, uint8_t value) {
             cpu->serial.current_data = value;
             break;
         default:
-            //~ zany_log(ZL_DEBUG, "Write to unexpected address in serial chip: %8x = %2x\n", address, value);
+            //~ zany_log(SL_DEBUG, "Write to unexpected address in serial chip: %8x = %2x\n", address, value);
             break;
     }
 }
@@ -297,7 +297,7 @@ void limn_reset(limn_t *cpu) {
 	}
     cpu->call_stack = NULL;
 	cpu->registers[LIMN_PC] = read_long(cpu, 0xFFFE0000);
-	LIMN_LOG(cpu, ZL_DEBUG, "Initial address: %.8lx\n", cpu->registers[LIMN_PC]);
+	LIMN_LOG(cpu, SL_DEBUG, "Initial address: %.8lx\n", cpu->registers[LIMN_PC]);
 }
 
 const char *SR(int r) {
@@ -1078,7 +1078,7 @@ bool limn_cycle(limn_t *cpu) {
             break;
         }
         case 0x45:
-            //~ LIMN_LOG(cpu, ZL_WARN, "CLI: Interrupts not yet implemented!\n");
+            //~ LIMN_LOG(cpu, SL_WARN, "CLI: Interrupts not yet implemented!\n");
             break;
         case 0x4C: {
             // TODO: log
@@ -1141,7 +1141,7 @@ bool limn_cycle(limn_t *cpu) {
             //~ ALLOWED "%c", R(0));
 			break;
         default:
-            LIMN_LOG(cpu,ZL_ERROR, "Unimplemented opcode: 0x%.2x / %c\n\tBreaking...\n", current_opcode, current_opcode);
+            LIMN_LOG(cpu, SL_ERROR, "Unimplemented opcode: 0x%.2x / %c\n\tBreaking...\n", current_opcode, current_opcode);
             cpu->running = false;
             return false;
     }
@@ -1162,9 +1162,9 @@ void limn_execute(limn_t *cpu) {
     if (cpu->running) {
         if (!cpu->p_running) {
             cpu->p_running = true;
-            cpu->last_time = s_zany_elapsed();
+            cpu->last_time = s_simple_elapsed();
         }
-        double now = s_zany_elapsed();
+        double now = s_simple_elapsed();
         cpu->running_time += (now - cpu->last_time);
         size_t target_ticks = cpu->speed * cpu->running_time;
         if (target_ticks >= cpu->ticks) {
@@ -1208,7 +1208,7 @@ limn_t *limn_create(limn_rom_t *rom) {
         limn_reset(l);
     }
     else {
-        LIMN_LOG(NULL, ZL_ERROR, "Attempt to create a VM without a valid ROM!\n");
+        LIMN_LOG(NULL, SL_ERROR, "Attempt to create a VM without a valid ROM!\n");
     }
     return l;
 }

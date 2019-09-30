@@ -5,10 +5,10 @@ imports:
     git: https://github.com/floooh/oryol.git
   oryol-imgui:
     git: https://github.com/floooh/oryol-imgui.git
-  liblib:
-    git: https://github.com/pixelherodev/liblib.git
   imguicolortextedit:
     git: https://github.com/pixelherodev/ImGuiColorTextEdit
   z80cpp:
     git: https://github.com/pixelherodev/z80cpp
     branch: zany_active
+  rapidxml:
+    git: https://github.com/fips-libs/fips-rapidxml

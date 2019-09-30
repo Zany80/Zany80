@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <Zany80/Plugin.h>
-#include <Zany80/API/graphics.h>
+#include <SIMPLE/Plugin.h>
+#include <SIMPLE/API/graphics.h>
 
 limn_t *cpu;
 menu_t *menu;

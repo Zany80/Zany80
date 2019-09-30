@@ -1,5 +1,3 @@
-#include "scas/stringop.h"
-#include "scas/list.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -12,6 +10,8 @@
 #include <strings.h>
 #endif
 
+#include "SIMPLE/scas/stringop.h"
+#include "SIMPLE/scas/list.h"
 
 /* I'm fairly sure every windows toolchain
  * has this feature by now */
