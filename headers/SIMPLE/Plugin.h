@@ -58,11 +58,15 @@ typedef struct {
 } plugin_version_t;
 
 typedef struct {
-	const char *name;
 	// The host program can store ANY TYPE in library
 	// Plugins must not use it directly!
 	void *library;
+	// *should* contain path to library file, but that's not guaranteed. If the
+	// value is *changed*, then it's safe to use it (e.g. if you set path to 
+	// null by default, and it's not null, it's safe to use it as a path to the
+	// plugin)
 	char *path;
+	const char *name;
 	bool (*supports)(const char *functionality);
 	plugin_version_t *version;
 	perpetual_plugin_t *perpetual;

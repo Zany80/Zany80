@@ -1,8 +1,0 @@
-add_library(zany_old MODULE zany_old.cpp)
-set_target_properties(zany_old PROPERTIES PREFIX "../")
-target_include_directories(zany_old PRIVATE ../../include ${CMAKE_SOURCE_DIR}/include)
-if (WIN32)
-	install(TARGETS zany_old DESTINATION plugins/gpu)
-else()
-	install(TARGETS zany_old DESTINATION share/zany80/plugins/gpu)
-endif()

@@ -1,6 +1,0 @@
-#pragma once
-
-#define _str(x) #x
-#define str(x) _str(x)
-
-#cmakedefine PROJECT_VERSION str(@VERSION@)
