@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../internal/dllports.h"
+#include "internal/dllports.h"
 
 #ifdef __cplusplus
 extern "C" {

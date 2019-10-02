@@ -3,6 +3,7 @@
 #include "SIMPLE/3rd-party/stretchy_buffer.h"
 #include "SIMPLE/3rd-party/cfgpath.h"
 #include "SIMPLE/API.h"
+#include "SIMPLE/data.h"
 #include "SIMPLE/XML.h"
 #include "SIMPLE/Plugin.h"
 #include "SIMPLE/repository.h"
@@ -299,6 +300,14 @@ void repository_register(const char *const path, bool update) {
 			if (!any_installed && update) {
 				simple_report_error("Already up to date!");
 			}
+			node_for_each(r, "DataFile", data, {
+				const char *name = node_get_attribute(data, "name");
+				const char *file = node_get_value(data);
+				char *full_path = malloc(strlen(path) + 1 + strlen(file) + 1);
+				sprintf(full_path, "%s/%s", path, file);
+				data_register(name, full_path, node_get_attribute(data, "version"));
+				free(full_path);
+			});
 		}
 		else {
 			simple_report_error("Error parsing manifest!");
