@@ -4,9 +4,12 @@
 extern "C" {
 #endif
 
-#include "SIMPLE/internal/dllports.h"
-#include "SIMPLE/API/graphics.h"
-#include "SIMPLE/scas/list.h"
+#include "internal/dllports.h"
+#include "data.h"
+#include "graphics.h"
+#include "XML.h"
+#include "scas/list.h"
+#include "scas/stringop.h"
 #include <stdbool.h>
 
 SIMPLE_DLL void simple_report_error(const char *message);

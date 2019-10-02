@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "SIMPLE/API/graphics.h"
+#include "SIMPLE/graphics.h"
 #include "SIMPLE/3rd-party/stretchy_buffer.h"
 #include "SIMPLE/internal/graphics.h"
 

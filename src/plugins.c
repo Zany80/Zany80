@@ -10,10 +10,8 @@
 #include "SIMPLE/scas/list.h"
 #include "SIMPLE/scas/stringop.h"
 #include "SIMPLE/API.h"
-#include "SIMPLE/API/graphics.h"
 #include "SIMPLE/Plugin.h"
 #include "SIMPLE/repository.h"
-#include "SIMPLE/XML.h"
 
 static list_t *plugins = NULL;
 
