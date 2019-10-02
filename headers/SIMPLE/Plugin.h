@@ -1,5 +1,7 @@
 #pragma once
 
+#define SIMPLE_ABI 1
+
 #ifdef _WIN32
 #pragma comment(lib, "mincore_downlevel.lib")   // Support OS older than SDK
 #endif

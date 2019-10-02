@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ASSERT(x)
-#include <stb_image.h>
-#include <stretchy_buffer.h>
+#include <SIMPLE/3rd-party/stb_image.h>
+#include <SIMPLE/3rd-party/stretchy_buffer.h>
 
 void * stb__sbgrowf(void *arr, int increment, int itemsize) {
    int dbl_cur = arr ? 2*stb__sbm(arr) : 0;

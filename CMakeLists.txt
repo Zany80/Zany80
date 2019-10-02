@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 set(FIPS_EMSCRIPTEN_USE_CWRAP ON CACHE BOOL "" FORCE)
+set(CMAKE_C_STANDARD 11)
 
 # Load in FIPS
 get_filename_component(FIPS_ROOT_DIR "../fips" ABSOLUTE)
@@ -49,7 +50,7 @@ endmacro()
 
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.1.2.1)
+project(Zany80 VERSION 0.1.3.0)
 set(VERSION_PREFIX "")
 set(VERSION_SUFFIX "")
 

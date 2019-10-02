@@ -7,6 +7,9 @@ extern "C" {
 typedef void TextEditor;
 #endif
 
+/// renders all registered windows
+void render_windows();
+
 widget_t *widget_new(const char *label);
 void editor_destroy(TextEditor *editor);
 void editor_set_text(widget_t *widget, const char *text);

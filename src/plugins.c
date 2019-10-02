@@ -3,15 +3,17 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <dlfcn.h>
+#include <inttypes.h>
 
 #include "SIMPLE/3rd-party/cfgpath.h"
 #include "SIMPLE/3rd-party/stretchy_buffer.h"
-#include "SIMPLE/XML.h"
+#include "SIMPLE/scas/list.h"
+#include "SIMPLE/scas/stringop.h"
 #include "SIMPLE/API.h"
 #include "SIMPLE/API/graphics.h"
 #include "SIMPLE/Plugin.h"
-#include "SIMPLE/scas/list.h"
-#include "SIMPLE/scas/stringop.h"
+#include "SIMPLE/repository.h"
+#include "SIMPLE/XML.h"
 
 static list_t *plugins = NULL;
 
@@ -133,6 +135,7 @@ static void load_plugin(int _index) {
 		simple_report_error("Failed to load plugin!");
 	}
 	config_free(config);
+	discard = -1;
 }
 
 void unload_plugin(plugin_t *plugin) {
@@ -153,6 +156,7 @@ void unload_plugin(plugin_t *plugin) {
 	else {
 		simple_report_error("Unable to handle plugin unload request: specified plugin not found!");
 	}
+	discard = -1;
 }
 
 static void _unload_plugin(int _index) {
@@ -227,6 +231,19 @@ void repo_add_indirect(widget_t *input) {
 	repo_add();
 }
 
+static void l_repository_update(int _index) {
+	plugin_config_t config = config_load();
+	size_t index = _index;
+	if (index >= config->known_plugins) {
+		simple_report_error("Invalid index received: has the configuration been changed manually while SIMPLE was running?");
+	}
+	else {
+		repository_update(config->plugins[index].repo);
+	}
+	discard = -1;
+	config_free(config);
+}
+
 void generate_plugin_manager() {
 	int index = 0;
 	widget_t *pm_group = get_plugin_manager();
@@ -235,6 +252,7 @@ void generate_plugin_manager() {
 	group_add(pm_group, repo_input = input_create("", 512, repo_add_indirect));
 	group_add(pm_group, menuitem_create("Add", repo_add));
 	plugin_config_t config = config_load();
+	const char **shown_repos = NULL;
 	for (size_t i = 0; i < config->known_plugins; i++) {
 		bool already_loaded = false;
 		plugin_descriptor_t d = config->plugins[i];
@@ -247,13 +265,28 @@ void generate_plugin_manager() {
 				}
 			}
 		}
+		bool already_shown = false;
+		for (int i = 0; i < sb_count(shown_repos); i++) {
+			if (!strcmp(d.repo, shown_repos[i])) {
+				already_shown = true;
+				break;
+			}
+		}
+		if (!already_shown) {
+			sb_push(shown_repos, d.repo);
+			char *buf = malloc(7 + strlen(d.repo) + 1);
+			sprintf(buf, "Update %s", d.repo);
+			group_add(pm_group, radio_create(buf, &discard, i, l_repository_update));
+		}
 		char *s = d.name ? d.name : d.path;
-		char *buf = malloc((already_loaded ? 7 : 5) + strlen(s) + 1);
+		char *buf = malloc((already_loaded ? 7 : 5) + strlen(s) + 16 + 1);
+		sprintf(buf, "%s %s##%" PRIu64, already_loaded ? "Unload" : "Load", s, i);
 		strcat(strcpy(buf, already_loaded ? "Unload " : "Load "), s);
 		group_add(pm_group, radio_create(buf, &discard, index++, 
 				already_loaded ? _unload_plugin : load_plugin));
 		free(buf);
 	}
+	sb_free(shown_repos);
 	config_free(config);
 }
 

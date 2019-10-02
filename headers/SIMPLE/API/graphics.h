@@ -41,6 +41,12 @@ SIMPLE_DLL void window_get_size(window_t *window, float *x, float *y);
 SIMPLE_DLL window_t *get_root();
 SIMPLE_DLL void window_destroy(window_t *window);
 SIMPLE_DLL bool window_is_minimized(window_t *window);
+/// Add a window to an internal list of windows to render every frame.
+/// For plugins which just use window_render as their perpetual->frame callback,
+/// this allows for removing the need for perpetual status (thus simplifying the
+/// plugin further)
+SIMPLE_DLL void window_register(window_t *);
+SIMPLE_DLL void window_unregister(window_t *);
 
 SIMPLE_DLL widget_t *button_create(const char *label, void(*handler)());
 SIMPLE_DLL widget_t *menuitem_create(const char *label, void(*handler)());

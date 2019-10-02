@@ -1,7 +1,10 @@
-#include <SIMPLE/Plugin.h>
-#include <SIMPLE/API.h>
-
-#include <SIMPLE.h>
+#include "SIMPLE/Plugin.h"
+#include "SIMPLE/API.h"
+#include "SIMPLE.h"
+#include "SIMPLE/internal/graphics.h"
+extern "C" {
+#include "SIMPLE/internal/cleanup.h"
+}
 
 #include <Gfx/Gfx.h>
 #include <IMUI/IMUI.h>
@@ -57,7 +60,7 @@ SIMPLE::SIMPLE() {}
 AppState::Code SIMPLE::OnInit() {
     this->is_fullscreen = false;
 	this->error = "";
-	this->show_debug_window = this->hub = false;
+	this->show_debug_window = true;
 	start = Clock::Now();
 	this->tp = start;
     options_menu = menu_create("Options");
@@ -126,6 +129,9 @@ AppState::Code SIMPLE::OnInit() {
 	pm_group = group_create();
 	window_append(plugin_manager, pm_group);
 	generate_plugin_manager();
+	window_register(get_root());
+	window_register(plugin_manager);
+	git_libgit2_init();
 	return App::OnInit();
 }
 
@@ -139,12 +145,11 @@ AppState::Code SIMPLE::OnRunning() {
 	delta = Clock::LapTime(this->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
-	render_window(get_root());
-	render_window(plugin_manager);
+	render_windows();
 	if (this->show_debug_window) {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
-		ImGui::Text("SIMPLE version: " PROJECT_VERSION);
+		ImGui::Text("SIMPLE version: " PROJECT_VERSION ", ABI: %d", SIMPLE_ABI);
 		ImGui::Text("Framerate: %.1f", 
 		//~ ImGui::GetIO().Framerate > 60 ? 60 : 
 				ImGui::GetIO().Framerate);
@@ -184,6 +189,8 @@ AppState::Code SIMPLE::OnRunning() {
 }
 
 AppState::Code SIMPLE::OnCleanup() {
+	updater_cleanup();
+	git_libgit2_shutdown();
 	unload_all_plugins();
     menu_destroy_all(options_menu);
     menu_destroy(options_menu);

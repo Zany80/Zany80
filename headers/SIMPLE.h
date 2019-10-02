@@ -19,7 +19,7 @@ public:
 	void ToggleFullscreen();
 private:
 	bool is_fullscreen;
-	bool show_debug_window, hub;
+	bool show_debug_window;
 	TimePoint tp;
 	String error;
 };

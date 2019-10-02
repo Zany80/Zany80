@@ -350,3 +350,19 @@ void image_set_size(widget_t *image, float w, float h) {
 	image->image.visible_width = w;
 	image->image.visible_height = h;
 }
+
+static window_t **windows;
+
+void window_register(window_t *w) {
+	sb_push(windows, w);
+}
+
+void window_unregister(window_t *w) {
+	sb_remove((void***)&windows, w);
+}
+
+void render_windows() {
+	for (int i = 0; i < sb_count(windows); i++) {
+		render_window(windows[i]);
+	}
+}
