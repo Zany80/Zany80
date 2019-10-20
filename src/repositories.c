@@ -10,89 +10,48 @@
 
 #include <git2.h>
 
-#include <threads.h>
-#include <stdatomic.h>
-
-static thrd_t **threads = NULL;
-static atomic_int **statuses = NULL;
-static char ** local_paths = NULL;
-static char ** remote_paths = NULL;
-//~ static atomic_bool shutting_down = false;
-
-enum {
-	RESULT_INCOMPLETE, /// thread hasn't finished yet!
-	RESULT_THRD_FAILURE, /// error spawning thread
-	RESULT_SUCCESS, /// repo cloned successfully
-	RESULT_ERROR, /// error cloning repo
-	RESULT_ALREADY_EXISTS, /// repo already cloned!
-};
-
-int clone_thread(void *_index) {
-	int index = *((int*)_index);
-	free(_index);
-	git_repository *repo = NULL;
-	int result;
-	char *local_path = local_paths[index];
-	char *path = remote_paths[index];
-	simple_log(SL_INFO, "Cloning '%s' to '%s'...\n", path, local_path);
-	// TODO for 0.2: add progress callback and cancel when shutting down.
-	// For now, leaving the thread running in the background isn't a big deal
-	int code = git_clone(&repo, path, local_path, NULL);
-	if (code >= 0) {
-		git_repository_free(repo);
-		result = RESULT_SUCCESS;
-		simple_log(SL_DEBUG, "Cloned successfully!\n");
+static char *git_error_message() {
+	const git_error *e = git_error_last();
+	if (e) {
+		return e->message;
 	}
-	else {
-		const git_error *e = git_error_last();
-		simple_log(SL_ERROR, "Error cloning repo %s: %s!\n", local_path, e ? e->message : NULL);
-		if (code == GIT_EEXISTS) {
-			result = RESULT_ALREADY_EXISTS;
-		}
-		else {
-			result = RESULT_ERROR;
-		}
-	}
-	atomic_store(statuses[index], result);
-	return 0;
+	return NULL;
 }
 
-// must be run from main thread!
-void launch_repo_thread(char *const path) {
-	// TODO: avoid collisions (e.g. github.com/x/y and github.com/a/y or git.sr.ht/~x/y)
-	char *last_part = strrchr(path, '/');
-	if (last_part != NULL) {
-		last_part++;
-		simple_log(SL_DEBUG, "Local directory name: %s\n", last_part);
-		char *local_path = malloc(MAX_PATH);
-		get_user_data_folder(local_path, MAX_PATH, "SIMPLE");
-		simple_log(SL_DEBUG, "Data folder: %s\n", local_path);
-		if (access(local_path, F_OK) != 0) {
-			mkdir(local_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+void repo_clone(char *const url) {
+	git_repository *repo = NULL;
+	char *repo_name = strrchr(url, '/');
+	if (repo_name != NULL) {
+		repo_name++;
+		char *path = malloc(MAX_PATH);
+		if (path) {
+			get_user_data_folder(path, MAX_PATH, "SIMPLE");
+			if (access(path, F_OK) != 0) {
+				mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+			}
+			strcat(path, repo_name);
+			simple_log(SL_INFO, "Cloning '%s' to '%s'...\n", url, path);
+			int code = git_clone(&repo, url, path, NULL);
+			if (code >= 0) {
+				git_repository_free(repo);
+				simple_log(SL_DEBUG, "Cloned successfully!\n");
+				repository_register(path, false);
+			}
+			else {
+				const char *error_message = git_error_message();
+				if (code == GIT_EEXISTS) {
+					error_message = "Repository already downloaded!";
+				}
+				if (!error_message) {
+					error_message = "Unknown Error";
+				}
+				simple_report_error(error_message);
+			}
+			free(path);
 		}
-		strcat(local_path, last_part);
-		simple_log(SL_DEBUG, "Repository folder: %s\n", local_path);
-		int *index = malloc(sizeof(int));
-		*index = sb_count(threads);
-		{
-			atomic_int *a = malloc(sizeof(atomic_int));
-			atomic_store(a, RESULT_INCOMPLETE);
-			sb_push(statuses, a);
-		}
-		sb_push(local_paths, local_path);
-		sb_push(remote_paths, path);
-		thrd_t *thread = malloc(sizeof(thrd_t));
-		if (thrd_create(thread, clone_thread, index) != thrd_success) {
-			atomic_store(statuses[*index], RESULT_THRD_FAILURE);
-			free(index);
-		}
-		// If failure, still push the thread; it'll be cleaned up later
-		sb_push(threads, thread);
 	}
 	else {
-		simple_log(SL_ERROR, "Invalid url: %s\n", path);
-		simple_report_error("Invalid URL!");
-		free(path);
+		simple_log(SL_ERROR, "Invalid URL: %s\n", url);
 	}
 }
 
@@ -108,14 +67,6 @@ static window_t *update_window = NULL;
 static widget_t **update_groups = NULL;
 static char **update_paths = NULL;
 static int discard = -1;
-
-static char *git_error_message() {
-	const git_error *e = git_error_last();
-	if (e) {
-		return e->message;
-	}
-	return NULL;
-}
 
 void repository_update(const char *const path) {
 	// git fetch, then re-register repo
@@ -319,46 +270,4 @@ void repository_register(const char *const path, bool update) {
 		simple_report_error("Invalid repository: manifest.xml not found!");
 	}
 	free(manifest_path);
-}
-
-// must be run from main thread!
-void process_threads() {
-	static int wait = 0;
-	for (int i = 0; i < sb_count(threads); i++) {
-		int status = atomic_load(statuses[i]);
-		switch (status) {
-			case RESULT_THRD_FAILURE:
-				simple_report_error("Error spawning download thread!");
-				break;
-			case RESULT_INCOMPLETE:
-				if (wait-- < 0) {
-					simple_log(SL_DEBUG, "Still waiting on download thread for '%s'...\n", local_paths[i]);
-					wait = 60;
-				}
-				break;
-			case RESULT_SUCCESS:
-				repository_register(local_paths[i], false);
-				break;
-			case RESULT_ALREADY_EXISTS:
-				simple_report_error("Already downloaded!");
-				break;
-			case RESULT_ERROR:
-				simple_report_error("Error cloning repository!");
-				break;
-		}
-		if (*statuses[i] != RESULT_INCOMPLETE) {
-			free(local_paths[i]);
-			free(remote_paths[i]);
-			free(statuses[i]);
-			free(threads[i]);
-			sb_remove_i((void***)&local_paths, i);
-			sb_remove_i((void***)&threads, i);
-			sb_remove_i((void***)&statuses, i);
-			sb_remove_i((void***)&remote_paths, i);
-		}
-	}
-}
-
-void repoclone_cleanup() {
-	// TODO: implement this (see TODO for 0.2 above)
 }

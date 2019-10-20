@@ -50,7 +50,7 @@ endmacro()
 
 fips_setup(PROJECT Zany80)
 # Needed to define a version
-project(Zany80 VERSION 0.1.4.0)
+project(Zany80 VERSION 0.1.5.0)
 set(VERSION_PREFIX "")
 set(VERSION_SUFFIX "")
 

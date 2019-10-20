@@ -216,13 +216,13 @@ list_t *h_get_plugins(const char *type) {
 }
 
 
-void launch_repo_thread(char *const);
+void repo_clone(char *const);
 static widget_t *repo_input;
 
 void repo_add() {
 	char *repository_url = input_get_text(repo_input);
 	simple_log(SL_INFO, "Adding plugin repository: %s\n", repository_url);
-	launch_repo_thread(repository_url);
+	repo_clone(repository_url);
 }
 
 void repo_add_indirect(widget_t *input) {

@@ -6,6 +6,7 @@
 #include <direct.h>
 #include <windows.h>
 
+// DEFINITELY NEED TO DOUBLE CHECK THIS AND MAKE SURE IT DOESN'T DIE OR ANYTHING
 ZANY_DLL list_t *simple_read_directory(const char *path) {
 	WIN32_FIND_DATA data;
 	char *full_path = malloc(strlen(path) + 3);

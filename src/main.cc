@@ -137,11 +137,7 @@ AppState::Code SIMPLE::OnInit() {
 
 static Duration delta;
 
-extern "C"
-void process_threads();
-
 AppState::Code SIMPLE::OnRunning() {
-	process_threads();
 	delta = Clock::LapTime(this->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
