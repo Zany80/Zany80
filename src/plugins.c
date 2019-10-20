@@ -216,13 +216,13 @@ list_t *h_get_plugins(const char *type) {
 }
 
 
-void repo_clone(char *const);
+void prep_clone(char *const);
 static widget_t *repo_input;
 
 void repo_add() {
 	char *repository_url = input_get_text(repo_input);
 	simple_log(SL_INFO, "Adding plugin repository: %s\n", repository_url);
-	repo_clone(repository_url);
+	prep_clone(repository_url);
 }
 
 void repo_add_indirect(widget_t *input) {
@@ -248,6 +248,7 @@ void generate_plugin_manager() {
 	group_clear(pm_group, true);
 	group_add(pm_group, label_set_wrapped(label_create("Enter a repository to source for plugins"), true));
 	group_add(pm_group, repo_input = input_create("", 512, repo_add_indirect));
+	input_set_text(repo_input, "https://github.com/simple-platform/limn1k-ide");
 	group_add(pm_group, menuitem_create("Add", repo_add));
 	plugin_config_t config = config_load();
 	const char **shown_repos = NULL;

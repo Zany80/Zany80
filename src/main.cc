@@ -1,4 +1,7 @@
 #include "SIMPLE/Plugin.h"
+extern "C" {
+#include "SIMPLE/repository.h"
+}
 #include "SIMPLE/API.h"
 #include "SIMPLE.h"
 #include "SIMPLE/internal/graphics.h"
@@ -136,13 +139,19 @@ AppState::Code SIMPLE::OnInit() {
 }
 
 static Duration delta;
+static char *repo_to_clone = NULL;
 
-AppState::Code SIMPLE::OnRunning() {
-	delta = Clock::LapTime(this->tp);
+extern "C"
+void prep_clone(char *repo) {
+	repo_to_clone = repo;
+}
+
+void main_loop() {
+	delta = Clock::LapTime(zany->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
 	render_windows();
-	if (this->show_debug_window) {
+	if (zany->show_debug_window) {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
 		ImGui::Text("SIMPLE version: " PROJECT_VERSION ", ABI: %d", SIMPLE_ABI);
@@ -161,7 +170,7 @@ AppState::Code SIMPLE::OnRunning() {
 		ImGui::Text("Unknown backend. This platform may not be fully supported.");
 		#endif
 		if (ImGui::Button("Hide")) {
-			show_debug_window = false;
+			zany->show_debug_window = false;
 		}
 		ImGui::End();
 	}
@@ -170,17 +179,28 @@ AppState::Code SIMPLE::OnRunning() {
 		((plugin_t*)plugin)->perpetual->frame(delta.AsSeconds());
 	});
 	list_free(perpetuals);
-	if (error != "") {
+	if (zany->error != "") {
 		ImGui::SetNextWindowFocus();
 		ImGui::Begin("Error!", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::Text("%s", error.AsCStr());
+		ImGui::Text("%s", zany->error.AsCStr());
 		if (ImGui::Button("Clear"))
-			error = "";
+			zany->error = "";
 		ImGui::End();
 	}
 	ImGui::Render();
 	Gfx::EndPass();
 	Gfx::CommitFrame();
+}
+
+AppState::Code SIMPLE::OnRunning() {
+	if (repo_to_clone) {
+		repo_clone(repo_to_clone);
+		free(repo_to_clone);
+		repo_to_clone = NULL;
+	}
+	else {
+		main_loop();
+	}
 	return Gfx::QuitRequested() ? AppState::Cleanup : AppState::Running;
 }
 

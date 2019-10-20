@@ -9,7 +9,10 @@
 
 using namespace Oryol;
 
+extern "C" void main_loop();
+
 class SIMPLE : public App {
+friend void main_loop();
 public:
 	SIMPLE();
 	AppState::Code OnInit();

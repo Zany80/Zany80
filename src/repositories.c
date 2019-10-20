@@ -8,6 +8,8 @@
 #include "SIMPLE/Plugin.h"
 #include "SIMPLE/repository.h"
 
+void main_loop();
+
 #include <git2.h>
 
 static char *git_error_message() {
@@ -18,7 +20,36 @@ static char *git_error_message() {
 	return NULL;
 }
 
+static window_t *clone_window = NULL;
+static widget_t *clone_label = NULL;
+
+static int transfer_callback(const git_transfer_progress *stats, void *payload) {
+	char buffer[11 + 8 + 1];
+	sprintf(buffer, "Progress: %d%%", stats->received_objects / stats->total_objects);
+	widget_set_label(clone_label, buffer);
+	main_loop();
+	return 0;
+}
+
+static int sideband_callback(const char *str, int len, void *payload) {
+	widget_set_label(clone_label, str);
+	main_loop();
+	return 0;
+}
+
+void setup_callback(git_fetch_options *opts) {
+	opts->callbacks.transfer_progress = transfer_callback;
+	opts->callbacks.sideband_progress = sideband_callback;
+}
+
 void repo_clone(char *const url) {
+	clone_window = window_create("Download Progress");
+	clone_label = label_set_wrapped(label_create("Progress: 0%"), true);
+	window_append(clone_window, clone_label);
+	window_min_size(clone_window, 600, 300);
+	window_auto_size(clone_window, true);
+	window_register(clone_window);
+	main_loop();
 	git_repository *repo = NULL;
 	char *repo_name = strrchr(url, '/');
 	if (repo_name != NULL) {
@@ -31,7 +62,9 @@ void repo_clone(char *const url) {
 			}
 			strcat(path, repo_name);
 			simple_log(SL_INFO, "Cloning '%s' to '%s'...\n", url, path);
-			int code = git_clone(&repo, url, path, NULL);
+			git_clone_options opts = GIT_CLONE_OPTIONS_INIT;
+			setup_callback(&opts.fetch_opts);
+			int code = git_clone(&repo, url, path, &opts);
 			if (code >= 0) {
 				git_repository_free(repo);
 				simple_log(SL_DEBUG, "Cloned successfully!\n");
@@ -53,6 +86,9 @@ void repo_clone(char *const url) {
 	else {
 		simple_log(SL_ERROR, "Invalid URL: %s\n", url);
 	}
+	window_unregister(clone_window);
+	window_destroy(clone_window);
+	widget_destroy(clone_label);
 }
 
 #ifdef ORYOL_WINDOWS
@@ -76,6 +112,7 @@ void repository_update(const char *const path) {
 		git_remote *remote = NULL;
 		if (git_remote_lookup(&remote, repo, "origin") == 0) {
 			git_fetch_options opts = GIT_FETCH_OPTIONS_INIT;
+			setup_callback(&opts);
 			if (git_remote_fetch(remote, NULL, &opts, NULL) >= 0) {
 				simple_log(SL_DEBUG, "Remote fetched successfully, checking out master branch...\n");
 				git_object *treeish = NULL;

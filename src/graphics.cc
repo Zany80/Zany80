@@ -167,6 +167,9 @@ void render_window(window_t *window) {
     }
     window->minimized = minimized;
     ImGui::End();
+    if (window == get_root()) {
+        ImGui::PopStyleVar();
+    }
     for (int i = 0; i < sb_count(awaiting_handling); i++) {
         widget_t *w = awaiting_handling[i];
         switch(w->type) {
@@ -186,9 +189,6 @@ void render_window(window_t *window) {
             default:
 				break;
         }
-    }
-    if (window == get_root()) {
-        ImGui::PopStyleVar();
     }
     sb_free(awaiting_handling);
     awaiting_handling = NULL;
