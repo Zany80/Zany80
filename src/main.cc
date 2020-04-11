@@ -57,7 +57,7 @@ SIMPLE::SIMPLE() {}
 AppState::Code SIMPLE::OnInit() {
     this->is_fullscreen = false;
 	this->error = "";
-	this->show_debug_window = true;
+	this->show_debug_window = false;
 	start = Clock::Now();
 	this->tp = start;
     options_menu = menu_create("Options");
@@ -150,8 +150,6 @@ void main_loop() {
 		ImGui::Text("Backend: OpenGL");
 		#elif ORYOL_D3D11
 		ImGui::Text("Backend: D3D11");
-		#elif ORYOL_EMSCRIPTEN
-		ImGui::Text("Backend: Emscripten");
 		#else
 		ImGui::Text("Unknown backend. This platform may not be fully supported.");
 		#endif
