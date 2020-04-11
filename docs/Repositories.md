@@ -56,8 +56,8 @@ that abstraction layer, give me time to review, and you're done!
 The format is very much subject to change, but backwards compatibility is
 guaranteed. The root of the manifest is a PluginRepository element, with a
 *mandatory* Format attribute. The format attribute specifies the format of the
-repository's manifest. If it is missing, it is implicitly assumed to be alpha-1
-which you almost certainly do not want.
+repository's manifest. If it is missing, SIMPLE will reject the repository as
+unsupported.
 
 Old formats will likely be supported indefinitely with the only allowed patches
 being bug fixes / security improvements. They are all supported via parsers in
@@ -71,9 +71,7 @@ point in separating the code into multiple copies when most of it is the same.
 
 ### alpha- formats
 
-Currently, there are only two formats: alpha-1 (the default if none is
-specified, since the original format didn't account for changes), and alpha-2,
-the current format.
+There are two formats currently, alpha-1 and alpha-2.
 
 ### alpha-1 and alpha-2
 
