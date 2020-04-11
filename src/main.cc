@@ -13,13 +13,7 @@ extern "C" {
 #include <IMUI/IMUI.h>
 #include <Input/Input.h>
 #include <IO/IO.h>
-#if ORYOL_EMSCRIPTEN
-#include <HttpFS/HTTPFileSystem.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#else
 #include <LocalFS/LocalFileSystem.h>
-#endif
 
 #include <sstream>
 
@@ -74,15 +68,7 @@ AppState::Code SIMPLE::OnInit() {
 	IOSetup ioSetup;
 	GfxSetup gfxSetup = GfxSetup::WindowMSAA4(800, 600, "SIMPLE Platform (Native Edition) v" PROJECT_VERSION);
 	gfxSetup.HtmlTrackElementSize = true;
-#if ORYOL_EMSCRIPTEN
-#ifdef FIPS_EMSCRIPTEN_LOCALIZE
-	ioSetup.FileSystems.Add("http", HTTPFileSystem::Creator());
-#else
-	ioSetup.FileSystems.Add("https", HTTPFileSystem::Creator());
-#endif
-#else
 	ioSetup.FileSystems.Add("file", LocalFileSystem::Creator());
-#endif
 	IO::Setup(ioSetup);
 	Gfx::Setup(gfxSetup);
 	SetupIcon();
@@ -101,20 +87,9 @@ AppState::Code SIMPLE::OnInit() {
 	else {
 		Log::Dbg("Running locally...\n");
 	}
-#elif ORYOL_EMSCRIPTEN
-#ifdef FIPS_EMSCRIPTEN_LOCALIZE
-	IO::SetAssign("root:", "http://localhost:8000/");
-#elif FIPS_EMSCRIPTEN_USE_WASM
-	IO::SetAssign("root:", "https://zany80.github.io/native/wasm/");
-#else
-	IO::SetAssign("root:", "https://zany80.github.io/native/emscripten/");
-#endif
 #endif
 	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
-#ifdef ORYOL_EMSCRIPTEN
-    IO::SetAssign("root:", "https://pixelherodev.github.io/asl_build/");
-#endif
 	Log::Dbg("Application URL: %s\n", IO::ResolveAssigns("root:").AsCStr());
 	Log::Dbg("Plugin URL: %s\n", IO::ResolveAssigns("plugins:").AsCStr());
 	InputSetup inputSetup;
@@ -126,7 +101,7 @@ AppState::Code SIMPLE::OnInit() {
 	IMUI::Setup();
 	this->tp = Clock::Now();
 	plugin_manager = window_create("Plugin Manager");
-	window_set_pos(plugin_manager, 0, 30);
+	window_set_pos(plugin_manager, 200, 30);
 	window_min_size(plugin_manager, 200, 50);
 	window_auto_size(plugin_manager, true);
 	pm_group = group_create();
@@ -139,11 +114,22 @@ AppState::Code SIMPLE::OnInit() {
 }
 
 static Duration delta;
-static char *repo_to_clone = NULL;
+static char *repo_to_operate = NULL;
+
+static enum {
+    CLONE,UPDATE
+} repo_operation;
 
 extern "C"
 void prep_clone(char *repo) {
-	repo_to_clone = repo;
+	repo_to_operate = repo;
+	repo_operation = CLONE;
+}
+
+extern "C"
+void prep_update(char *repo) {
+    repo_to_operate = repo;
+    repo_operation = UPDATE;
 }
 
 void main_loop() {
@@ -193,10 +179,15 @@ void main_loop() {
 }
 
 AppState::Code SIMPLE::OnRunning() {
-	if (repo_to_clone) {
-		repo_clone(repo_to_clone);
-		free(repo_to_clone);
-		repo_to_clone = NULL;
+	if (repo_to_operate) {
+    		if (repo_operation == CLONE) {
+			repo_clone(repo_to_operate);
+    		}
+    		else {
+        		repository_update(repo_to_operate);
+    		}
+		free(repo_to_operate);
+		repo_to_operate = NULL;
 	}
 	else {
 		main_loop();

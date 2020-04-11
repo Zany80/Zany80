@@ -70,6 +70,7 @@ SIMPLE_DLL widget_t* label_set_wrapped(widget_t *widget, bool wrapped);
 SIMPLE_DLL void input_set_text(widget_t *widget, const char *text);
 /// Allocated via malloc, MUST BE free()d BY CALLER
 SIMPLE_DLL char *input_get_text(widget_t *widget);
+SIMPLE_DLL void input_set_password(widget_t *widget, bool pass);
 
 SIMPLE_DLL widget_t *group_create();
 SIMPLE_DLL void group_add(widget_t *group, widget_t *widget);

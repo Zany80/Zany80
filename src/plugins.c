@@ -217,6 +217,7 @@ list_t *h_get_plugins(const char *type) {
 
 
 void prep_clone(char *const);
+void prep_update(char *const);
 static widget_t *repo_input;
 
 void repo_add() {
@@ -236,7 +237,7 @@ static void l_repository_update(int _index) {
 		simple_report_error("Invalid index received: has the configuration been changed manually while SIMPLE was running?");
 	}
 	else {
-		repository_update(config->plugins[index].repo);
+	    	prep_update(strdup(config->plugins[index].repo));
 	}
 	discard = -1;
 	config_free(config);

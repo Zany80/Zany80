@@ -67,6 +67,7 @@ typedef struct {
 	char *buf;
 	size_t capacity;
 	void (*handler)(widget_t *widget);
+    bool pw;
 } input_t;
 
 typedef struct {

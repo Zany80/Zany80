@@ -234,6 +234,7 @@ widget_t *input_create(const char *label, size_t capacity, void (*handler)(widge
 	w->input.capacity = capacity;
 	w->input.handler = handler;
 	w->input.buf = malloc(capacity);
+    w->input.pw = false;
 	strcpy(w->input.buf, "");
 	return w;
 }
@@ -243,6 +244,10 @@ widget_t *customwidget_create(void (*handler)()) {
     w->type = custom;
     w->custom.render = handler;
     return w;
+}
+
+void input_set_password(widget_t *w, bool pw) {
+    w->input.pw = pw;
 }
 
 char *input_get_text(widget_t *widget) {

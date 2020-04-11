@@ -105,6 +105,15 @@ static char **update_paths = NULL;
 static int discard = -1;
 
 void repository_update(const char *const path) {
+	if (!update_window) {
+	    	update_window = window_create("Updater");
+	    	clone_label = label_set_wrapped(label_create("Progress"), true);
+	    	window_append(update_window, clone_label);
+	    	window_register(update_window);
+	}
+	else {
+    		return;
+	}
 	// git fetch, then re-register repo
 	git_repository *repo = NULL;
 	simple_log(SL_DEBUG, "Updating repo '%s'\n", path);
@@ -147,6 +156,11 @@ void repository_update(const char *const path) {
 		simple_log(SL_ERROR, "Error opening repository '%s'!\n", path);
 		simple_report_error("Error opening repository for updating!");
 	}
+	widget_destroy(clone_label);
+	clone_label = NULL;
+	window_unregister(update_window);
+	window_destroy(update_window);
+	update_window = NULL;
 }
 
 static void do_update(int index) {

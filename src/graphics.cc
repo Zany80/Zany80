@@ -57,12 +57,19 @@ static void render_widget(widget_t *widget) {
                 }
             }
             break;
-        case radio:
-			if (ImGui::RadioButton(widget->label, widget->radio.current, widget->radio.index)) {
-                if (widget->radio.handler != NULL) {
-                    sb_push(awaiting_handling, widget);
+        case radio:{
+            bool handler = false;
+            if (widget->radio.current) {
+                if (ImGui::RadioButton(widget->label, widget->radio.current, widget->radio.index)) {
+                    handler = true;
                 }
 			}
+            else if (ImGui::RadioButton(widget->label, false)) {
+                handler = true;
+            }
+            if (handler && widget->radio.handler != NULL) {
+                sb_push(awaiting_handling, widget);
+            }}
 			break;
         case submenu:
             if (widget->menu.collapsed) {
@@ -87,15 +94,19 @@ static void render_widget(widget_t *widget) {
                 }
             }
             break;
-        case input:
+        case input:{
             ImGui::TextUnformatted(widget->label);
             ImGui::SameLine();
-			if (ImGui::InputText("", widget->input.buf, widget->input.capacity, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            int flags = ImGuiInputTextFlags_EnterReturnsTrue;
+            if (widget->input.pw) {
+                flags |= ImGuiInputTextFlags_Password;
+            }
+			if (ImGui::InputText("", widget->input.buf, widget->input.capacity, flags)) {
                 if (widget->input.handler) {
                     sb_push(awaiting_handling, widget);
                 }
 			}
-			break;
+			break;}
         case editor:
 			widget->editor.editor->Render(widget->label);
 			break;

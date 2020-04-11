@@ -1,12 +1,12 @@
 #!/usr/bin/env xdg-open
 [Desktop Entry]
-Version=0.1.0
-Name=Zany80
-Comment=Z80-based fantasy console
-Exec=zany80
-Icon=zany80
+Version=0.2.0
+Name=SIMPLE Platform
+Comment=Simple executable platform
+Exec=SIMPLE
+Icon=SIMPLE
 Terminal=false
 Type=Application
 Categories=Game;Development
 MimeType=application/x-rom-zany80
-GenericName=Zany80
+GenericName=SIMPLE

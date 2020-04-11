@@ -2,21 +2,18 @@
 
 ## Short-term
 
-* Unit tests
 * Go over all the rushed parts and fix them (e.g. plugin removal)
-* Ensure all error reporting goes through report_error
+* Re-do error reporting
 * Re-do logging so that each module has its own individual log
 * Add version info to plugin interface
-* Documentation. Lots of it.
 * Re-do imGuiTextEditor fips fork to use a subproject for ease of upgrading
-* PortableApps Windows version
 
 ## Slightly less short-term
 
+* Documentation. Lots of it.
 * Configurable performant static for console screen when no program is running
 * Lua plugin wrapper
 * C support
-	* Lua support via eLua. Will need to add KCC support to eLua, then z80 support.
 * Multiple file support in editor (multiple buffers at once, multi-file projects)
 * Built in help (tutorial plugin?)
 * More examples for editor
@@ -30,10 +27,11 @@
 		* Revisit in the future, not worth it right now
 	* ~~Simple pixel framebuffer~~ (simple CPU-controlled display)
 * Add z80e core
-* Use backtrace/stackwalker to find module names in logging functions
+* ~~Use backtrace/stackwalker to find module names in logging functions~~ Not nearly efficient enough to be worthwhile.
 
 # Long term
 
+* Lua support via eLua. Will need to add KCC support to eLua, then z80 support.
 * Replace Oryol with Sokol as primary backend, remove C++ dependency entirely
 	* Support alternative backends in addition to Sokol (SFML, SDL, etc)
 * Add other CPUs (e.g. 6809, AVR, 68k)
