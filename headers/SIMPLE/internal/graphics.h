@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef __cplusplus
-#include <TextEditor.h>
+#include "../third_party/imguitexteditor/TextEditor.h"
 extern "C" {
 #else
 typedef void TextEditor;

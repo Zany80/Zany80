@@ -1,8 +1,8 @@
 #include "SIMPLE/data.h"
 #include "SIMPLE/API.h"
 #include "SIMPLE/XML.h"
-#include "SIMPLE/3rd-party/cfgpath.h"
-#include "SIMPLE/3rd-party/stretchy_buffer.h"
+#include "SIMPLE/third_party/cfgpath.h"
+#include "SIMPLE/third_party/stretchy_buffer.h"
 
 #include <stdio.h>
 

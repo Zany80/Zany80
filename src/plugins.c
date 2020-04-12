@@ -5,8 +5,8 @@
 #include <dlfcn.h>
 #include <inttypes.h>
 
-#include "SIMPLE/3rd-party/cfgpath.h"
-#include "SIMPLE/3rd-party/stretchy_buffer.h"
+#include "SIMPLE/third_party/cfgpath.h"
+#include "SIMPLE/third_party/stretchy_buffer.h"
 #include "SIMPLE/scas/list.h"
 #include "SIMPLE/scas/stringop.h"
 #include "SIMPLE/API.h"

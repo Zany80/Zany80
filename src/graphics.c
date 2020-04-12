@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "SIMPLE/graphics.h"
-#include "SIMPLE/3rd-party/stretchy_buffer.h"
+#include "SIMPLE/third_party/stretchy_buffer.h"
 #include "SIMPLE/internal/graphics.h"
 
 static window_t root = {

@@ -13,7 +13,7 @@ jmp_buf env;
 
 #include <fstream>
 
-#include <SIMPLE/3rd-party/stretchy_buffer.h>
+#include <SIMPLE/third_party/stretchy_buffer.h>
 
 char *h_read_file(const char *path) {
     FILE *f = fopen(path, "rb");

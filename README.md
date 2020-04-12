@@ -15,9 +15,13 @@ with the maintainance burden of supporting webapp bullshit, so unless
 someone else does it it will not happen.
 
 Licensing note: some utility files have been borrowed from various open-source
-projects. Their code is organized by source in src/lib, and all have been
-included in accordance with their respective licenses. A single LICENSE file
-should be available in each folder (if it's missing, please file a ticket).
+projects. Their code is organized by source in src/third_party/, and all have
+been included in accordance with their respective licenses. A single LICENSE
+file should be available in each folder (if it's missing, please file a
+ticket).
+
+Headers for these projects are in headers/SIMPLE/third-party/, and the same
+organizational structure applies.
 
 [cfgpath.h](https://github.com/Malvineous/cfgpath) is in the public domain,
 credit and appreciation goes to Malvineous.

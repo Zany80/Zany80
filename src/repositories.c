@@ -1,7 +1,7 @@
 #include <unistd.h>
 
-#include "SIMPLE/3rd-party/stretchy_buffer.h"
-#include "SIMPLE/3rd-party/cfgpath.h"
+#include "SIMPLE/third_party/stretchy_buffer.h"
+#include "SIMPLE/third_party/cfgpath.h"
 #include "SIMPLE/API.h"
 #include "SIMPLE/data.h"
 #include "SIMPLE/XML.h"
@@ -91,9 +91,9 @@ void repo_clone(char *const url) {
 	widget_destroy(clone_label);
 }
 
-#ifdef ORYOL_WINDOWS
+#ifdef SIMPLE_WINDOWS
 const char *const PLAT = "Windows";
-#elif defined(ORYOL_LINUX)
+#elif defined(SIMPLE_LINUX)
 const char *const PLAT = "Linux";
 #else
 #error Unsupported platform!
