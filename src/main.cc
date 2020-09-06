@@ -1,7 +1,4 @@
 #include "SIMPLE/Plugin.h"
-extern "C" {
-#include "SIMPLE/repository.h"
-}
 #include "SIMPLE/API.h"
 #include "SIMPLE.h"
 #include "SIMPLE/internal/graphics.h"
@@ -19,8 +16,6 @@ extern "C" {
 
 #include <config.h>
 
-#include <git2.h>
-
 SIMPLE *zany;
 
 OryolMain(SIMPLE);
@@ -28,7 +23,7 @@ OryolMain(SIMPLE);
 Array<String> available_plugins;
 
 static void tf() {
-    zany->ToggleFullscreen();
+	zany->ToggleFullscreen();
 }
 
 extern "C" void simple_report_error(const char *error_message) {
@@ -45,28 +40,22 @@ void SIMPLE::report_error(const char *error) {
 
 static TimePoint start;
 static menu_t *options_menu;
-static window_t *plugin_manager;
-static widget_t *pm_group;
 
-extern "C"
-widget_t *get_plugin_manager() {
-	return pm_group;
-}
 SIMPLE::SIMPLE() {}
 
 AppState::Code SIMPLE::OnInit() {
-    this->is_fullscreen = false;
+	this->is_fullscreen = false;
 	this->error = "";
 	this->show_debug_window = true;
 	start = Clock::Now();
 	this->tp = start;
-    options_menu = menu_create("Options");
-    window_append_menu(get_root(), options_menu);
-    menu_append(options_menu, checkbox_create("Show Debug Window", &this->show_debug_window, NULL));
-    menu_append(options_menu, checkbox_create("Toggle Fullscreen", &this->is_fullscreen, tf));
+	options_menu = menu_create("Options");
+	window_append_menu(get_root(), options_menu);
+	menu_append(options_menu, checkbox_create("Show Debug Window", &this->show_debug_window, NULL));
+	menu_append(options_menu, checkbox_create("Toggle Fullscreen", &this->is_fullscreen, tf));
 	zany = this;
 	IOSetup ioSetup;
-	GfxSetup gfxSetup = GfxSetup::WindowMSAA4(800, 600, "SIMPLE Platform (Native Edition) v" PROJECT_VERSION);
+	GfxSetup gfxSetup = GfxSetup::WindowMSAA4(800, 600, "Zany80 Fantasy Computer - Native Edition");
 	gfxSetup.HtmlTrackElementSize = true;
 	ioSetup.FileSystems.Add("file", LocalFileSystem::Creator());
 	IO::Setup(ioSetup);
@@ -88,59 +77,29 @@ AppState::Code SIMPLE::OnInit() {
 		Log::Dbg("Running locally...\n");
 	}
 #endif
-	IO::SetAssign("plugins:", "root:plugins/");
 	IO::SetAssign("lib:", "root:lib/");
 	Log::Dbg("Application URL: %s\n", IO::ResolveAssigns("root:").AsCStr());
-	Log::Dbg("Plugin URL: %s\n", IO::ResolveAssigns("plugins:").AsCStr());
 	InputSetup inputSetup;
-    inputSetup.PinchEnabled = false;
-    inputSetup.PanEnabled = false;
-    inputSetup.AccelerometerEnabled = false;
-    inputSetup.GyrometerEnabled = false;
+	inputSetup.PinchEnabled = false;
+	inputSetup.PanEnabled = false;
+	inputSetup.AccelerometerEnabled = false;
+	inputSetup.GyrometerEnabled = false;
 	Input::Setup(inputSetup);
 	IMUI::Setup();
 	this->tp = Clock::Now();
-	plugin_manager = window_create("Plugin Manager");
-	window_set_pos(plugin_manager, 200, 30);
-	window_min_size(plugin_manager, 200, 50);
-	window_auto_size(plugin_manager, true);
-	pm_group = group_create();
-	window_append(plugin_manager, pm_group);
-	generate_plugin_manager();
 	window_register(get_root());
-	window_register(plugin_manager);
-	git_libgit2_init();
 	return App::OnInit();
 }
 
-static Duration delta;
-static char *repo_to_operate = NULL;
-
-static enum {
-    CLONE,UPDATE
-} repo_operation;
-
-extern "C"
-void prep_clone(char *repo) {
-	repo_to_operate = repo;
-	repo_operation = CLONE;
-}
-
-extern "C"
-void prep_update(char *repo) {
-    repo_to_operate = repo;
-    repo_operation = UPDATE;
-}
-
-void main_loop() {
-	delta = Clock::LapTime(zany->tp);
+AppState::Code SIMPLE::OnRunning() {
+	static Duration delta = Clock::LapTime(zany->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
 	render_windows();
 	if (zany->show_debug_window) {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
-		ImGui::Text("SIMPLE version: " PROJECT_VERSION ", ABI: %d", SIMPLE_ABI);
+    		ImGui::Text("Zany80 version: " PROJECT_VERSION ", ABI: %d", SIMPLE_ABI);
 		ImGui::Text("Framerate: %.1f", 
 		//~ ImGui::GetIO().Framerate > 60 ? 60 : 
 				ImGui::GetIO().Framerate);
@@ -160,11 +119,6 @@ void main_loop() {
 		}
 		ImGui::End();
 	}
-	list_t *perpetuals = h_get_plugins("Perpetual");
-	list_foreach(perpetuals, [](void *plugin) {
-		((plugin_t*)plugin)->perpetual->frame(delta.AsSeconds());
-	});
-	list_free(perpetuals);
 	if (zany->error != "") {
 		ImGui::SetNextWindowFocus();
 		ImGui::Begin("Error!", NULL, ImGuiWindowFlags_AlwaysAutoResize);
@@ -176,35 +130,13 @@ void main_loop() {
 	ImGui::Render();
 	Gfx::EndPass();
 	Gfx::CommitFrame();
-}
-
-AppState::Code SIMPLE::OnRunning() {
-	if (repo_to_operate) {
-    		if (repo_operation == CLONE) {
-			repo_clone(repo_to_operate);
-    		}
-    		else {
-        		repository_update(repo_to_operate);
-    		}
-		free(repo_to_operate);
-		repo_to_operate = NULL;
-	}
-	else {
-		main_loop();
-	}
 	return Gfx::QuitRequested() ? AppState::Cleanup : AppState::Running;
 }
 
 AppState::Code SIMPLE::OnCleanup() {
-	updater_cleanup();
-	git_libgit2_shutdown();
-	unload_all_plugins();
-    menu_destroy_all(options_menu);
-    menu_destroy(options_menu);
-    group_clear(pm_group, true);
-    widget_destroy(pm_group);
-    window_destroy(plugin_manager);
-    window_destroy(get_root());
+	menu_destroy_all(options_menu);
+	menu_destroy(options_menu);
+	window_destroy(get_root());
 	IMUI::Discard();
 	Input::Discard();
 	Gfx::Discard();
