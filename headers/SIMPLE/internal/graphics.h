@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../graphics.h"
+
 #ifdef __cplusplus
 #include <TextEditor.h>
 extern "C" {
