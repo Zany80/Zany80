@@ -5,4 +5,5 @@ build/
 *.geany
 fips-files/verbs/__pycache__/*.pyc
 .vscode/
+/zig-cache
 valgrind-zany80.log
