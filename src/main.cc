@@ -101,17 +101,13 @@ AppState::Code SIMPLE::OnRunning() {
 		ImGui::Begin("Debug", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::Text("Native Edition");
     		ImGui::Text("Zany80 version: " PROJECT_VERSION ", ABI: %d", SIMPLE_ABI);
-		ImGui::Text("Framerate: %.1f", 
-		//~ ImGui::GetIO().Framerate > 60 ? 60 : 
-				ImGui::GetIO().Framerate);
+		ImGui::Text("Framerate: %.1f", ImGui::GetIO().Framerate);
 		#if FIPS_GLFW_WAYLAND
 		ImGui::Text("Backend: Wayland/OpenGL");
 		#elif ORYOL_GLFW
 		ImGui::Text("Backend: OpenGL");
 		#elif ORYOL_D3D11
 		ImGui::Text("Backend: D3D11");
-		#elif ORYOL_EMSCRIPTEN
-		ImGui::Text("Backend: Emscripten");
 		#else
 		ImGui::Text("Unknown backend. This platform may not be fully supported.");
 		#endif
