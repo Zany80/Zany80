@@ -92,7 +92,8 @@ AppState::Code SIMPLE::OnInit() {
 }
 
 AppState::Code SIMPLE::OnRunning() {
-	static Duration delta = Clock::LapTime(zany->tp);
+	static Duration delta;
+	delta = Clock::LapTime(zany->tp);
 	Gfx::BeginPass(PassAction::Clear(glm::vec4(0.1f, 0.8f, 0.6f, 1.0f)));
 	IMUI::NewFrame(delta);
 	render_windows();
