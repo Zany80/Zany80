@@ -1,36 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "sokol_app.h"
-#include "sokol_gfx.h"
-#include "sokol_cimgui.h"
+#include "sokol/sokol_app.h"
+#include "sokol/sokol_gfx.h"
+#include "sokol/util/sokol_imgui.h"
+#include "sokol/sokol_time.h"
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "cimgui/cimgui.h"
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
 
+uint64_t last_time;
+
 void init(void) {
     printf("Zany80 version " STR(PROJECT_VERSION));
     sg_setup(&(sg_desc){
-        .buffer_pool_size = 128,
+        .mtl_device = sapp_metal_get_device(),
+        .mtl_renderpass_descriptor_cb = sapp_metal_get_renderpass_descriptor,
+        .mtl_drawable_cb = sapp_metal_get_drawable,
+        .d3d11_device = sapp_d3d11_get_device(),
+        .d3d11_device_context = sapp_d3d11_get_device_context(),
+        .d3d11_render_target_view_cb = sapp_d3d11_get_render_target_view,
+        .d3d11_depth_stencil_view_cb = sapp_d3d11_get_depth_stencil_view
     });
-    scimgui_setup(&(scimgui_desc_t){
-        .no_default_font = false,
-    });
+    simgui_setup(&(simgui_desc_t){.sample_count = 2});
+    stm_setup();
 }
 
 void frame(void) {
     int width = sapp_width();
     int height = sapp_height();
-    scimgui_new_frame(width, height, 0.016);
-    scimgui_render();
+    const sg_pass_action action = (sg_pass_action) { 0 };
+    sg_begin_default_pass(&action, width, height);
+    double delta = stm_sec(stm_laptime(&last_time));
+    simgui_new_frame(width, height, delta);
+    simgui_render();
+    sg_end_pass();
+    sg_commit();
 }
 
 void deinit(void) {
-    scimgui_shutdown();
+    simgui_shutdown();
     sg_shutdown();
 }
 
 void event(const sapp_event *event) {
-    (void)event;
+    simgui_handle_event(event);
 }
 
 sapp_desc sokol_main(int argc, char **argv) {

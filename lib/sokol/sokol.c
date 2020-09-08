@@ -3,3 +3,6 @@
 
 #include "sokol_app.h"
 #include "sokol_gfx.h"
+
+#define _POSIX_SOURCE
+#include "sokol_time.h"

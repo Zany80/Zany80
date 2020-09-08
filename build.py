@@ -140,15 +140,17 @@ with SourceLibrary('sokol') as sokol:
     sokol.add_sources_glob('lib/sokol/sokol_cpp.cpp')
     sokol.add_sources_glob('lib/sokol/sokol.c')
     sokol.add_headers_glob('lib/sokol/*.h')
+    sokol.add_headers_glob('lib/sokol/util/*.h')
     
 with SourceLibrary('cimgui') as cimgui:
-    sokol.add_sources_glob('lib/cimgui/*.cpp')
-    sokol.add_headers_glob('lib/cimgui/*.h')
+    cimgui.add_sources_glob('lib/cimgui/*.cpp')
+    cimgui.add_headers_glob('lib/cimgui/*.h')
+
 
 with Executable('Zany80') as Zany80:
     Zany80.add_sources_glob('src/main.c')
     Zany80.add_dependencies('sokol', 'cimgui')
-    Zany80.add_includes('lib/sokol/', 'lib/cimgui')
+    Zany80.add_includes('lib/')
 
 # create object directories
 for tgt in Target.all.values():
