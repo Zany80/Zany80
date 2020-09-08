@@ -990,8 +990,8 @@ void TextEditor::EnterCharacter(Char aChar, bool aShift)
 
 			if (modified)
 			{
-				assert(mLines.size() > start.mLine && mLines[start.mLine].size() > start.mColumn);
-				assert(mLines.size() > end.mLine && mLines[end.mLine].size() > end.mColumn);
+				assert(mLines.size() > (size_t)start.mLine && mLines[start.mLine].size() > (size_t)start.mColumn);
+				assert(mLines.size() > (size_t)end.mLine && mLines[end.mLine].size() > (size_t)end.mColumn);
 				u.mAddedStart = start;
 				u.mAddedEnd = end;
 				u.mAdded = GetText(start, end);

@@ -35,10 +35,10 @@ EXE_EXT = '.exe' if os.name == 'nt' else ''
 # For now, we'll keep compiler source in 'src/compiler' and VM source in 'src/vm', with shared stuff in 'src/' directly.
 BIN_NAME = 'Zany80' + EXE_EXT
 
-DEFAULT_FLAGS = {'-Wall', '-pedantic', '-DSOKOL_GLCORE33'}
+DEFAULT_FLAGS = {'-Wall', '-pedantic', '-DSOKOL_GLCORE33' }
 DEBUG_FLAGS = {'-g', '-Og', '-D_DEBUG'}
 # pixelherodev's personal flag set :P I'm insane, I know.
-PIXELS_DEVEL_FLAGS = { '-Werror', '-Wextra', '-Wno-error=pedantic', '-Wno-error=unused-parameter', '-Wno-error=missing-field-initializers', '-Wno-error=deprecated-declarations', '-pedantic', '-march=native', '-mtune=native', '-falign-functions=32' }
+PIXELS_DEVEL_FLAGS = { '-Werror', '-Wextra', '-Wno-error=reorder', '-Wno-error=pedantic', '-Wno-error=unused-parameter', '-Wno-error=missing-field-initializers', '-Wno-error=deprecated-declarations', '-pedantic', '-march=native', '-mtune=native', '-falign-functions=32' }
 RELEASE_FLAGS = {'-O2'}
 
 # these *do* need to be in order, so no sets!
@@ -146,10 +146,18 @@ with SourceLibrary('cimgui') as cimgui:
     cimgui.add_sources_glob('lib/cimgui/*.cpp')
     cimgui.add_headers_glob('lib/cimgui/*.h')
 
+with SourceLibrary('stb') as stb:
+    stb.add_sources_glob('lib/stb/stb_ds.c')
+    stb.add_headers_glob('lib/stb/stb_ds.h')
+
+with SourceLibrary('TextEditor') as TextEditor:
+    TextEditor.add_sources_glob('lib/TextEditor/TextEditor.cpp')
+    TextEditor.add_headers_glob('lib/TextEditor/TextEditor.h')
+    TextEditor.add_includes('lib/cimgui/')
 
 with Executable('Zany80') as Zany80:
-    Zany80.add_sources_glob('src/main.c')
-    Zany80.add_dependencies('sokol', 'cimgui')
+    Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', '-Werror')
+    Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor')
     Zany80.add_includes('lib/')
 
 # create object directories

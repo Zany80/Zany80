@@ -1,9 +1,11 @@
-#include <stdio.h>
+#define _XOPEN_SOURCE 500
 #include <string.h>
 
-#include "SIMPLE/graphics.h"
-#include "SIMPLE/3rd-party/stretchy_buffer.h"
-#include "SIMPLE/internal/graphics.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "graphics.h"
+#include "stb/stb_ds.h"
 
 static window_t root = {
     .widgets = NULL,
@@ -59,19 +61,25 @@ void window_set_pos(window_t *window, float x, float y) {
 }
 
 void window_append(window_t *window, widget_t *widget) {
-    sb_push(window->widgets, widget);
+    stbds_arrpush(window->widgets, widget);
 }
 
 void window_append_menu(window_t *window, menu_t *menu) {
-    sb_push(window->menus, menu);
+    stbds_arrpush(window->menus, menu);
 }
 
 void window_remove_menu(window_t *window, menu_t *menu) {
-    sb_remove((void***)&window->menus, menu);
+    int index = stbds_arrfind(window->menus, menu);
+    if (index != -1) {
+        stbds_arrdel(window->menus, index);
+    }
 }
 
 void window_remove(window_t *window, widget_t *widget) {
-    sb_remove((void***)&window->widgets, widget);
+    int index = stbds_arrfind(window->widgets, widget);
+    if (index != -1) {
+        stbds_arrdel(window->widgets, index);
+    }
 }
 
 window_t *get_root() {
@@ -79,8 +87,8 @@ window_t *get_root() {
 }
 
 void window_destroy(window_t *window) {
-    sb_free(window->menus);
-    sb_free(window->widgets);
+    stbds_arrfree(window->menus);
+    stbds_arrfree(window->widgets);
     if (window != get_root()) {
         free(window);
     }
@@ -110,17 +118,17 @@ void submenu_set_collapsed(widget_t *widget, bool collapsed) {
 }
 
 void menu_append(menu_t *menu, widget_t *widget) {
-    sb_push(menu->widgets, widget);
+    stbds_arrpush(menu->widgets, widget);
 }
 
 void menu_destroy(menu_t *menu) {
-    sb_free(menu->widgets);
+    stbds_arrfree(menu->widgets);
     free(menu->label);
     free(menu);
 }
 
 void menu_destroy_all(menu_t *menu) {
-	for (int i = 0; i < sb_count(menu->widgets); i++) {
+	for (size_t i = 0; i < arrlenu(menu->widgets); i++) {
 		widget_destroy(menu->widgets[i]);
 	}
 }
@@ -194,7 +202,7 @@ widget_t *label_create(const char *_label) {
         enum {
             normal, color_match
         } state = normal;
-        int cbegin;
+        int cbegin = 0;
         int index = 0;
         while ((c = _label[index++]) != 0) {
             if (c == '[' && state == normal) {
@@ -292,7 +300,7 @@ void widget_set_visible(widget_t *widget, bool visible) {
 void widget_destroy(widget_t *widget) {
 	switch (widget->type) {
 		case group:
-			sb_free(widget->_group.widgets);
+			stbds_arrfree(widget->_group.widgets);
 			break;
 		case editor:
 			editor_destroy(widget->editor.editor);
@@ -330,20 +338,23 @@ widget_t *group_create() {
 }
 
 void group_add(widget_t *group, widget_t *widget) {
-    sb_push(group->_group.widgets, widget);
+    stbds_arrpush(group->_group.widgets, widget);
 }
 
 void group_remove(widget_t *group, widget_t *widget) {
-    sb_remove((void***)&group->_group.widgets, widget);
+    int index = stbds_arrfind(group->_group.widgets, widget);
+    if (index != -1) {
+        stbds_arrdel(group->_group.widgets, index);
+    }
 }
 
 void group_clear(widget_t *group, bool f) {
     if (f) {
-        for (int i = 0; i < sb_count(group->_group.widgets); i++) {
+        for (size_t i = 0; i < arrlenu(group->_group.widgets); i++) {
             widget_destroy(group->_group.widgets[i]);
         }
     }
-    sb_free(group->_group.widgets);
+    stbds_arrfree(group->_group.widgets);
     group->_group.widgets = NULL;
 }
 
@@ -359,15 +370,18 @@ void image_set_size(widget_t *image, float w, float h) {
 static window_t **windows;
 
 void window_register(window_t *w) {
-	sb_push(windows, w);
+	stbds_arrpush(windows, w);
 }
 
 void window_unregister(window_t *w) {
-	sb_remove((void***)&windows, w);
+    int index = stbds_arrfind(windows, w);
+    if (index != -1) {
+        stbds_arrdel(windows, index);
+    }
 }
 
 void render_windows() {
-	for (int i = 0; i < sb_count(windows); i++) {
+	for (size_t i = 0; i < arrlenu(windows); i++) {
 		render_window(windows[i]);
 	}
 }

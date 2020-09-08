@@ -6,6 +6,7 @@
 #include "sokol/sokol_time.h"
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui/cimgui.h"
+#include "graphics.h"
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
@@ -25,6 +26,9 @@ void init(void) {
     });
     simgui_setup(&(simgui_desc_t){.sample_count = 2});
     stm_setup();
+    window_t *root = get_root();
+    window_register(root);
+    window_append(root, label_create("Hello, world!\n[00CCCC]test"));
 }
 
 void frame(void) {
@@ -34,6 +38,7 @@ void frame(void) {
     sg_begin_default_pass(&action, width, height);
     double delta = stm_sec(stm_laptime(&last_time));
     simgui_new_frame(width, height, delta);
+    render_windows();
     simgui_render();
     sg_end_pass();
     sg_commit();
