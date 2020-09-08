@@ -1,5 +1,7 @@
 # Zany80
 
+## Note: this repo is dead, see https://sr.ht/~pixelherodev/Zany80 instead
+
 Zany80 is an IDE to make working with various pieces of hardware easier, tightly
 integrating various emulators with debuggers and an intelligent code editor. It
 also provides tools to ease developments of various types of software (port
