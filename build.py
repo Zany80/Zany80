@@ -160,6 +160,15 @@ with SourceLibrary('TextEditor') as TextEditor:
     TextEditor.add_headers_glob('lib/TextEditor/TextEditor.h')
     TextEditor.add_includes('lib/cimgui/')
 
+with SourceLibrary('scas') as scas:
+    scas.add_sources_glob('lib/scas/*.c')
+    scas.add_headers_glob('lib/scas/*.h')
+
+with SourceLibrary('z80e') as z80e:
+    z80e.add_sources_glob('lib/z80e/**/*.c')
+    z80e.add_headers_glob('lib/z80e/**/*.h')
+    z80e.add_dependencies('scas')
+
 with Executable('Zany80') as Zany80:
     # SIMPLE frontend and core APIs
     Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c', 'src/XML.cpp')
@@ -167,7 +176,7 @@ with Executable('Zany80') as Zany80:
     Zany80.add_sources_glob('src/serial.c')
     # License
     Zany80.add_sources_glob('src/license.c')
-    Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor', 'rapidxml')
+    Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor', 'rapidxml', 'z80e')
     Zany80.add_includes('lib/')
 
 # create object directories
@@ -191,9 +200,9 @@ all: {targets_all}
 
 HEADERS={headers_all}
 {OBJ_DIR}/%.o: %.c $(HEADERS)
-\t$(CC) $(CFLAGS) $(INCLUDES) $< -c -o $@
+\t$(CC) $< $(CFLAGS) $(INCLUDES) -c -o $@
 {OBJ_DIR}/%.o: %.cpp $(HEADERS)
-\t$(CXX) $(CXXFLAGS) $(INCLUDES) $< -c -o $@
+\t$(CXX) $< $(CXXFLAGS) $(INCLUDES) -c -o $@
 '''.format(
     CFLAGS=' '.join(sorted(CFLAGS)),
     CXXFLAGS=' '.join(sorted(CXXFLAGS)),
