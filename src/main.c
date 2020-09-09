@@ -17,7 +17,7 @@
 uint64_t last_time;
 
 void init(void) {
-	printf("Zany80 version " STR(PROJECT_VERSION));
+	printf("Zany80 version " STR(PROJECT_VERSION) "\n");
 	sg_setup(&(sg_desc){
 		.mtl_device = sapp_metal_get_device(),
 		.mtl_renderpass_descriptor_cb = sapp_metal_get_renderpass_descriptor,
@@ -46,7 +46,8 @@ void init(void) {
 		"menu.\n"
 		"\n"
 		"When the serial port has its own window, the clear button is present on the "
-		"menu bar."
+		"menu bar.\n"
+		"\n"
 		;
 	serial_write_all(msg, sizeof(msg) - 1);
 }

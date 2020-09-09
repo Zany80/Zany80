@@ -45,7 +45,7 @@ static void input_handler(widget_t *input) {
 	{
 		char *m = malloc(strlen(msg) + 2);
 		if (m == NULL) {
-				// TODO: determine OOM solution
+			// TODO: determine OOM solution
 			puts("Failed to allocate memory");
 			exit(1);
 		}
