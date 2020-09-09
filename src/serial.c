@@ -37,6 +37,7 @@ void serial_write(uint32_t value) {
 void serial_clear_output() {
 	out_size = 0;
 	output_buf[0] = 0;
+	widget_set_label(output, output_buf);
 }
 
 static void input_handler(widget_t *input) {
@@ -60,13 +61,12 @@ static void input_handler(widget_t *input) {
 	input_set_text(input, "");
 }
 
-void serial_init() {
-	serial_is_docked = false;
+void serial_init(bool docked) {
+	serial_is_docked = docked;
 	window = window_create("Serial Monitor");
 	window_set_pos(window, 100, 80);
 	window_min_size(window, 200, 100);
-	window_initial_size(window, 700, 100);
-	window_register(window);
+	window_initial_size(window, 700, 300);
 	clear = menuitem_create("Clear", serial_clear_output);
 	global_menu = menu_create("Serial");
 	menu_append(global_menu, clear);
@@ -82,6 +82,15 @@ void serial_init() {
 		// TODO: OOM solution
 		puts("OOM");
 		exit(1);
+	}
+	if (docked) {
+		window_t *root = get_root();
+		window_append_menu(root, global_menu);
+		window_append(root, input);
+		window_append(root, output);
+	}
+	else {
+		window_register(window);
 	}
 }
 
@@ -110,5 +119,15 @@ void serial_toggle_root() {
 		window_append_menu(root, global_menu);
 		window_append(root, input);
 		window_append(root, output);
+	}
+}
+
+void serial_write_all(const char *const msg, int32_t len) {
+	// TODO: optimize this
+	if (len == -1) {
+		len = strlen(msg);
+	}
+	for (int32_t i = 0; i < len; i += 1) {
+		serial_write(msg[i]);
 	}
 }
