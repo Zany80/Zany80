@@ -8,12 +8,13 @@
 #include "serial.h"
 
 static window_t *window;
-static menu_t *menu;
-static widget_t *output, *input;
+static widget_t *output, *input, *clear;
+static menu_t *global_menu;
 
 static ring_buffer_t *input_buf;
 static char output_buf[SERIAL_BUF_SIZE];
 static size_t out_size;
+bool serial_is_docked;
 
 uint32_t serial_read() {
 	// TODO: determine attached caller (caller-id parameter?)
@@ -43,7 +44,7 @@ static void input_handler(widget_t *input) {
 	{
 		char *m = malloc(strlen(msg) + 2);
 		if (m == NULL) {
-    			// TODO: determine OOM solution
+				// TODO: determine OOM solution
 			puts("Failed to allocate memory");
 			exit(1);
 		}
@@ -60,14 +61,16 @@ static void input_handler(widget_t *input) {
 }
 
 void serial_init() {
+	serial_is_docked = false;
 	window = window_create("Serial Monitor");
-	window_set_pos(window, 0, 20);
+	window_set_pos(window, 100, 80);
 	window_min_size(window, 200, 100);
 	window_initial_size(window, 700, 100);
 	window_register(window);
-	menu = menu_create("Control");
-	menu_append(menu, menuitem_create("Clear", serial_clear_output));
-	window_append_menu(window, menu);
+	clear = menuitem_create("Clear", serial_clear_output);
+	global_menu = menu_create("Serial");
+	menu_append(global_menu, clear);
+	window_append(window, clear);
 	output = label_set_wrapped(label_create(NULL), true);
 	input = input_create(NULL, 128, input_handler);
 	input->width = -2;
@@ -76,8 +79,8 @@ void serial_init() {
 	out_size = 0;
 	input_buf = ring_buffer_new(1024);
 	if (!input_buf) {
-    		// TODO: OOM solution
-    		puts("OOM");
+		// TODO: OOM solution
+		puts("OOM");
 		exit(1);
 	}
 }
@@ -85,9 +88,27 @@ void serial_init() {
 void serial_deinit() {
 	window_unregister(window);
 	window_destroy(window);
-	menu_destroy_all(menu);
-	menu_destroy(menu);
 	widget_destroy(output);
 	widget_destroy(input);
+	menu_destroy(global_menu);
+	widget_destroy(clear);
 	ring_buffer_free(input_buf);
+}
+
+void serial_toggle_root() {
+	window_t *root = get_root();
+	// This is set to the *new* value.
+	if (!serial_is_docked) {
+		window_remove(root, clear);
+		window_remove(root, input);
+		window_remove(root, output);
+		window_remove_menu(root, global_menu);
+		window_register(window);
+	}
+	else {
+		window_unregister(window);
+		window_append_menu(root, global_menu);
+		window_append(root, input);
+		window_append(root, output);
+	}
 }

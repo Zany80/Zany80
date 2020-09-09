@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifndef SERIAL_BUF_SIZE
 #define SERIAL_BUF_SIZE 32 * 1024
@@ -18,8 +19,10 @@ void serial_init();
 /// Frees up all resources used by the serial monitor.
 void serial_deinit();
 /// Moves the serial monitor's menu into the root window under the title Serial,
-/// or removes it from the root window.
+/// or removes it from the root window. If the monitor is docked, this has no
+/// effect.
 void serial_toggle_root_menu();
 /// Moves the serial monitor into the root window - or, if it is already there,
-/// pops it out.
-void serial_toggle_root_contents();
+/// pops it out. The menu is moved to the new target.
+void serial_toggle_root();
+extern bool serial_is_docked;

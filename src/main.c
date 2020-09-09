@@ -31,6 +31,9 @@ void init(void) {
     stm_setup();
     window_t *root = get_root();
     window_register(root);
+    menu_t *menu = menu_create("Global");
+    window_append_menu(root, menu);
+    menu_append(menu, checkbox_create("Dock serial port", &serial_is_docked, &serial_toggle_root));
     serial_init();
 }
 
