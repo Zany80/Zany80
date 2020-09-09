@@ -25,13 +25,16 @@ void serial_write(uint32_t value) {
 	if (value == 0) {
 		return;
 	}
-	if (out_size >= 1024 * 32) {
-		// TODO: integrate with permissions / UI feedback?
-		serial_clear_output();
+	char c = (char)(value & 0xFF);
+	if (c != 0) {
+		if (out_size >= SERIAL_BUF_SIZE) {
+			// TODO: integrate with permissions / UI feedback?
+			serial_clear_output();
+		}
+		output_buf[out_size++] = (char)(value & 0xFF);
+		output_buf[out_size] = 0;
+		widget_set_label(output, output_buf);
 	}
-	output_buf[out_size++] = (char)(value & 0xFF);
-	output_buf[out_size] = 0;
-	widget_set_label(output, output_buf);
 }
 
 void serial_clear_output() {

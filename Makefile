@@ -48,7 +48,7 @@ stb_HEADERS = lib/stb/stb_ds.h
 
 Zany80: build/Zany80
 
-Zany80_OBJECTS = build/obj/src/graphics.o build/obj/src/graphics_legacy.o build/obj/src/main.o build/obj/src/ring_buffer.o build/obj/src/serial.o
+Zany80_OBJECTS = build/obj/src/graphics.o build/obj/src/graphics_legacy.o build/obj/src/license.o build/obj/src/main.o build/obj/src/ring_buffer.o build/obj/src/serial.o
 
 Zany80_HEADERS = 
 

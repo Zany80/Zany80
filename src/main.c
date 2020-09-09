@@ -10,11 +10,22 @@
 #include "graphics.h"
 
 #include "serial.h"
+#include "license.h"
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
 
-uint64_t last_time;
+static bool license_shown = false;
+static window_t *license;
+
+static void toggle_license() {
+	if (license_shown) {
+		window_register(license);
+	}
+	else {
+		window_unregister(license);
+	}
+}
 
 void init(void) {
 	printf("Zany80 version " STR(PROJECT_VERSION) "\n");
@@ -34,6 +45,7 @@ void init(void) {
 	menu_t *menu = menu_create("Global");
 	window_append_menu(root, menu);
 	menu_append(menu, checkbox_create("Dock serial port", &serial_is_docked, &serial_toggle_root));
+	menu_append(menu, checkbox_create("Show license", &license_shown, &toggle_license));
 	// Start the serial port docked in the root window.
 	serial_init(true);
 	const char msg[] = "Welcome to Zany80 version " STR(PROJECT_VERSION) "!\n"
@@ -48,8 +60,13 @@ void init(void) {
 		"When the serial port has its own window, the clear button is present on the "
 		"menu bar.\n"
 		"\n"
+		"To view the license, hit License in the Global menu.\n"
+		"\n"
 		;
 	serial_write_all(msg, sizeof(msg) - 1);
+	license = window_create("License");
+	window_auto_size(license, true);
+	window_append(license, label_set_wrapped(label_create(LICENSE), false));
 }
 
 void frame(void) {
@@ -57,6 +74,7 @@ void frame(void) {
 	int height = sapp_height();
 	const sg_pass_action action = (sg_pass_action) { 0 };
 	sg_begin_default_pass(&action, width, height);
+        static uint64_t last_time;
 	double delta = stm_sec(stm_laptime(&last_time));
 	simgui_new_frame(width, height, delta);
 	render_windows();
