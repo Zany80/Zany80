@@ -7,17 +7,21 @@
 #include "sokol/sokol_time.h"
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui/cimgui.h"
-#include "graphics.h"
 
 #include "serial.h"
+#include "z80.h"
 #include "license.h"
+#include "global.h"
+#include "graphics.h"
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
 
+extern uint64_t executed;
 static bool license_shown = false;
 static window_t *license;
 static bool in_pass = false;
+menu_t *global_menu;
 
 static void toggle_license() {
 	if (license_shown) {
@@ -43,10 +47,10 @@ void init(void) {
 	stm_setup();
 	window_t *root = get_root();
 	window_register(root);
-	menu_t *menu = menu_create("Global");
-	window_append_menu(root, menu);
-	menu_append(menu, checkbox_create("Dock serial port", &serial_is_docked, &serial_toggle_root));
-	menu_append(menu, checkbox_create("Show license", &license_shown, &toggle_license));
+	global_menu = menu_create("Global");
+	window_append_menu(root, global_menu);
+	menu_append(global_menu, checkbox_create("Dock serial port", &serial_is_docked, &serial_toggle_root));
+	menu_append(global_menu, checkbox_create("Show license", &license_shown, &toggle_license));
 	// Start the serial port docked in the root window.
 	serial_init(true);
 	const char msg[] = "Welcome to Zany80 version " STR(PROJECT_VERSION) "!\n"
@@ -68,6 +72,7 @@ void init(void) {
 	license = window_create("License");
 	window_auto_size(license, true);
 	window_append(license, label_set_wrapped(label_create(LICENSE), false));
+	z80_init();
 }
 
 void frame(void) {
@@ -78,6 +83,13 @@ void frame(void) {
 	in_pass = true;
         static uint64_t last_time;
 	double delta = stm_sec(stm_laptime(&last_time));
+	static double total_time = 0;
+	if (executed != 0) {
+		total_time += delta;
+		double HZ = executed / total_time;
+		printf("\rMHz: %.04f", HZ / 1000000);
+		fflush(stdout);
+	}
 	simgui_new_frame(width, height, delta);
 	render_windows();
 	simgui_render();
@@ -87,6 +99,7 @@ void frame(void) {
 }
 
 void deinit(void) {
+	z80_deinit();
 	if (in_pass) {
 		sg_end_pass();
 		in_pass = false;
