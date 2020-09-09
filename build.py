@@ -35,14 +35,14 @@ EXE_EXT = '.exe' if os.name == 'nt' else ''
 # For now, we'll keep compiler source in 'src/compiler' and VM source in 'src/vm', with shared stuff in 'src/' directly.
 BIN_NAME = 'Zany80' + EXE_EXT
 
-DEFAULT_FLAGS = {'-Wall', '-pedantic', '-DSOKOL_GLCORE33' }
+DEFAULT_FLAGS = {'-Wall', '-pedantic', '-DSOKOL_GLCORE33', '-D_POSIX_C_SOURCE=200809L' }
 DEBUG_FLAGS = {'-g', '-Og', '-D_DEBUG'}
 # pixelherodev's personal flag set :P I'm insane, I know.
 PIXELS_DEVEL_FLAGS = { '-Werror', '-Wextra', '-Wno-error=reorder', '-Wno-error=pedantic', '-Wno-error=unused-parameter', '-Wno-error=missing-field-initializers', '-Wno-error=deprecated-declarations', '-pedantic', '-march=native', '-mtune=native', '-falign-functions=32' }
 RELEASE_FLAGS = {'-O2'}
 
 # these *do* need to be in order, so no sets!
-BASE_LDFLAGS = [ '-lGL', '-lX11', '-ldl', '-lstdc++' ]
+BASE_LDFLAGS = [ '-lGL', '-lX11', '-ldl', '-lstdc++', '-lm' ]
 DEFAULT_LDFLAGS = ['-static', '-static-libgcc' ] + BASE_LDFLAGS
 
 # parse arguments
