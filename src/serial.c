@@ -26,14 +26,14 @@ void serial_write(uint32_t value) {
 	}
 	if (out_size >= 1024 * 32) {
 		// TODO: integrate with permissions / UI feedback?
-		serial_clear();
+		serial_clear_output();
 	}
 	output_buf[out_size++] = (char)(value & 0xFF);
 	output_buf[out_size] = 0;
 	widget_set_label(output, output_buf);
 }
 
-void serial_clear() {
+void serial_clear_output() {
 	out_size = 0;
 	output_buf[0] = 0;
 }
@@ -61,15 +61,15 @@ static void input_handler(widget_t *input) {
 
 void serial_init() {
 	window = window_create("Serial Monitor");
-	window_min_size(window, 200, 160);
 	window_set_pos(window, 0, 20);
-	window_initial_size(window, 450, 700);
+	window_min_size(window, 200, 80);
 	window_register(window);
 	menu = menu_create("Control");
-	menu_append(menu, menuitem_create("Clear", serial_clear));
+	menu_append(menu, menuitem_create("Clear", serial_clear_output));
 	window_append_menu(window, menu);
-	output = label_create(NULL);
-	input = input_create("", 128, input_handler);
+	output = label_set_wrapped(label_create(NULL), true);
+	input = input_create(NULL, 128, input_handler);
+	input->width = -2;
 	window_append(window, output);
 	window_append(window, input);
 	out_size = 0;

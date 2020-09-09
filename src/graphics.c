@@ -137,6 +137,7 @@ widget_t *widget_new(const char *label) {
 	widget_t *w = malloc(sizeof(widget_t));
 	w->label = label ? strdup(label) : NULL;
 	w->visible = true;
+	w->width = -1;
 	return w;
 }
 

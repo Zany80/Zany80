@@ -174,6 +174,8 @@ typedef struct {
 
 struct widget_t {
     widget_type type;
+    /// If not negative 1, the widget's width is overridden to this value
+    int width;
     char *label;
     union {
         button_t button;

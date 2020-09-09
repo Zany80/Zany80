@@ -16,6 +16,9 @@ static void render_widget(widget_t *widget) {
 	if (!widget->visible) {
 		return;
 	}
+	if (widget->width != -1) {
+		ImGui::PushItemWidth(widget->width);
+	}
 	switch (widget->type) {
 		case WIDGET_TYPE_LABEL:
 			if (!widget->label) {
@@ -91,12 +94,15 @@ static void render_widget(widget_t *widget) {
 			}
 			break;
 		case WIDGET_TYPE_INPUT:{
-			ImGui::TextUnformatted(widget->label);
-			ImGui::SameLine();
+			if (widget->label && strlen(widget->label)) {
+				ImGui::TextUnformatted(widget->label);
+				ImGui::SameLine();
+			}
 			int flags = ImGuiInputTextFlags_EnterReturnsTrue;
 			if (widget->input.pw) {
 				flags |= ImGuiInputTextFlags_Password;
 			}
+
 			if (ImGui::InputText("", widget->input.buf, widget->input.capacity, flags)) {
 				if (widget->input.handler) {
 					stbds_arrpush(awaiting_handling, widget);
@@ -119,6 +125,9 @@ static void render_widget(widget_t *widget) {
 		case WIDGET_TYPE_CUSTOM:
 			widget->custom.render();
 			break;
+	}
+	if (widget->width != -1) {
+		ImGui::PopItemWidth();
 	}
 }
 
