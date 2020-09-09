@@ -148,11 +148,11 @@ typedef struct {
 typedef enum {
     // menu_item is the same as button, except instead of having a border it
     // fills up all space available to it
-    button, menu_item, checkbox, radio, label, 
-    group, submenu,
-    editor, input,
-    image,
-    custom
+    WIDGET_TYPE_BUTTON, WIDGET_TYPE_MENU_ITEM, WIDGET_TYPE_CHECKBOX, WIDGET_TYPE_RADIO, WIDGET_TYPE_LABEL, 
+    WIDGET_TYPE_GROUP, WIDGET_TYPE_SUBMENU,
+    WIDGET_TYPE_EDITOR, WIDGET_TYPE_INPUT,
+    WIDGET_TYPE_IMAGE,
+    WIDGET_TYPE_CUSTOM
 } widget_type;
 
 typedef struct {

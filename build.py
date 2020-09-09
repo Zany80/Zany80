@@ -173,7 +173,7 @@ CXXFLAGS+={CXXFLAGS}
 LDFLAGS+={LDFLAGS}
 INCLUDES+={includes_all}
 
-.PHONY: default ./{BIN_DIR}/Zany80 all Zany80
+.PHONY: default all Zany80
 default: Zany80
 \t./{BIN_DIR}/Zany80
 

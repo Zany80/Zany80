@@ -32,9 +32,7 @@ pub fn build(b: *Builder) void {
     }) |v| {
         exe.addCSourceFile(v, &[_][]const u8{});
     }
-    for (&[_][]const u8{"lib/sokol/"}) |v| {
-        exe.addIncludeDir(v);
-    }
+    exe.addIncludeDir("lib/");
     if (exe.target.isWindows()) {
         exe.addObjectFile("src/icon.rc");
         exe.defineCMacro("ZANY_WINDOWS");

@@ -17,7 +17,7 @@ static void render_widget(widget_t *widget) {
 		return;
 	}
 	switch (widget->type) {
-		case label:
+		case WIDGET_TYPE_LABEL:
 			// Hack to avoid empty line when color change is the first part
 			// of a label. TODO: avoid this.
 			if (strlen(widget->label) != 0) {
@@ -29,28 +29,28 @@ static void render_widget(widget_t *widget) {
 				render_widget(widget->_label.next);
 			}
 			break;
-		case button:
+		case WIDGET_TYPE_BUTTON:
 			if (ImGui::Button(widget->label)) {
 				if (widget->button.handler != NULL) {
 					stbds_arrpush(awaiting_handling, widget);
 				}
 			}
 			break;
-		case menu_item:
+		case WIDGET_TYPE_MENU_ITEM:
 			if (ImGui::MenuItem(widget->label)) {
 				if (widget->button.handler != NULL) {
 					stbds_arrpush(awaiting_handling, widget);
 				}
 			}
 			break;
-		case checkbox:
+		case WIDGET_TYPE_CHECKBOX:
 			if (ImGui::Checkbox(widget->label, widget->checkbox.value)) {
 				if (widget->checkbox.handler != NULL) {
 					stbds_arrpush(awaiting_handling, widget);
 				}
 			}
 			break;
-		case radio:{
+		case WIDGET_TYPE_RADIO:{
 			bool handler = false;
 			if (widget->radio.current) {
 				if (ImGui::RadioButton(widget->label, widget->radio.current, widget->radio.index)) {
@@ -64,7 +64,7 @@ static void render_widget(widget_t *widget) {
 				stbds_arrpush(awaiting_handling, widget);
 			}}
 			break;
-		case submenu:
+		case WIDGET_TYPE_SUBMENU:
 			if (widget->menu.collapsed) {
 				if (ImGui::CollapsingHeader(widget->menu.menu->label)) {
 					for (size_t j = 0; j < stbds_arrlenu(widget->menu.menu->widgets); j++) {
@@ -79,7 +79,7 @@ static void render_widget(widget_t *widget) {
 				ImGui::EndMenu();
 			}
 			break;
-		case group:
+		case WIDGET_TYPE_GROUP:
 			for (size_t i = 0; i < stbds_arrlenu(widget->_group.widgets); i++) {
 				render_widget(widget->_group.widgets[i]);
 				if (widget->_group.orientation == horizontal && i + 1 != stbds_arrlenu(widget->_group.widgets)) {
@@ -87,7 +87,7 @@ static void render_widget(widget_t *widget) {
 				}
 			}
 			break;
-		case input:{
+		case WIDGET_TYPE_INPUT:{
 			ImGui::TextUnformatted(widget->label);
 			ImGui::SameLine();
 			int flags = ImGuiInputTextFlags_EnterReturnsTrue;
@@ -100,10 +100,10 @@ static void render_widget(widget_t *widget) {
 				}
 			}
 			break;}
-		case editor:
+		case WIDGET_TYPE_EDITOR:
 			widget->editor.editor->Render(widget->label);
 			break;
-		case image:
+		case WIDGET_TYPE_IMAGE:
 			if (widget->image.stream) {
 				//Oryol::ImageDataAttrs attrs;
 				//attrs.NumFaces = attrs.NumMipMaps = 1;
@@ -113,7 +113,7 @@ static void render_widget(widget_t *widget) {
 			}
 //			ImGui::Image(((image_info_t*)widget->image.id)->imgui, ImVec2(widget->image.visible_width, widget->image.visible_height));
 			break;
-		case custom:
+		case WIDGET_TYPE_CUSTOM:
 			widget->custom.render();
 			break;
 	}
@@ -178,17 +178,17 @@ void render_window(window_t *window) {
 	for (size_t i = 0; i < stbds_arrlenu(awaiting_handling); i++) {
 		widget_t *w = awaiting_handling[i];
 		switch(w->type) {
-			case button:
-			case menu_item:
+			case WIDGET_TYPE_BUTTON:
+			case WIDGET_TYPE_MENU_ITEM:
 				w->button.handler();
 				break;
-			case checkbox:
+			case WIDGET_TYPE_CHECKBOX:
 				w->checkbox.handler();
 				break;
-			case radio:
+			case WIDGET_TYPE_RADIO:
 				w->radio.handler(w->radio.index);
 				break;
-			case input:
+			case WIDGET_TYPE_INPUT:
 				w->input.handler(w);
 				break;
 			default:
@@ -223,7 +223,7 @@ void window_get_size(window_t *window, float *x, float *y) {
 
 widget_t *editor_create(const char *label) {
 	widget_t *w = widget_new(label);
-	w->type = editor;
+	w->type = WIDGET_TYPE_EDITOR;
 	w->editor.editor = new TextEditor();
 	return w;
 }
@@ -243,7 +243,7 @@ void editor_destroy(TextEditor *editor) {
 widget_t *_image_create(uint8_t *buf, size_t width, size_t h, bool stream) {
 	return NULL;
 	widget_t *w = widget_new(NULL);
-	w->type = image;
+	w->type = WIDGET_TYPE_IMAGE;
 	w->image.buf = buf;
 	w->image.visible_width = w->image.width = width;
 	w->image.visible_height = w->image.height = h;
