@@ -18,6 +18,9 @@ static void render_widget(widget_t *widget) {
 	}
 	switch (widget->type) {
 		case WIDGET_TYPE_LABEL:
+			if (!widget->label) {
+				break;
+			}
 			// Hack to avoid empty line when color change is the first part
 			// of a label. TODO: avoid this.
 			if (strlen(widget->label) != 0) {
