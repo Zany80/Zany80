@@ -62,7 +62,8 @@ static void input_handler(widget_t *input) {
 void serial_init() {
 	window = window_create("Serial Monitor");
 	window_set_pos(window, 0, 20);
-	window_min_size(window, 200, 80);
+	window_min_size(window, 200, 100);
+	window_initial_size(window, 700, 100);
 	window_register(window);
 	menu = menu_create("Control");
 	menu_append(menu, menuitem_create("Clear", serial_clear_output));
@@ -70,8 +71,8 @@ void serial_init() {
 	output = label_set_wrapped(label_create(NULL), true);
 	input = input_create(NULL, 128, input_handler);
 	input->width = -2;
-	window_append(window, output);
 	window_append(window, input);
+	window_append(window, output);
 	out_size = 0;
 	input_buf = ring_buffer_new(1024);
 	if (!input_buf) {
@@ -82,6 +83,7 @@ void serial_init() {
 }
 
 void serial_deinit() {
+	window_unregister(window);
 	window_destroy(window);
 	menu_destroy_all(menu);
 	menu_destroy(menu);
