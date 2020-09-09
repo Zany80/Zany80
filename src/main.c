@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "sokol/sokol_app.h"
 #include "sokol/sokol_gfx.h"
 #include "sokol/util/sokol_imgui.h"
@@ -7,6 +8,8 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui/cimgui.h"
 #include "graphics.h"
+
+#include "serial.h"
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
@@ -28,7 +31,7 @@ void init(void) {
     stm_setup();
     window_t *root = get_root();
     window_register(root);
-    window_append(root, label_create("Hello, world!\n[00CCCC]test"));
+    serial_init();
 }
 
 void frame(void) {
@@ -45,6 +48,7 @@ void frame(void) {
 }
 
 void deinit(void) {
+    serial_deinit();
     simgui_shutdown();
     sg_shutdown();
 }

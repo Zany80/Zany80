@@ -136,6 +136,8 @@ class Executable(Target):
     def __init__(self, name):
         super().__init__(name, {name + EXE_EXT})
 
+# SOURCES (FOR GREPPING)
+
 with SourceLibrary('sokol') as sokol:
     sokol.add_sources_glob('lib/sokol/sokol_cpp.cpp')
     sokol.add_sources_glob('lib/sokol/sokol.c')
@@ -156,7 +158,10 @@ with SourceLibrary('TextEditor') as TextEditor:
     TextEditor.add_includes('lib/cimgui/')
 
 with Executable('Zany80') as Zany80:
-    Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', '-Werror')
+    # SIMPLE frontend and core APIs
+    Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c')
+    # Core Zany80 components
+    Zany80.add_sources_glob('src/serial.c')
     Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor')
     Zany80.add_includes('lib/')
 
