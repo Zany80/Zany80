@@ -60,6 +60,16 @@ void window_set_pos(window_t *window, float x, float y) {
 	window->absY = y;
 }
 
+void window_clear(window_t *window, bool f) {
+	if (f) {
+		for (size_t i = 0; i < arrlenu(window->widgets); i++) {
+			widget_destroy(window->widgets[i]);
+		}
+	}
+	stbds_arrfree(window->widgets);
+	window->widgets = NULL;
+}
+
 void window_append(window_t *window, widget_t *widget) {
 	stbds_arrpush(window->widgets, widget);
 }

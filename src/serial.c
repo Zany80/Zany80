@@ -98,7 +98,16 @@ void serial_init(bool docked) {
 }
 
 void serial_deinit() {
-	window_unregister(window);
+	if (serial_is_docked) {
+		window_t *root = get_root();
+		window_remove(root, clear);
+		window_remove(root, input);
+		window_remove(root, output);
+		window_remove_menu(root, global_menu);
+	}
+	else {
+		window_unregister(window);
+	}
 	window_destroy(window);
 	widget_destroy(output);
 	widget_destroy(input);

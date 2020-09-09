@@ -33,6 +33,9 @@ void window_remove_menu(window_t *window, menu_t *menu);
 void window_get_pos(window_t *window, float *x, float *y); 
 void window_get_size(window_t *window, float *x, float *y);
 window_t *get_root();
+/// Removes all widgets from the window. If kill_kids is set, all widgets are
+/// destroyed as well.
+void window_clear(window_t *window, bool kill_kids);
 void window_destroy(window_t *window);
 bool window_is_minimized(window_t *window);
 /// Add a window to an internal list of windows to render every frame.

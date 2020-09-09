@@ -17,6 +17,7 @@
 
 static bool license_shown = false;
 static window_t *license;
+static bool in_pass = false;
 
 static void toggle_license() {
 	if (license_shown) {
@@ -74,17 +75,28 @@ void frame(void) {
 	int height = sapp_height();
 	const sg_pass_action action = (sg_pass_action) { 0 };
 	sg_begin_default_pass(&action, width, height);
+	in_pass = true;
         static uint64_t last_time;
 	double delta = stm_sec(stm_laptime(&last_time));
 	simgui_new_frame(width, height, delta);
 	render_windows();
 	simgui_render();
 	sg_end_pass();
+	in_pass = false;
 	sg_commit();
 }
 
 void deinit(void) {
+	if (in_pass) {
+		sg_end_pass();
+		in_pass = false;
+		puts("Was in pass during deinit!");
+	}
+	window_clear(license, true);
+	window_destroy(license);
 	serial_deinit();
+	window_t *root = get_root();
+	window_clear(root, true);
 	simgui_shutdown();
 	sg_shutdown();
 }
