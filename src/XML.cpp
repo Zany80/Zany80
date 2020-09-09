@@ -1,9 +1,9 @@
-#include "SIMPLE/internal/XML.h"
-#include "rapidxml_print.hpp"
+#include "XML.h"
 
-extern "C" {
-    #include "SIMPLE/XML.h"
-}
+#define RAPIDXML_NO_EXCEPTIONS
+#include "rapidxml/rapidxml.hpp"
+#include "rapidxml/rapidxml_print.hpp"
+using namespace rapidxml;
 
 #include <stdio.h>
 #include <setjmp.h>
@@ -13,7 +13,21 @@ jmp_buf env;
 
 #include <fstream>
 
-#include <SIMPLE/3rd-party/stretchy_buffer.h>
+#include "stb/stb_ds.h"
+
+struct _xml_document_t {
+    xml_document<> *_doc;
+    char *buf;
+    xml_node_t *associated_nodes;
+};
+
+struct _xml_node_t {
+    xml_node<> *_node;
+    // doc is the parent document of this node, sourced is the owner of the doc
+    // that is sourced for nodes with a src attribute
+    xml_document_t doc, sourced;
+};
+
 
 char *h_read_file(const char *path) {
     FILE *f = fopen(path, "rb");
@@ -70,13 +84,13 @@ void document_destroy(xml_document_t doc) {
         delete doc->_doc;
     }
     delete[] doc->buf;
-    for (int i = 0; i < sb_count(doc->associated_nodes); i++) {
+    for (size_t i = 0; i < stbds_arrlenu(doc->associated_nodes); i++) {
         if (doc->associated_nodes[i]->sourced != NULL) {
             document_destroy(doc->associated_nodes[i]->sourced);
         }
         delete doc->associated_nodes[i];
     }
-    sb_free(doc->associated_nodes);
+    stbds_arrfree(doc->associated_nodes);
     delete doc;
 }
 
@@ -87,7 +101,7 @@ xml_node_t document_get_root(xml_document_t doc) {
         n->_node = doc->_doc->first_node();
         n->doc = doc;
         n->sourced = NULL;
-        sb_push(doc->associated_nodes, n);
+        stbds_arrpush(doc->associated_nodes, n);
         return n;
     }
     return NULL;
@@ -108,7 +122,7 @@ xml_node_t node_create(xml_document_t doc, const char *name, const char *value) 
     n->doc = doc;
     n->sourced = NULL;
     n->_node = doc->_doc->allocate_node(node_element, doc->_doc->allocate_string(name), value ? doc->_doc->allocate_string(value) : NULL);
-    sb_push(doc->associated_nodes, n);
+    stbds_arrpush(doc->associated_nodes, n);
     return n;
 }
 
@@ -132,7 +146,7 @@ xml_node_t node_get_child(xml_node_t node, const char *name) {
             n->_node = child;
             n->doc = node->doc;
             n->sourced = NULL;
-            sb_push(node->doc->associated_nodes, n);
+            stbds_arrpush(node->doc->associated_nodes, n);
             return n;
         }
         else {
@@ -149,7 +163,7 @@ xml_node_t node_get_next_sibling(xml_node_t node, const char *name) {
         n->doc = node->doc;
         n->sourced = NULL;
         n->_node = sib;
-        sb_push(n->doc->associated_nodes, n);
+        stbds_arrpush(n->doc->associated_nodes, n);
         return n;
     }
     return NULL;
@@ -162,7 +176,7 @@ xml_node_t node_get_parent(xml_node_t node) {
         n->doc = node->doc;
         n->sourced = NULL;
         n->_node = parent;
-        sb_push(n->doc->associated_nodes, n);
+        stbds_arrpush(n->doc->associated_nodes, n);
         return n;
     }
     return NULL;

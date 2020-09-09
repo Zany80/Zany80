@@ -152,6 +152,9 @@ with SourceLibrary('stb') as stb:
     stb.add_sources_glob('lib/stb/stb_ds.c')
     stb.add_headers_glob('lib/stb/stb_ds.h')
 
+with SourceLibrary('rapidxml') as rapidxml:
+    rapidxml.add_headers_glob('lib/rapidxml/*.hpp')
+
 with SourceLibrary('TextEditor') as TextEditor:
     TextEditor.add_sources_glob('lib/TextEditor/TextEditor.cpp')
     TextEditor.add_headers_glob('lib/TextEditor/TextEditor.h')
@@ -159,12 +162,12 @@ with SourceLibrary('TextEditor') as TextEditor:
 
 with Executable('Zany80') as Zany80:
     # SIMPLE frontend and core APIs
-    Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c')
+    Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c', 'src/XML.cpp')
     # Core Zany80 components
     Zany80.add_sources_glob('src/serial.c')
     # License
     Zany80.add_sources_glob('src/license.c')
-    Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor')
+    Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor', 'rapidxml')
     Zany80.add_includes('lib/')
 
 # create object directories
