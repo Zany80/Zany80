@@ -1,5 +1,0 @@
-exports:
-  modules:
-    z80cpp: .
-  header-dirs:
-    - include
