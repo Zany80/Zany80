@@ -4,7 +4,7 @@ CXXFLAGS+=-DPROJECT_VERSION=0.2.0 -DSOKOL_GLCORE33 -O2 -Wall -Werror -Wextra -Wn
 LDFLAGS+=-lGL -lX11 -ldl -lstdc++
 INCLUDES+=-Ilib/ -Ilib/cimgui/
 
-.PHONY: default ./build/Zany80 all Zany80
+.PHONY: default all Zany80
 default: Zany80
 	./build/Zany80
 
@@ -48,7 +48,7 @@ stb_HEADERS = lib/stb/stb_ds.h
 
 Zany80: build/Zany80
 
-Zany80_OBJECTS = build/obj/src/graphics.o build/obj/src/graphics_legacy.o build/obj/src/main.o
+Zany80_OBJECTS = build/obj/src/graphics.o build/obj/src/graphics_legacy.o build/obj/src/main.o build/obj/src/ring_buffer.o build/obj/src/serial.o
 
 Zany80_HEADERS = 
 
