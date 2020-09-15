@@ -234,10 +234,11 @@ void window_get_size(window_t *window, float *x, float *y) {
 	ImGui::End();
 }
 
-widget_t *editor_create(const char *label) {
-	widget_t *w = widget_new(label);
+widget_t *editor_create() {
+	widget_t *w = widget_new(NULL);
 	w->type = WIDGET_TYPE_EDITOR;
 	w->editor.editor = new TextEditor();
+	w->editor.editor->mIgnoreImGuiChild = true;
 	return w;
 }
 

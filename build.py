@@ -173,7 +173,7 @@ with Executable('Zany80') as Zany80:
     # SIMPLE frontend and core APIs
     Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c', 'src/XML.cpp')
     # Core Zany80 components
-    Zany80.add_sources_glob('src/serial.c', 'src/z80.c')
+    Zany80.add_sources_glob('src/serial.c', 'src/z80.c', 'src/editor.c')
     # Embedded files
     Zany80.add_sources_glob('src/license.c', 'src/zexall.c')
     Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor', 'rapidxml', 'z80e')

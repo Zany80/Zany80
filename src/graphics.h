@@ -50,7 +50,7 @@ widget_t *menuitem_create(const char *label, void(*handler)());
 widget_t *checkbox_create(const char *label, bool *value, void(*handler)());
 widget_t *radio_create(const char *label, int *current, int index, void(*handler)(int index));
 widget_t *label_create(const char *label);
-widget_t *editor_create(const char *label);
+widget_t *editor_create();
 widget_t *input_create(const char *label, size_t capacity, void (*handler)(widget_t *input));
 /// RGBA buffer, buf MUST have a size of at least width*height*4
 widget_t *image_create(uint8_t *buf, size_t width, size_t height);

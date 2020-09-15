@@ -10,6 +10,7 @@
 #include "cimgui/cimgui.h"
 
 #include "serial.h"
+#include "editor.h"
 #include "z80.h"
 #include "license.h"
 #include "global.h"
@@ -68,6 +69,7 @@ void init(void) {
 	window_auto_size(license, true);
 	window_append(license, label_set_wrapped(label_create(LICENSE), false));
 	z80_init();
+	editor_init();
 }
 
 void frame(void) {
@@ -94,12 +96,13 @@ void frame(void) {
 }
 
 void deinit(void) {
-	z80_deinit();
 	if (in_pass) {
 		sg_end_pass();
 		in_pass = false;
 		puts("Was in pass during deinit!");
 	}
+	editor_deinit();
+	z80_deinit();
 	window_clear(license, true);
 	window_destroy(license);
 	serial_deinit();
