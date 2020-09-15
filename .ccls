@@ -1,0 +1,10 @@
+/usr/lib/llvm/10/bin/clang
+-std=c11
+-Ilib/sokol
+-Ilib/sokol/util/
+-Ilib/cimgui
+-Ilib/
+-Wall
+-Wextra
+-pedantic
+
