@@ -38,7 +38,7 @@ void init(void) {
 	printf("Zany80 version " STR(PROJECT_VERSION) "\n");
 	sg_setup(&(sg_desc){
 		.context = sapp_sgcontext(),
-		});
+	});
 	simgui_setup(&(simgui_desc_t){.sample_count = 4});
 	stm_setup();
 	window_t *root = get_root();
