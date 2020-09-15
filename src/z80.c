@@ -8,6 +8,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define MHz * 1000 * 1000
+const size_t speed = 500 MHz;
+
 static asic_t *asic = NULL;
 static widget_t *run, *callback_widget;
 
@@ -15,9 +18,12 @@ static bool stop = false;
 uint64_t executed;
 
 static void cpu_reset(void *device, uint8_t data) {
-	const char msg[] = "Jumped to 0x00!\n";
+	(void)data;
+	const asic_t *asic = device;
+	const char msg[] = "Tests completed.\n";
 	serial_write_all(msg, sizeof(msg) - 1);
 	stop = true;
+	asic->cpu->halted = true;
 	window_remove(get_root(), callback_widget);
 }
 
@@ -38,8 +44,9 @@ static uint8_t write_text(void *device) {
 }
 
 static void z80_callback() {
-	cpu_execute(asic->cpu, 5000000);
-	executed += 5000000;
+	const size_t frame = speed / 60;
+	cpu_execute(asic->cpu, frame);
+	executed += frame;
 }
 
 static void z80_run() {
@@ -50,10 +57,11 @@ static void z80_run() {
 void z80_init() {
 	stop = false;
 	executed = 0;
-        if (asic) {
-                // TODO
-        }
-        asic = asic_init(TI84p, NULL);
+	if (asic) {
+		// TODO
+	}
+	asic = asic_init(TI84p, NULL);
+	asic_set_clock_rate(asic, speed);
 	for (uint16_t i = 0; i < 0x100; i += 1) {
 		asic->cpu->devices[i].write_out = cpu_reset;
 		asic->cpu->devices[i].read_in = write_text;
@@ -65,7 +73,7 @@ void z80_init() {
 
 	asic->mmu->ram[5] = 0xdb; /* IN A, N */
 	asic->mmu->ram[6] = 0x00;
-	asic->mmu->ram[7] = 0xc9; /* RET */    
+	asic->mmu->ram[7] = 0xc9; /* RET */	
 	asic->mmu->banks[0].page = 0;
 	asic->mmu->banks[1].page = 1;
 	asic->mmu->banks[2].page = 2;
@@ -79,13 +87,12 @@ void z80_init() {
 	asic->cpu->registers.PC = 0x100;
 
 	run = menuitem_create("Run zex tests", z80_run);
-        menu_append(global_menu, run);
+	menu_append(global_menu, run);
 }
 
 void z80_deinit() {
-        if (!asic) {
-                // TODO
-        }
-        asic_free(asic);
-        asic = NULL;
+	if (asic) {
+		asic_free(asic);
+		asic = NULL;
+	}
 }
