@@ -224,9 +224,6 @@ public:
 	inline void SetHandleKeyboardInputs (bool aValue){ mHandleKeyboardInputs = aValue;}
 	inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
 
-	inline void SetImGuiChildIgnored    (bool aValue){ mIgnoreImGuiChild     = aValue;}
-	inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
-
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
 	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
@@ -269,7 +266,6 @@ public:
 	static const Palette& GetLightPalette();
 	static const Palette& GetRetroBluePalette();
 
-private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
 
 	struct EditorState
