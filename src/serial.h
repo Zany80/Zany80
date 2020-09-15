@@ -1,3 +1,6 @@
+#ifndef ZANY_SERIAL_H
+#define ZANY_SERIAL_H
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -27,3 +30,5 @@ extern bool serial_is_docked;
 /// Writes the full message to the serial port's output buffer. If len is -1,
 /// the length is obtained via strlen; otherwise, it is used as given.
 void serial_write_all(const char *const msg, int32_t len);
+
+#endif
