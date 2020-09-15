@@ -42,7 +42,7 @@ PIXELS_DEVEL_FLAGS = { '-Werror', '-Wextra', '-Wno-error=reorder', '-Wno-error=p
 RELEASE_FLAGS = {'-O2'}
 
 # these *do* need to be in order, so no sets!
-BASE_LDFLAGS = [ '-lGL', '-lX11', '-ldl', '-lstdc++', '-lm' ]
+BASE_LDFLAGS = [ '-lX11', '-lXi', '-lXcursor', '-lGL', '-ldl', '-lstdc++', '-lm', '-pthread' ]
 DEFAULT_LDFLAGS = ['-static', '-static-libgcc' ] + BASE_LDFLAGS
 
 # parse arguments
