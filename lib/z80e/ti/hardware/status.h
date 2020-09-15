@@ -1,6 +1,6 @@
 #ifndef STATUS_H
 #define STATUS_H
-#include <z80e/core/cpu.h>
+#include <z80e/cpu.h>
 #include <z80e/ti/ti.h>
 #include <z80e/ti/asic.h>
 

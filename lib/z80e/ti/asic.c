@@ -117,7 +117,6 @@ asic_t *asic_init(ti_device_type type, log_t *log) {
 	device->hook = create_hook_set(device);
 
 	device->link = calloc(1, sizeof(z80_link_socket_t));
-
 	plug_devices(device);
 	asic_mirror_ports(device);
 	return device;

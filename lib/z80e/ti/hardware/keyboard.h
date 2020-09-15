@@ -1,6 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
-#include <z80e/core/cpu.h>
+#include <z80e/cpu.h>
 
 z80iodevice_t init_keyboard();
 void free_keyboard(void *keyboard);

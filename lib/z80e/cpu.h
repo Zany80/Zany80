@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <z80e/core/registers.h>
+#include <z80e/registers.h>
 #include <z80e/log/log.h>
 
 typedef struct z80cpu z80cpu_t;

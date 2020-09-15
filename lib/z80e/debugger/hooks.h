@@ -6,7 +6,7 @@
 typedef struct hook_info hook_info_t;
 
 #include <z80e/ti/asic.h>
-#include <z80e/core/registers.h>
+#include <z80e/registers.h>
 #include <z80e/ti/hardware/t6a04.h>
 
 hook_info_t *create_hook_set(asic_t *asic);

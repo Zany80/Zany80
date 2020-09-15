@@ -4,7 +4,7 @@
 
 typedef struct ti_mmu ti_mmu_t;
 
-#include <z80e/core/cpu.h>
+#include <z80e/cpu.h>
 #include <z80e/debugger/hooks.h>
 #include <z80e/ti/ti.h>
 #include <z80e/log/log.h>
