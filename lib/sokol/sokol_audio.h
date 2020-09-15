@@ -417,6 +417,10 @@ SOKOL_API_DECL int saudio_push(const float* frames, int num_frames);
 
 #ifdef __cplusplus
 } /* extern "C" */
+
+/* reference-based equivalents for c++ */
+inline void saudio_setup(const saudio_desc& desc) { return saudio_setup(&desc); }
+
 #endif
 #endif // SOKOL_AUDIO_INCLUDED
 
@@ -452,18 +456,27 @@ SOKOL_API_DECL int saudio_push(const float* frames, int num_frames);
 #endif
 
 #ifndef _SOKOL_PRIVATE
-    #if defined(__GNUC__)
+    #if defined(__GNUC__) || defined(__clang__)
         #define _SOKOL_PRIVATE __attribute__((unused)) static
     #else
         #define _SOKOL_PRIVATE static
     #endif
 #endif
 
-#if (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
+#ifndef _SOKOL_UNUSED
+    #define _SOKOL_UNUSED(x) (void)(x)
+#endif
+
+#if defined(SOKOL_DUMMY_BACKEND)
+    // No threads needed for SOKOL_DUMMY_BACKEND
+#elif (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
     #include <pthread.h>
 #elif defined(_WIN32)
     #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+    #define NOMINMAX
     #endif
     #include <windows.h>
     #include <synchapi.h>
@@ -471,7 +484,9 @@ SOKOL_API_DECL int saudio_push(const float* frames, int num_frames);
     #pragma comment (lib, "ole32.lib")
 #endif
 
-#if defined(__APPLE__)
+#if defined(SOKOL_DUMMY_BACKEND)
+    // No audio API needed for SOKOL_DUMMY_BACKEND
+#elif defined(__APPLE__)
     #include <AudioToolbox/AudioToolbox.h>
 #elif (defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
     #define ALSA_PCM_NEW_HW_PARAMS_API
@@ -528,7 +543,11 @@ SOKOL_API_DECL int saudio_push(const float* frames, int num_frames);
 #endif
 
 /*=== MUTEX WRAPPER DECLARATIONS =============================================*/
-#if (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
+#if defined(SOKOL_DUMMY_BACKEND)
+
+typedef struct { int dummy_mutex; } _saudio_mutex_t;
+
+#elif (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
 
 typedef struct {
     pthread_mutex_t mutex;
@@ -541,11 +560,16 @@ typedef struct {
 } _saudio_mutex_t;
 
 #else
-typedef struct { } _saudio_mutex_t;
+typedef struct { int dummy_mutex; } _saudio_mutex_t;
 #endif
 
+/*=== DUMMY BACKEND DECLARATIONS =============================================*/
+#if defined(SOKOL_DUMMY_BACKEND)
+typedef struct {
+    int dummy_backend;
+} _saudio_backend_t;
 /*=== COREAUDIO BACKEND DECLARATIONS =========================================*/
-#if defined(__APPLE__)
+#elif defined(__APPLE__)
 
 typedef struct {
     AudioQueueRef ca_audio_queue;
@@ -685,7 +709,12 @@ _SOKOL_PRIVATE void _saudio_stream_callback(float* buffer, int num_frames, int n
 }
 
 /*=== MUTEX IMPLEMENTATION ===================================================*/
-#if (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
+#if defined(SOKOL_DUMMY_BACKEND)
+_SOKOL_PRIVATE void _saudio_mutex_init(_saudio_mutex_t* m) { (void)m; }
+_SOKOL_PRIVATE void _saudio_mutex_destroy(_saudio_mutex_t* m) { (void)m; }
+_SOKOL_PRIVATE void _saudio_mutex_lock(_saudio_mutex_t* m) { (void)m; }
+_SOKOL_PRIVATE void _saudio_mutex_unlock(_saudio_mutex_t* m) { (void)m; }
+#elif (defined(__APPLE__) || defined(__linux__) || defined(__unix__)) && !defined(__EMSCRIPTEN__)
 _SOKOL_PRIVATE void _saudio_mutex_init(_saudio_mutex_t* m) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
@@ -914,6 +943,7 @@ _SOKOL_PRIVATE void _saudio_backend_shutdown(void) { };
 
 /* NOTE: the buffer data callback is called on a separate thread! */
 _SOKOL_PRIVATE void _sapp_ca_callback(void* user_data, AudioQueueRef queue, AudioQueueBufferRef buffer) {
+    _SOKOL_UNUSED(user_data);
     if (_saudio_has_callback()) {
         const int num_frames = buffer->mAudioDataByteSize / _saudio.bytes_per_frame;
         const int num_channels = _saudio.num_channels;
@@ -979,6 +1009,7 @@ _SOKOL_PRIVATE void _saudio_backend_shutdown(void) {
 
 /* the streaming callback runs in a separate thread */
 _SOKOL_PRIVATE void* _saudio_alsa_cb(void* param) {
+    _SOKOL_UNUSED(param);
     while (!_saudio.backend.thread_stop) {
         /* snd_pcm_writei() will be blocking until it needs data */
         int write_res = snd_pcm_writei(_saudio.backend.device, _saudio.backend.buffer, _saudio.backend.buffer_frames);
@@ -1119,7 +1150,7 @@ _SOKOL_PRIVATE DWORD WINAPI _saudio_wasapi_thread_fn(LPVOID param) {
         if (FAILED(IAudioClient_GetCurrentPadding(_saudio.backend.audio_client, &padding))) {
             continue;
         }
-        SOKOL_ASSERT(_saudio.backend.thread.dst_buffer_frames >= (int)padding);
+        SOKOL_ASSERT(_saudio.backend.thread.dst_buffer_frames >= padding);
         UINT32 num_frames = _saudio.backend.thread.dst_buffer_frames - padding;
         if (num_frames > 0) {
             _saudio_wasapi_submit_buffer(num_frames);
@@ -1299,14 +1330,12 @@ EM_JS(int, saudio_js_init, (int sample_rate, int num_channels, int buffer_size),
             sampleRate: sample_rate,
             latencyHint: 'interactive',
         });
-        console.log('sokol_audio.h: created AudioContext');
     }
     else if (typeof webkitAudioContext !== 'undefined') {
         Module._saudio_context = new webkitAudioContext({
             sampleRate: sample_rate,
             latencyHint: 'interactive',
         });
-        console.log('sokol_audio.h: created webkitAudioContext');
     }
     else {
         Module._saudio_context = null;
@@ -1348,6 +1377,18 @@ EM_JS(int, saudio_js_init, (int sample_rate, int num_channels, int buffer_size),
     }
 });
 
+/* shutdown the WebAudioContext and ScriptProcessorNode */
+EM_JS(void, saudio_js_shutdown, (void), {
+    if (Module._saudio_context !== null) {
+        if (Module._saudio_node) {
+            Module._saudio_node.disconnect();
+        }
+        Module._saudio_context.close();
+        Module._saudio_context = null;
+        Module._saudio_node = null;
+    }
+});
+
 /* get the actual sample rate back from the WebAudio context */
 EM_JS(int, saudio_js_sample_rate, (void), {
     if (Module._saudio_context) {
@@ -1383,9 +1424,11 @@ _SOKOL_PRIVATE bool _saudio_backend_init(void) {
 }
 
 _SOKOL_PRIVATE void _saudio_backend_shutdown(void) {
-    /* on HTML5, there's always a 'hard exit' without warning,
-        so nothing useful to do here
-    */
+    saudio_js_shutdown();
+    if (_saudio.backend.buffer) {
+        SOKOL_FREE(_saudio.backend.buffer);
+        _saudio.backend.buffer = 0;
+    }
 }
 
 /*=== ANDROID BACKEND IMPLEMENTATION ======================================*/

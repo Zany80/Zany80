@@ -936,6 +936,11 @@ SOKOL_API_DECL void sfetch_continue(sfetch_handle_t h);
 
 #ifdef __cplusplus
 } /* extern "C" */
+
+/* reference-based equivalents for c++ */
+inline void sfetch_setup(const sfetch_desc_t& desc) { return sfetch_setup(&desc); }
+inline sfetch_handle_t sfetch_send(const sfetch_request_t& request) { return sfetch_send(&request); }
+
 #endif
 #endif // SOKOL_FETCH_INCLUDED
 
@@ -981,11 +986,15 @@ SOKOL_API_DECL void sfetch_continue(sfetch_handle_t h);
 #endif
 
 #ifndef _SOKOL_PRIVATE
-    #if defined(__GNUC__)
+    #if defined(__GNUC__) || defined(__clang__)
         #define _SOKOL_PRIVATE __attribute__((unused)) static
     #else
         #define _SOKOL_PRIVATE static
     #endif
+#endif
+
+#ifndef _SOKOL_UNUSED
+    #define _SOKOL_UNUSED(x) (void)(x)
 #endif
 
 #if defined(__EMSCRIPTEN__)
@@ -997,6 +1006,9 @@ SOKOL_API_DECL void sfetch_continue(sfetch_handle_t h);
 #elif defined(_WIN32)
     #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+    #define NOMINMAX
     #endif
     #include <windows.h>
     #define _SFETCH_PLATFORM_WINDOWS (1)
@@ -1687,6 +1699,7 @@ _SOKOL_PRIVATE void _sfetch_thread_join(_sfetch_thread_t* thread) {
         EnterCriticalSection(&thread->incoming_critsec);
         _sfetch_thread_request_stop(thread);
         BOOL set_event_res = SetEvent(thread->incoming_event);
+        _SOKOL_UNUSED(set_event_res);
         SOKOL_ASSERT(set_event_res);
         LeaveCriticalSection(&thread->incoming_critsec);
         WaitForSingleObject(thread->thread, INFINITE);
@@ -1721,6 +1734,7 @@ _SOKOL_PRIVATE void _sfetch_thread_enqueue_incoming(_sfetch_thread_t* thread, _s
         }
         LeaveCriticalSection(&thread->incoming_critsec);
         BOOL set_event_res = SetEvent(thread->incoming_event);
+        _SOKOL_UNUSED(set_event_res);
         SOKOL_ASSERT(set_event_res);
     }
 }
@@ -1732,7 +1746,7 @@ _SOKOL_PRIVATE uint32_t _sfetch_thread_dequeue_incoming(_sfetch_thread_t* thread
     EnterCriticalSection(&thread->incoming_critsec);
     while (_sfetch_ring_empty(incoming) && !thread->stop_requested) {
         LeaveCriticalSection(&thread->incoming_critsec);
-        WaitForSingleObject(&thread->incoming_event, INFINITE);
+        WaitForSingleObject(thread->incoming_event, INFINITE);
         EnterCriticalSection(&thread->incoming_critsec);
     }
     uint32_t item = 0;
@@ -2272,7 +2286,7 @@ _SOKOL_PRIVATE void _sfetch_channel_dowork(_sfetch_channel_t* chn, _sfetch_pool_
 _SOKOL_PRIVATE bool _sfetch_validate_request(_sfetch_t* ctx, const sfetch_request_t* req) {
     #if defined(SOKOL_DEBUG)
         if (req->channel >= ctx->desc.num_channels) {
-            SOKOL_LOG("_sfetch_validate_request: request.num_channels too big!");
+            SOKOL_LOG("_sfetch_validate_request: request.channel too big!");
             return false;
         }
         if (!req->path) {
@@ -2288,15 +2302,15 @@ _SOKOL_PRIVATE bool _sfetch_validate_request(_sfetch_t* ctx, const sfetch_reques
             return false;
         }
         if (req->chunk_size > req->buffer_size) {
-            SOKOL_LOG("_sfetch_validate_request: request.stream_size is greater request.buffer_size)");
+            SOKOL_LOG("_sfetch_validate_request: request.chunk_size is greater request.buffer_size)");
             return false;
         }
         if (req->user_data_ptr && (req->user_data_size == 0)) {
-            SOKOL_LOG("_sfetch_validate_request: request.user_data_ptr is set, but req.user_data_size is null");
+            SOKOL_LOG("_sfetch_validate_request: request.user_data_ptr is set, but request.user_data_size is null");
             return false;
         }
         if (!req->user_data_ptr && (req->user_data_size > 0)) {
-            SOKOL_LOG("_sfetch_validate_request: request.user_data_ptr is null, but req.user_data_size is not");
+            SOKOL_LOG("_sfetch_validate_request: request.user_data_ptr is null, but request.user_data_size is not");
             return false;
         }
         if (req->user_data_size > SFETCH_MAX_USERDATA_UINT64 * sizeof(uint64_t)) {

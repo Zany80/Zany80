@@ -6,7 +6,7 @@ Simple
 [STB-style](https://github.com/nothings/stb/blob/master/docs/stb_howto.txt)
 cross-platform libraries for C and C++, written in C.
 
-[See what's new](#updates) (**30-Jan-2020**: some internal code cleanup in sokol_gfx.h)
+[See what's new](#updates) (**31-Aug-2020**: sokol_gfx.h and sokol_app.h automatically select D3D11 C++ or C API)
 
 [Live Samples](https://floooh.github.io/sokol-html5/index.html) via WASM.
 
@@ -25,6 +25,8 @@ Utility libraries:
 - **sokol\_gl.h**: OpenGL 1.x style immediate-mode rendering API on top of sokol_gfx.h
 - **sokol\_fontstash.h**: sokol_gl.h rendering backend for [fontstash](https://github.com/memononen/fontstash)
 - **sokol\_gfx\_imgui.h**: debug-inspection UI for sokol_gfx.h (implemented with Dear ImGui)
+- **sokol\_debugtext.h**: a simple text renderer using vintage home computer fonts
+- **sokol\_memtrack.h**: easily track memory allocations in sokol headers
 
 WebAssembly is a 'first-class citizen', one important motivation for the
 Sokol headers is to provide a collection of cross-platform APIs with a
@@ -170,18 +172,13 @@ to split the Objective-C code from the C code of the sample):
 ```cpp
 #include "sokol_app.h"
 #include "sokol_gfx.h"
+#include "sokol_glue.h"
 
 sg_pass_action pass_action;
 
 void init(void) {
     sg_setup(&(sg_desc){
-        .mtl_device = sapp_metal_get_device(),
-        .mtl_renderpass_descriptor_cb = sapp_metal_get_renderpass_descriptor,
-        .mtl_drawable_cb = sapp_metal_get_drawable,
-        .d3d11_device = sapp_d3d11_get_device(),
-        .d3d11_device_context = sapp_d3d11_get_device_context(),
-        .d3d11_render_target_view_cb = sapp_d3d11_get_render_target_view,
-        .d3d11_depth_stencil_view_cb = sapp_d3d11_get_depth_stencil_view
+        .context = sapp_sgcontext()
     });
     pass_action = (sg_pass_action) {
         .colors[0] = { .action=SG_ACTION_CLEAR, .val={1.0f, 0.0f, 0.0f, 1.0f} }
@@ -454,9 +451,7 @@ Mainly some "missing features" for desktop apps:
 
 - define an application icon
 - change the window title on existing window
-- allow to programmatically activate and deactivate fullscreen
 - pointer lock
-- show/hide mouse cursor
 - allow to change mouse cursor image (at first only switch between system-provided standard images)
 
 ## sokol_audio.h planned features:
@@ -464,6 +459,221 @@ Mainly some "missing features" for desktop apps:
 - implement an alternative WebAudio backend using Audio Worklets and WASM threads
 
 # Updates
+
+- **31-Aug-2020**:
+    Internal change: The D3D11/DXGI backend code in sokol_gfx.h and sokol_app.h
+    now use the D3D11 and DXGI C++-APIs when the implementation is compiled as
+    C++, and the C-APIs when the implementation is compiled as C (before, the C
+    API was also used when the implementation is compiled as C++). The new
+    behaviour is useful when another header *must* use the D3D11/DXGI C++ APIs
+    but should be included in the same compilation unit as sokol_gfx.h an
+    sokol_app.h (for example see this PR:
+    https://github.com/floooh/sokol/pull/351).
+
+- **24-Aug-2020**:
+    The backend-specific callback functions that are provided to sokol_gfx.h
+    in the ```sg_setup()``` initialization call now have alternative
+    versions which accept a userdata-pointer argument. The userdata-free functions
+    still exist, so no changes are required for existing code.
+
+- **02-Aug-2020**:
+    - sokol_app.h now has a mouse-lock feature (aka pointer-lock) via two
+      new functions ```void sapp_lock_mouse(bool lock)``` and ```bool sapp_mouse_locked(void)```.
+      For documentation, please search for 'MOUSE LOCK' in sokol_app.h.
+      The sokol-app samples [events-sapp](https://floooh.github.io/sokol-html5/events-sapp.html)
+      and [cgltf-sapp](https://floooh.github.io/sokol-html5/cgltf-sapp.html) have been
+      updated to demonstrate the feature.
+    - sokol_app.h Linux: mouse pointer visibility (via ```void sapp_show_mouse(bool show)```)
+      has been implemented for Linux/X11
+    - sokol_app.h WASM: mouse wheel scroll deltas are now 'normalized' between
+      the different scroll modes (pixels, lines, pages). See this issue:
+      https://github.com/floooh/sokol/issues/339. Many thanks to @bqqbarbhg for
+      investigating the issue and providing a solution!
+    - sokol_app.h now has [better documentation](https://github.com/floooh/sokol/blob/89a3bb8da0a2df843d6cc60a270ddc69f9aa69d6/sokol_app.h#L70)
+      what system libraries must be linked on the various platforms (and on Linux two additional libraries must be
+      linked now: Xcursor and Xi)
+
+- **22-Jul-2020**: **PLEASE NOTE** cmake 3.18 breaks some of sokol samples when
+  compiling with the Visual Studio toolchain because some C files now actually
+  compile as C++ for some reason (see:
+  https://twitter.com/FlohOfWoe/status/1285996526117040128).  Until this is
+  fixed, or I have come up with a workaround, please use an older cmake version
+  to build the sokol samples with the Visual Studio compiler.
+
+  (Update: I have added a workaround to fips: https://github.com/floooh/fips/commit/89997b8ebdca6fc9455a5cfe6145eecaa017df49
+  which fixes the issue at least for fips projects)
+
+- **14-Jul-2020**:
+    - sapp_mouse_shown() has been implemented for macOS (thanks to @slmjkdbtl for
+      providing the initial PR!)
+    - On macOS, the lower-level functions CGDisplayShowCursor and CGDisplayHideCursor
+      are now used instead of the NSCursor class. This is in preparation for the
+      'pointer lock' feature which will also use CGDisplay* functions.
+    - Calling ```sapp_show_mouse(bool visible)``` no longer 'stacks' (e.g. there's
+      no 'hidden counter' underneath anymore, instead calling ```sapp_show_mouse(true)```
+      will always show the cursor and ```sapp_show_mouse(false)``` will always
+      hide it. This is a different behaviour than the underlying Win32 and
+      macOS functions ShowCursor() and CGDisplaShow/HideCursor()
+    - The mouse show/hide behaviour can now be tested in the ```events-sapp``` sample
+      (so far this only works on Windows and macOS).
+
+- **13-Jul-2020**:
+    - On macOS and iOS, sokol_app.h and sokol_gfx.h can now be compiled with
+      ARC (Automatic Reference Counting) **disabled** (previously ARC had to be
+      enabled).
+    - Compiling with ARC enabled is still supported but with a little caveat:
+      if you're compiling sokol_app.h or sokol_gfx.h in ObjC mode (not ObjC++
+      mode) *AND* ARC is enabled, then the Xcode version must be more recent
+      than before (the language feature ```__has_feature(objc_arc_fields)```
+      must be supported, which I think has been added in Xcode 10.2, I couldn't
+      find this mentioned in any Xcode release notes though). Compiling with
+      ARC disabled should also work on older Xcode versions though.
+    - Various internal code cleanup things:
+        - sokol_app.h had the same 'structural cleanup' as sokol_gfx.h in
+          January, all internal state (including ObjC id's) has been merged into
+          a single big state structure. Backend specific struct declarations
+          have been moved closer together in the header, and
+          backend-specific structures and functions have been named more
+          consistently for better 'searchability'
+        - The 'mini GL' loader in the sokol_app.h Win32+WGL backend has been
+          rewritten to use X-Macros (less redundant lines of code)
+        - All macOS and iOS code has been revised and cleaned up
+        - On macOS a workaround for a (what looks like) post-Catalina
+          NSOpenGLView issue has been added: if the sokol_app.h window doesn't
+          fit on screen (and was thus 'clamped' by Cocoa) *AND* the
+          content-size was not set to native Retina resolution, the initial
+          content size was reported as if it was in Retina resolution. This
+          caused an empty screen to be rendered in the imgui-sapp demo. The
+          workaround is to hook into the NSOpenGLView reshape event at which
+          point the reported content size is correct.
+        - On macOS and iOS, the various 'view delegate' objects have been
+          removed, and rendering happens instead in the subclasses of MTKView,
+          GLKView and NSOpenGLView.
+        - On macOS and iOS, there's now proper cleanup code in the
+          applicationWillTerminate callback (although note that on iOS this
+          function isn't guaranteed to be called, because an application can
+          also simply be killed by the operating system.
+
+- **22-Jun-2020**: The X11/GLX backend in sokol_app.h now has (soft-)fullscreen
+support, bringing the feature on par with Windows and macOS. Many thanks to
+@medvednikov for the PR!
+
+- **20-Jun-2020**: Some work to better support older DX10-level GPUs in the
+sokol_gfx.h D3D11 backend:
+    - sg_make_shader() now by default compiles HLSL shader code as shader model 4.0
+      (previously shader model 5.0 which caused problems with some older
+      Intel GPUs still in use, see this issue: https://github.com/floooh/sokol/issues/179)
+    - A new string item ```const char* d3d11_target``` in ```sg_shader_stage_desc``` now allows
+      to pass in the D3D shader model for compiling shaders. This defaults to
+      "vs_4_0" for the vertex shader stage and "ps_4_0" for the fragment shader stage.
+      The minimal DX shader model for use with the sokol_gfx.h D3D11 backend is
+      shader model 4.0, because that's the first shader model supporting
+      constant buffers.
+    - The *sokol-shdc* shader compiler tool has a new output option ```hlsl4```
+      to generate HLSL4 source code and shader model 4.0 byte code.
+    - All embedded D3D shader byte code in the sokol utility headers has been
+      changed from shader model 5.0 to 4.0
+
+    If you are using sokol_gfx.h with sokol-shdc, please update both at the same time
+    to avoid compilation errors caused by the new ```sg_shader_stage_desc.d3d11_target```
+    item. The sg_shader_desc initialization code in sokol-shdc has now been made more
+    robust to prevent similar problems in the future.
+
+- **14-Jun-2020**: I have added a very simple utility header ```sokol_memtrack.h```
+which allows to track memory allocations in sokol headers (number and overall
+size of allocations) by overriding the macros SOKOL_MALLOC, SOKOL_CALLOC and
+SOKOL_FREE. Simply include ```sokol_memtrack.h``` before the other sokol
+header implementation includes to enable memory tracking in those headers
+(but remember that the sokol_memtrack.h implementation must only be included
+once in the whole project, so this only works when all other sokol header
+implementations are included in the same compilation unit).
+
+- **06-Jun-2020**: Some optimizations in the sokol_gfx.h GL backend to avoid
+  redundant GL calls in two areas: in the sg_begin_pass() calls when not
+  clearing the color- and depth-stencil-attachments, and in sg_apply_bindings()
+  when binding textures.  Everything should behave exactly as before, but if
+  you notice any problems in those areas, please file a bug. Many thanks to
+  @edubart for the PRs!
+
+- **01-Jun-2020**: sokol_app.h now allows to toggle to and from fullscreen
+programmatically and to query the current fullscreen state via 2 new
+functions: ```sapp_toggle_fullscreen()``` and ```sapp_is_fullscreen()```.
+Currently this is only implemented for Windows and macOS (not Linux).
+Thanks to @mattiasljungstrom for getting the feature started and providing
+the Win32 implementation!
+
+- **28-May-2020**: a small quality-of-life improvement for C++ coders: when the
+sokol headers are included into C++, all public API functions which take a
+pointer to a struct now have a C++ overload which instead takes a const-ref.
+This allows to move the struct initialization right into the function call
+just like in C99. For instance, in C99 one can write:
+    ```c
+    sg_buffer buf = sg_make_buffer(&(sg_buffer_desc){
+        .size = sizeof(vertices),
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .content = vertices
+    });
+    ```
+    In C++ it isn't possible to take the address of an 'adhoc-initialized'
+    struct like this, but with the new reference-wrapper functions (and C++20
+    designated initialization) this should work now:
+    ```cpp
+    sg_buffer buf = sg_make_buffer({
+        .size = sizeof(vertices),
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .content = vertices
+    });
+    ```
+    Many thanks to @garettbass for providing the PR!
+
+
+- **27-May-2020**: a new utility header [sokol_debugtext.h](https://github.com/floooh/sokol/blob/master/util/sokol_debugtext.h)
+for rendering simple ASCII text using vintage home computer fonts via sokol_gfx.h
+
+- **13-May-2020**: a new function in sokol_time.h to round a measured frame time
+to common display refresh rates: ```stm_round_to_common_refresh_rate()```.
+See the header documentation for the motivation behind this function.
+
+- **02-May-2020**: sokol_app.h: the 'programmatic quit' behaviour on the
+web-platform is now more in line with other platforms: calling
+```sapp_quit()``` will invoke the cleanup callback function, perform
+platform-specific cleanup (like unregistering JS event handlers), and finally
+exit the frame loop. In typical scenarios this isn't very useful (because
+usually the user will simply close the tab, which doesn't allow to run
+cleanup code), but it's useful for situations where the same
+code needs to run repeatedly on a web page. Many thanks to @caiiiycuk
+for providing the PR!
+
+- **30-Apr-2020**: experimental WebGPU backend and a minor breaking change:
+    - sokol_gfx.h: a new WebGPU backend, expect frequent breakage for a while
+      because the WebGPU API is still in flux
+    - a new header sokol_glue.h, with interop helper functions when specific combinations
+      of sokol headers are used together
+    - changes in the way sokol_gfx.h is initialized via a new layout of the
+      sg_desc structure
+    - sokol_gfx.h: a new ```sg_sampler_type``` enum which is required for
+      shader creation to tell the WebGPU backend about the sampler data types
+      (float, signed int, or unsigned int) used in the shader
+    - sokol_app.h: a handful new functions to query default framebuffer attributes (color- and
+      depth-buffer pixel formats, and MSAA sample count)
+    - sokol_app.h: WebGPU device and swapchain initialization (currently only
+      in the emscripten code path)
+    - [sokol-shdc](https://github.com/floooh/sokol-tools/blob/master/docs/sokol-shdc.md) has
+      been updated with WebGPU support (currently outputs SPIRV bytecode), and to output the new
+      ```sg_sampler_type``` enum in ```sg_shader_image_desc```
+    - [sokol-samples](https://github.com/floooh/sokol-samples/) has a new set of
+      backend-specific WebGPU samples, and the other samples have been updated
+      for the new sokol-gfx initialization
+    - ```pre-webgpu``` tags have been added to the [sokol](https://github.com/floooh/sokol/releases/tag/pre-webgpu), [sokol-samples](https://github.com/floooh/sokol-samples/releases/tag/pre-webgpu), [sokol-tools](https://github.com/floooh/sokol-tools/releases/tag/pre-webgpu)
+      and [sokol-tools-bin](https://github.com/floooh/sokol-tools-bin/releases/tag/pre-webgpu) github repositories (in case you need to continue working with
+      the older versions)
+    - please see this [blog post](https://floooh.github.io/2020/04/26/sokol-spring-2020-update.html)
+      for more details
+
+- **05-Apr-2020**: A bugfix in sokol_gl.h, the (fairly recent) optimization for
+    merging draw calls contained a bug that could be triggered in an "empty"
+    sgl_begin/sgl_end pair (with no vertices recorded inbetween). This could
+    lead to the following draw call being rendered with the wrong uniform data.
 
 - **30-Jan-2020**: Some cleanup in sokol_gfx.h in the backend implementation code,
     internal data structures and documentation comments. The public

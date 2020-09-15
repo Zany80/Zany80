@@ -143,18 +143,19 @@
 
     WINMAIN AND ARGC / ARGV
     =======================
-    On Windows with WinMain() based apps, use the __argc and __argv global
-    variables provided by Windows. These are compatible with main(argc, argv)
-    and have already been converted to UTF-8 by Windows:
+    On Windows with WinMain() based apps, getting UTF8-encoded command line
+    arguments is a bit more complicated:
 
-        int WINAPI WinMain(...) {
-            sargs_setup(&(sargs_desc){
-                .argc = __argc,
-                .argv = __argv
-            });
-        }
+    First call GetCommandLineW(), this returns the entire command line
+    as UTF-16 string. Then call CommandLineToArgvW(), this parses the
+    command line string into the usual argc/argv format (but in UTF-16).
+    Finally convert the UTF-16 strings in argv[] into UTF-8 via
+    WideCharToMultiByte().
 
-    (this is also what sokol_app.h uses btw)
+    See the function _sapp_win32_command_line_to_utf8_argv() in sokol_app.h
+    for example code how to do this (if you're using sokol_app.h, it will
+    already convert the command line arguments to UTF-8 for you of course,
+    so you can plug them directly into sokol_app.h).
 
     API DOCUMENTATION
     =================
@@ -294,6 +295,10 @@ SOKOL_API_DECL const char* sargs_value_at(int index);
 
 #ifdef __cplusplus
 } /* extern "C" */
+
+/* reference-based equivalents for c++ */
+inline void sargs_setup(const sargs_desc& desc) { return sargs_setup(&desc); }
+
 #endif
 #endif // SOKOL_ARGS_INCLUDED
 
@@ -337,7 +342,7 @@ SOKOL_API_DECL const char* sargs_value_at(int index);
 #endif
 
 #ifndef _SOKOL_PRIVATE
-    #if defined(__GNUC__)
+    #if defined(__GNUC__) || defined(__clang__)
         #define _SOKOL_PRIVATE __attribute__((unused)) static
     #else
         #define _SOKOL_PRIVATE static

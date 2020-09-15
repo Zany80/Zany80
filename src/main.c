@@ -3,6 +3,7 @@
 
 #include "sokol/sokol_app.h"
 #include "sokol/sokol_gfx.h"
+#include "sokol/sokol_glue.h"
 #include "sokol/util/sokol_imgui.h"
 #include "sokol/sokol_time.h"
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -35,15 +36,9 @@ static void toggle_license() {
 void init(void) {
 	printf("Zany80 version " STR(PROJECT_VERSION) "\n");
 	sg_setup(&(sg_desc){
-		.mtl_device = sapp_metal_get_device(),
-		.mtl_renderpass_descriptor_cb = sapp_metal_get_renderpass_descriptor,
-		.mtl_drawable_cb = sapp_metal_get_drawable,
-		.d3d11_device = sapp_d3d11_get_device(),
-		.d3d11_device_context = sapp_d3d11_get_device_context(),
-		.d3d11_render_target_view_cb = sapp_d3d11_get_render_target_view,
-		.d3d11_depth_stencil_view_cb = sapp_d3d11_get_depth_stencil_view
-	});
-	simgui_setup(&(simgui_desc_t){.sample_count = 2});
+		.context = sapp_sgcontext(),
+		});
+	simgui_setup(&(simgui_desc_t){.sample_count = 4});
 	stm_setup();
 	window_t *root = get_root();
 	window_register(root);
@@ -81,7 +76,7 @@ void frame(void) {
 	const sg_pass_action action = (sg_pass_action) { 0 };
 	sg_begin_default_pass(&action, width, height);
 	in_pass = true;
-        static uint64_t last_time;
+	static uint64_t last_time;
 	double delta = stm_sec(stm_laptime(&last_time));
 	static double total_time = 0;
 	if (executed != 0) {
@@ -130,6 +125,7 @@ sapp_desc sokol_main(int argc, char **argv) {
 		.cleanup_cb = deinit,
 		.event_cb = event,
 		.sample_count = 4,
+		.gl_force_gles2 = false,
 		.fullscreen = true,
 		.alpha = true,
 	};

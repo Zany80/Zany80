@@ -7,6 +7,7 @@
 
 extern "C" {
 #include "graphics.h"
+#undef __cplusplus
 #include "sokol/sokol_app.h"
 }
 
