@@ -9,7 +9,7 @@ using namespace rapidxml;
 #include <setjmp.h>
 #include <string.h>
 #include <inttypes.h>
-jmp_buf env;
+static jmp_buf env;
 
 #include <fstream>
 
