@@ -1,14 +1,16 @@
 #include "log.h"
+#include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #endif
 
-int v = 0;
-int indent = 0;
-int colored = 1;
+static scas_log_importance_t v = 0;
+static unsigned indent = 0;
+static bool colored = true;
 
 const char *verbosity_colors[] = {
 	"", // L_SILENT
@@ -17,23 +19,19 @@ const char *verbosity_colors[] = {
 	"\x1B[1;30m", // L_DEBUG
 };
 
-void init_log(int verbosity) {
+void scas_log_init(scas_log_importance_t verbosity) {
 	v = verbosity;
 }
 
-void enable_colors() {
-	colored = 0;
+void scas_log_set_colors(bool _colored) {
+	colored = _colored;
 }
 
-void disable_colors() {
-	colored = 0;
-}
-
-void indent_log() {
+void scas_log_indent() {
 	++indent;
 }
 
-void deindent_log() {
+void scas_log_deindent() {
 	if (indent > 0) {
 		--indent;
 	}
@@ -55,18 +53,17 @@ void scas_abort(char *format, ...) {
 #endif
 }
 
-void scas_log(int verbosity, char* format, ...) {
+void scas_log(scas_log_importance_t verbosity, char* format, ...) {
 	if (verbosity <= v && verbosity >= 0) {
 		size_t c = verbosity;
 		if (c > sizeof(verbosity_colors) / sizeof(char *)) {
 			c = sizeof(verbosity_colors) / sizeof(char *) - 1;
 		}
 		if (colored) {
-			fprintf(stderr, verbosity_colors[c]);
+			fprintf(stderr, "%s", verbosity_colors[c]);
 		}
 		if (verbosity == L_DEBUG || verbosity == L_INFO) {
-			int i;
-			for (i = 0; i < indent; ++i) {
+			for (unsigned i = 0; i < indent; ++i) {
 				fprintf(stderr, "  ");
 			}
 		}
@@ -74,10 +71,6 @@ void scas_log(int verbosity, char* format, ...) {
 		va_start(args, format);
 		vfprintf(stderr, format, args);
 		va_end(args);
-		if (colored) {
-			fprintf(stderr, "\x1B[0m\n");
-		} else {
-			fprintf(stderr, "\n");
-		}
+		fprintf(stderr, "%s\n", colored ? "\x1B[0m" : "");
 	}
 }

@@ -74,7 +74,7 @@ void dump_area(area_t *a) {
 		for (i = 0; i < a->source_map->length; ++i) {
 			source_map_t *map = a->source_map->items[i];
 			scas_log(L_INFO, "Source file '%s'", map->file_name);
-			indent_log();
+			scas_log_indent();
 			int j;
 			for (j = 0; j < map->entries->length; ++j) {
 				source_map_entry_t *entry = map->entries->items[j];
@@ -89,20 +89,20 @@ void dump_area(area_t *a) {
 						map->file_name, entry->line_number,
 						entry->source_code);
 			}
-			deindent_log();
+			scas_log_deindent();
 		}
 	}
 	if (runtime.dump_private_symbols || runtime.dump_public_symbols) {
 		/* TODO: Distinguish between private/public */
 		scas_log(L_INFO, "Symbols defined:");
-		indent_log();
+		scas_log_indent();
 		int i;
 		for (i = 0; i < a->symbols->length; ++i) {
 			symbol_t *sym = a->symbols->items[i];
 			scas_log(L_INFO, "'%s' == 0x%08X (%s)", sym->name, sym->value,
 					sym->type == SYMBOL_LABEL ? "Label" : "Equate");
 		}
-		deindent_log();
+		scas_log_deindent();
 	}
 	if (runtime.dump_references) {
 		scas_log(L_INFO, "Unresolved references:");
@@ -130,8 +130,8 @@ area_t *find_area(const char *name, object_t *o) {
 int main(int argc, char **argv) {
 	init_runtime();
 	parse_arguments(argc, argv);
-	init_log(L_INFO);
-	disable_colors();
+	scas_log_init(L_INFO);
+	scas_log_set_colors(false);
 	int i;
 	for (i = 0; i < runtime.input_files->length; ++i) {
 		FILE *f;

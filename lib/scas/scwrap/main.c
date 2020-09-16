@@ -31,7 +31,7 @@ void parse_arguments(int argc, char **argv) {
 int main(int argc, char **argv) {
 	init_runtime();
 	parse_arguments(argc, argv);
-	init_log(L_INFO);
+	scas_log_init(L_INFO);
 
 	object_t *o = create_object();
 	area_t *a = create_area("DATA");

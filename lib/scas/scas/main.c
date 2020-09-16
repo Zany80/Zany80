@@ -225,7 +225,7 @@ list_t *split_include_path() {
 int main(int argc, char **argv) {
 	init_scas_runtime();
 	parse_arguments(argc, argv);
-	init_log(scas_runtime.verbosity);
+	scas_log_init(scas_runtime.verbosity);
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
 	if (instruction_set == NULL) {
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
 	int i;
 	for (i = 0; i < scas_runtime.input_files->length; ++i) {
 		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_files->items[i]);
-		indent_log();
+		scas_log_indent();
 		FILE *f;
 		if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
 			f = stdin;
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
 					errors->length, warnings->length, scas_runtime.input_files->items[i]);
 		}
 		list_add(objects, o);
-		deindent_log();
+		scas_log_deindent();
 	}
 
 	scas_log(L_DEBUG, "Opening output file for writing: %s", scas_runtime.output_file);

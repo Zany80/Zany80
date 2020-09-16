@@ -42,6 +42,7 @@ add_executable(scas
     ${assembler}
     ${linker}
     ${scas}
+    ${PROJECT_SOURCE_DIR}/log.c
     ${PROJECT_BINARY_DIR}/tables/z80.c
 )
 
@@ -70,11 +71,13 @@ endif()
 add_executable(scdump
     ${common}
     ${scdump}
+    ${PROJECT_SOURCE_DIR}/log.c
 )
 
 add_executable(scwrap
     ${common}
     ${scwrap}
+    ${PROJECT_SOURCE_DIR}/log.c
 )
 
 if(SCAS_DOCUMENTATION)

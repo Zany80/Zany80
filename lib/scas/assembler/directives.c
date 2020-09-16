@@ -1500,9 +1500,9 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 				(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 		int argc;
 		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->delimiter);
-		indent_log();
+		scas_log_indent();
 		int ret = d->function(state, argv, argc);
-		deindent_log();
+		scas_log_deindent();
 		for (int i = 0; i < argc; i += 1) {
 			free(argv[i]);
 		}
