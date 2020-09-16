@@ -208,42 +208,7 @@ widget_t *label_create(const char *_label) {
 	w->_label.wrapped = false;
 	w->_label.color = 0xFFFFFFFF;
 	w->_label.next = NULL;
-	if (_label != NULL) {
-		char c;
-		enum {
-			normal, color_match
-		} state = normal;
-		int cbegin = 0;
-		int index = 0;
-		while ((c = _label[index++]) != 0) {
-			if (c == '[' && state == normal) {
-				state = color_match;
-				cbegin = index;
-			}
-			if (c == ']' && state == color_match) {
-				state = normal;
-				if (index - cbegin == 7) {
-					bool valid_color = true;
-					for (int i = 0; i < 6; i++) {
-						int index = cbegin + i;
-						if (!((_label[index] >= '0' && _label[index] <= '9') || (_label[index] >= 'A' && _label[index] <= 'F'))) {
-							valid_color = false;
-							break;
-						}
-					}
-					if (valid_color) {
-						w->label[cbegin - 1] = 0;
-						w->_label.next = label_create(_label + index);
-						w->_label.next->_label.color = extract_color(_label + cbegin);
-						break;
-					}
-				}
-				else {
-					printf("Index - cbegin = %d; %s\n",index - cbegin, _label + index);
-				}
-			}
-		}
-	}
+	widget_set_label(w, _label);
 	return w;
 }
 
@@ -301,7 +266,47 @@ void widget_set_label(widget_t *widget, const char *label) {
 	if (widget->label) {
 		free(widget->label);
 	}
+	if (widget->_label.next) {
+		widget_destroy(widget->_label.next);
+	}
 	widget->label = label ? strdup(label) : NULL;
+	if (!widget->label) {
+		return;
+	}
+	char c;
+	enum {
+		normal, color_match
+	} state = normal;
+	int cbegin = 0;
+	int index = 0;
+	while ((c = label[index++]) != 0) {
+		if (c == '[' && state == normal) {
+			state = color_match;
+			cbegin = index;
+		}
+		if (c == ']' && state == color_match) {
+			state = normal;
+			if (index - cbegin == 7) {
+				bool valid_color = true;
+				for (int i = 0; i < 6; i++) {
+					int index = cbegin + i;
+					if (!((label[index] >= '0' && label[index] <= '9') || (label[index] >= 'A' && label[index] <= 'F'))) {
+						valid_color = false;
+						break;
+					}
+				}
+				if (valid_color) {
+					widget->label[cbegin - 1] = 0;
+					widget->_label.next = label_create(label + index);
+					widget->_label.next->_label.color = extract_color(label + cbegin);
+					break;
+				}
+			}
+			else {
+				printf("Index - cbegin = %d; %s\n",index - cbegin, label + index);
+			}
+		}
+	}
 }
 
 void widget_set_visible(widget_t *widget, bool visible) {

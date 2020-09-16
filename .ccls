@@ -4,6 +4,7 @@
 -Ilib/sokol/util/
 -Ilib/cimgui
 -Ilib/
+-Ilib/scas/include/
 -Wall
 -Wextra
 -pedantic
