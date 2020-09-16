@@ -442,7 +442,14 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				transform_local_labels(expression, state->last_global_label);
 				const char *file_name = stack_peek(state->file_name_stack);
 				transform_relative_labels(expression, state->last_relative_label, file_name);
+				symbol_t sym_pc = {
+					.type = SYMBOL_LABEL,
+					.value = state->PC,
+					.name = "$"
+				};
+				list_add(state->equates, &sym_pc);
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
+				state->equates->length -= 1;
 				if (error == EXPRESSION_BAD_SYMBOL) {
 					if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
 						unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));

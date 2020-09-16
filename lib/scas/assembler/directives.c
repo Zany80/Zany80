@@ -152,6 +152,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
+		free_expression(expression);
 		return 1;
 	} 
 
@@ -167,6 +168,8 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 			result = 0;
 		}
 	}
+	free(buffer);
+	free_expression(expression);
 	return 1;
 }
 
@@ -748,8 +751,19 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
+		transform_local_labels(expression, state->last_global_label);
+		int len = state->equates->length;
+		for (int i = 0; i < state->current_area->symbols->length; i += 1) {
+			list_add(state->equates, state->current_area->symbols->items[i]);
+		}
+		symbol_t sym_pc = {
+			.type = SYMBOL_LABEL,
+			.value = state->PC,
+			.name = "$"
+		};
+		list_add(state->equates, &sym_pc);
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
-		free_expression(expression);
+		state->equates->length = len;
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
@@ -766,6 +780,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		list_add(state->current_area->symbols, sym);
 		scas_log(L_DEBUG, "Added equate '%s' with value 0x%08X", sym->name, sym->value);
 	}
+	free_expression(expression);
 	return 1;
 }
 

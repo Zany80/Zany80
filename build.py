@@ -78,6 +78,8 @@ class Target:
         self.artifacts = set(artifacts)
         self.sources = {}   # source => object mapping
         self.headers = set()
+        self.cflags = []
+        self.cxxflags = []
         self.includes = []
         self.dependencies = set()
         # target names must be unique
@@ -109,6 +111,16 @@ class Target:
         for p in paths:
             if p not in self.includes:
                 self.includes.append(p)
+
+    def add_cflags(self, *flags):
+        for flag in flags:
+            if flag not in self.cflags:
+                self.cflags.append(flag)
+
+    def add_cxxflags(self, *flags):
+        for flag in flags:
+            if flag not in self.cxxflags:
+                self.cxxflags.append(flag)
 
     def add_dependencies(self, *deps):
         self.dependencies |= {d.name if isinstance(d, Target) else d for d in deps}
@@ -161,8 +173,13 @@ with SourceLibrary('TextEditor') as TextEditor:
     TextEditor.add_includes('lib/cimgui/')
 
 with SourceLibrary('scas') as scas:
-    scas.add_sources_glob('lib/scas/*.c')
-    scas.add_headers_glob('lib/scas/*.h')
+    scas.add_sources_glob('lib/scas/common/*.c')
+    scas.add_headers_glob('lib/scas/common/*.h')
+    scas.add_sources_glob('lib/scas/assembler/*.c')
+    scas.add_headers_glob('lib/scas/assembler/*.h')
+    scas.add_sources_glob('lib/scas/linker/*.c')
+    scas.add_headers_glob('lib/scas/linker/*.h')
+    scas.add_cflags('-Ilib/scas/include')
 
 with SourceLibrary('z80e') as z80e:
     z80e.add_sources_glob('lib/z80e/**/*.c')
@@ -173,7 +190,7 @@ with Executable('Zany80') as Zany80:
     # SIMPLE frontend and core APIs
     Zany80.add_sources_glob('src/main.c', 'src/graphics.c', 'src/graphics_legacy.cpp', 'src/ring_buffer.c', 'src/XML.cpp')
     # Core Zany80 components
-    Zany80.add_sources_glob('src/serial.c', 'src/z80.c', 'src/editor.c')
+    Zany80.add_sources_glob('src/serial.c', 'src/z80.c', 'src/editor.c', 'src/scas.c')
     # Embedded files
     Zany80.add_sources_glob('src/license.c', 'src/zexall.c')
     Zany80.add_dependencies('sokol', 'cimgui', 'stb', 'TextEditor', 'rapidxml', 'z80e')
@@ -200,9 +217,9 @@ all: {targets_all}
 
 HEADERS={headers_all}
 {OBJ_DIR}/%.o: %.c $(HEADERS)
-\t$(CC) $< $(CFLAGS) $(INCLUDES) -c -o $@
+\t$(CC) $< $(CFLAGS) $(EXTRA_CFLAGS) $(INCLUDES) -c -o $@
 {OBJ_DIR}/%.o: %.cpp $(HEADERS)
-\t$(CXX) $< $(CXXFLAGS) $(INCLUDES) -c -o $@
+\t$(CXX) $< $(CXXFLAGS) $(EXTRA_CXXFLAGS) $(INCLUDES) -c -o $@
 '''.format(
     CFLAGS=' '.join(sorted(CFLAGS)),
     CXXFLAGS=' '.join(sorted(CXXFLAGS)),
@@ -236,6 +253,8 @@ def emit_target(tgt, emitted=None):
         t_artifacts=' '.join(artifacts),
         t_objects=' '.join(sorted(tgt.sources.values())),
         t_headers=' '.join(sorted(tgt.headers)),
+        t_cflags = ' '.join(sorted(tgt.cflags)),
+        t_cxxflags = ' '.join(sorted(tgt.cxxflags)),
         dep_depends_objects=''.join(' ' + dd for dd in dep_depends_objects),
         dep_depends_headers=''.join(' ' + dd for dd in dep_depends_headers),
     )
@@ -251,6 +270,8 @@ def emit_target(tgt, emitted=None):
     t.append('''\
 
 {t_name}_OBJECTS = {t_objects}
+$({t_name}_OBJECTS): EXTRA_CFLAGS := {t_cflags}
+$({t_name}_OBJECTS): EXTRA_CXXFLAGS := {t_cxxflags}
 
 {t_name}_HEADERS = {t_headers}
 

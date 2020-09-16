@@ -1,0 +1,15 @@
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+*.swp
+*.o
+bin/
+*.rom
+test/
+build/
+.lvimrc
+tables/z80.c
+.ccls
+.ccls-cache

@@ -2,6 +2,7 @@
 #include "list.h"
 #include "log.h"
 #include "objects.h"
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -101,15 +102,14 @@ void add_warning(list_t *warnings, int code, size_t line_number,
 void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address, ...) {
 	source_map_t *map;
 	source_map_entry_t *entry;
-	int found = 0;
-	int i;
-	for (i = 0; i < maps->length; ++i) {
+	bool found = false;
+	for (int i = 0; i < maps->length; ++i) {
 		map = maps->items[i];
 		int j;
 		for (j = 0; j < map->entries->length; ++j) {
 			entry = map->entries->items[j];
 			if (address >= entry->address && address < entry->address + entry->length) {
-				found = 1;
+				found = true;
 				break;
 			}
 		}
@@ -135,16 +135,25 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	va_end(args);
 
 	error->message = buf;
+	scas_log(L_ERROR, "Added error '%s' at:", buf);
 	if (found) {
 		error->line_number = entry->line_number;
 		error->file_name = strdup(map->file_name);
 		error->line = strdup(entry->source_code);
+		for (int i = 0; i < maps->length; ++i) {
+			map = maps->items[i];
+			for (int j = 0; j < map->entries->length; ++j) {
+				entry = map->entries->items[j];
+				if (address >= entry->address && address < entry->address + entry->length) {
+					scas_log(L_ERROR, "\t%s:%d:%d", map->file_name,
+							entry->line_number, error->column);
+				}
+			}
+		}
 	} else {
 		error->line_number = 0;
 		error->file_name = NULL;
 		error->line = NULL;
 	}
 	list_add(errors, error);
-	scas_log(L_ERROR, "Added error '%s' at %s:%d:%d", buf, error->file_name,
-			error->line_number, error->column);
 }

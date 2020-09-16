@@ -1,0 +1,26 @@
+image: archlinux
+packages:
+  - make
+  - cmake
+  - mkrom
+  - patchrom
+  - genkfs
+  - mktiupgrade
+  - valgrind
+sources:
+  - https://github.com/knightos/scas
+  - https://github.com/knightos/kernel
+environment:
+  project: scas
+tasks:
+  - build: |
+      cd ${project}
+      mkdir build
+      cd build
+      cmake -DCMAKE_BUILD_TYPE=Release ..
+      make
+      cd ../../kernel
+      # Temporary: use scas PR
+      git checkout scas
+      mkdir bin/TI84pSE -p
+      make AS="valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas"

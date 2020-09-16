@@ -1,0 +1,274 @@
+                               scas Object Files
+
+scas produces object files that contain machine code, assembly code, and symbols.
+Unlike ELF files, "sobj" files are not linked at runtime, but instead are linked
+ahead-of-time. The object files are useful for linking large parts of a codebase
+seperately, as well as for debugging purposes.
+
+This document takes a similar format to the gzip specification. That is:
+
+In the diagrams below, a box like this:
+
++---+
+|   | <-- the vertical bars might be missing
++---+
+
+represents one byte; a box like this:
+
++==============+
+|              |
++==============+
+
+represents a variable number of bytes. 
+
+                                  Data Formats
+
+A few common data formats are in use. Strings are generally encoded as UTF-8
+strings and delimited with a zero, and integers are always unsigned. Signed
+integers are converted to unsigned, two's compliment, unless otherwise
+specified. All multi-octet values are little-endian unless specified otherwise.
+
+                                     Header
+
++==========+---------+
+| SCASOBJ  | Version |
++==========+---------+
+
+"SCASOBJ" is the literal ASCII string "SCASOBJ", without a length prefix. The
+version is an unsigned 8-bit integer that specifies what version of the SCASOBJ
+specification is in use. The current version is 2.
+
+                                     Areas
+
+An SOBJ file is composed of one or more areas. Each area has symbols, machine
+code, late immediate values, imports, etc.
+
++============+==========+
+| Area count | Areas... |
++============+==========+
+
+The area count is a 32-bit unsigned integer that refers to the total number of
+areas in this object file. Each area takes the following form:
+
++===========+============+================+=================+
+| Area name | Symbols... | Expressions... | Machine code... | ->
++===========+============+================+=================+
++==========+============+
+| Metadata | Source Map |
++==========+============+
+
+                                    Symbols
+
+What follows is a list of symbols. These include both exported symbols and
+symbols that need to be assigned a final address.
+
++==============+============+
+| Symbol count | Symbols... |
++==============+============+
+
+The number of symbols is encoded as an unsigned 32-bit integer.
+
+Each symbol takes the following format:
+
++----------+=============+======+=======+==============+
+| Exported | Name length | Name | Value | Base address |
++----------+=============+======+=======+==============+
+
+The length and value are both 64-bit unsigned integers. The name itself is a UTF-8
+string with no null delimiter. Exported is 1 if the symbol has been exported, or 0
+if it's an internal symbol. The base address is the address at which it was defined,
+which may be used to insert instructions into the machine code while still
+resolving the correct address of labels.
+
+                          Immediate Value Expressions
+
+The next section is a list of expressions and the address their value should be
+assigned to.
+
++==================+================+
+| Expression count | Expressions... |
++==================+================+
+
+The length here is an unsigned 32-bit integer. Each expression takes the following
+format:
+
++------+-------+=====================+==============+=========+============+
+| Type | Width | Instruction Address | Base Address | Address | Expression |
++------+-------+=====================+==============+=========+============+
+
+The type specifies the type of immediate value, and can be one of the following:
+
+* 0x00: Absolute
+* 0x01: Relative
+
+Absolute values are calculated from the global address space, and relative
+values are calculated relative to the address of the instruction. The "base
+address" is the address to use as the reference for relative immediate values.
+The "address" is the address of the immediate value itself. The "instruction
+address" is the address of the instruction or directive that introduced this
+immediate value, which is used to resolve the value of "$".
+
+The "Expression" takes this format:
+
++=============+===========+
+| Token count | Tokens... |
++=============+===========+
+
+The token count is an unsigned 32 bit integer. Expressions are stored in reverse
+polish notation. That is, the expression "2 + 2 * 10" would be stored as:
+
+    + 2 * 2 10
+
+You can evaluate these expressions by treating it like a stack. Pop off the "+"
+and add to it "2" and "* 2 10". Of course, you'll have to evaluate "* 2 10" to
+do that. Each token takes this format:
+
++------+============+
+| Type | Token Data |
++------+============+
+
+The type is one of these values:
+
+* 0x01: Symbol
+   This token is a string.
+
+* 0x02: Integer
+   This token is an 64-bit unsigned integer.
+
+* 0x03: Operator
+   This token is an operator:
+   - 0x00: +
+   - 0x01: -
+   - 0x02: + (unary)
+   - 0x03: - (unary)
+   - 0x04: *
+   - 0x05: /
+
+                                  Machine Code
+
+The next section is unlinked machine code. It is preceeded by its length as an
+unsigned 64-bit integer.
+
+Any expression that would demand a symbol, as in the following example, uses
+zero instead of the actual value. The expression list can be used to resolve
+these at the linker step.
+
+    .org 10
+    symbol:
+        LD HL, symbol
+        LD HL, symbol + 10
+        LD HL, symbol * 2
+        LD HL, 0xBEEF
+        JR symbol
+
+This example would be assembled to the following machine code:
+
+    21 00 00
+    21 00 00
+    21 00 00
+    21 EF BE
+    18 00
+
+                                    Metadata
+
+The metadata is a list of key/value pairs with arbitrary data for various
+purposes. Keys that begin with "scas." are reserved.
+
++===========+=========+
+| Key count | Keys... |
++===========+=========+
+
+The count is a 64-bit unsigned integer. The keys themselves take this format:
+
++------------+============+==============+=======+
+| Key length | Key string | Value length | Value |
++------------+============+==============+=======+
+
+The key string is an ASCII string whose length is defined by the unsigned 8-bit
+integer "Key length". The value is an arbitrary payload of octets whose length
+is defined by the unsigned 64-bit integer "Value length".
+
+                                   Source Map
+
+The source map includes the assembly code that produced the machine code.  It
+contains each line of code, minus whitespace. For example, with the following
+code segment:
+
+    ; This is an example
+
+    symbol:
+        call symbol ; Stack overflow
+
+Only this code would be preserved:
+
+    ; This is an example
+    symbol:
+    call symbol ; Stack overflow
+
+This section of the object file is a list of lines of code and affected addresses.
+It takes the following format:
+
++============+==========+
+| File count | Files... |
++============+==========+
+
+The file count is an unsigned 32-bit integer. Each file uses this format:
+
++===========+============+==========+
+| File name | Line count | Lines... |
++===========+============+==========+
+
++=============+=========+===============+======+
+| Line number | Address | Output length | Code |
++=============+=========+===============+======+
+
+The address is relative to the start of this area, and the output length refers
+to the length of the machine code output by this line of code. The code is the
+assembly code itself that was is used to represent this machine code. The line
+number is, of course, the line this code appears on in the source file, as an
+unsigned 64-bit integer.
+
+                          Appendix I: Defined Metadata
+
+Some kinds of metadata are supported directly by scas, and take this format.
+
+"scas.functions" includes a list of declared functions. The data takes this
+format:
+
++================+==============+
+| Function count | Functions... |
++================+==============+
+
+The function count is an unsigned 32-bit integer. Following it are functions:
+
++===============+==============+============+
+| Function name | Start symbol | End symbol |
++===============+==============+============+
+
+Each is an ASCII string, prefixed by an unsigned 32-bit integer indicating its
+length. The name is the name of the symbol that defines the function (i.e. what
+other things use to reference it). The start and end symbols define the
+boundaries of the function. For example kcc (the KnightOS C compiler) may
+generate this code:
+
+   ;example.c:1: int main() {
+   ;	---------------------------------
+   ; Function main
+   ; ---------------------------------
+   _main_start::
+   _main:
+   ;example.c:2: return 0;
+       ld	hl,#0x0000
+       ret
+       _main_end::
+   .function	_main, _main_start, _main_end
+
+From the following C code:
+
+   int main() {
+      return 0;
+   }
+
+The function directive indicates to the assembler that the "_main" function is
+declared between "_main_start" and "_main_end". Respectively, these become
+"function name", "start symbol", and "end symbol" in the object metadata.

@@ -1,0 +1,47 @@
+/////
+vim:set ts=4 sw=4 tw=82 noet:
+/////
+scdump (1)
+==========
+
+Name
+----
+scdump - Dump scas object files
+
+Synopsis
+--------
+'scdump' [options] _FILE(s)_
+
+Description
+-----------
+
+Prints information about scas objects to stdout.
+
+Options
+-------
+
+*-a, --area* <area>::
+	Dumps only _area_ and omits others.
+
+*-c, --code*::
+	Dumps source code entries.
+
+*-p, --private-symbols*::
+    Dumps private symbols defined by this object.
+
+*-r, --references*::
+    Dumps unresolved symbol references.
+
+*-s, --symbols*::
+    Dumps public symbols defined by this object.
+
+*-x, --machine-code*::
+    Dumps machine code to stdout. Note that it does this in raw binary form and
+    you should probably be careful using this in a terminal.
+
+Authors
+-------
+
+Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
+source contributors. For more information about scas development, see
+<https://github.com/KnightOS/scas>.

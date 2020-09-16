@@ -1,0 +1,388 @@
+/////
+vim:set ts=4 sw=4 tw=82 noet:
+/////
+scas (1)
+==========
+
+Name
+----
+scas - SirCmpwn's Assembler
+
+Synopsis
+--------
+'scas' [options] _FILE(s)_
+
+Description
+-----------
+
+scas assembles and optionally links any number of assembly and object files into a
+single output file. Specify "-" as an input file name to read from stdin.
+
+Options
+-------
+
+*-a, --architecture* <arch>::
+	Specifies an architecture or instruction set file. The default is z80. If you
+	specify a file name, that file will be used as an instruction set. Otherwise,
+	it will be matched against scas's internal list of instruction sets. See
+	_Architectures_ below for additional information.
+
+*-c, --compile*::
+	Compile, but do not link, the assembly sources into an object file.
+
+*-D <MACRO>, -D<MACRO>, \--define* <MACRO>::
+	Defines _MACRO_ as 1. You may also use *-D MACRO=STRING* to set a macro to a
+	specific value, as if writing *#define MACRO STRING* into your code.
+
+*-f<option>[=value]*::
+	Enables an assembler flag. See _Flags_ below.
+
+*-i, --input* <file>::
+	Uses the specified file, or - for stdin, as input.
+
+*-I, --include* <directories>::
+	Adds the specified directories to the include path, delimited by commas. By
+	default, the include path is the working directory plus anything in the
+	*SCAS_PATH* enviornment variable.
+
+*-o, --output* <file>::
+	Uses the specified file, or - for stdout, as the output.
+
+*-L, --listing* <file>::
+	Outputs a listing file to _file_, or - for stdout. This is a human-readable
+	plaintext file that can help you find out more about how the file was
+	assembled. Its format is described in _Listings_ below.
+
+*-S, --symbols* <file>::
+	Outputs symbols as assembly source to the specified file, or - for stdout. See
+	_Symbol Files_ below for additional information.
+
+*-v[vv...]*::
+	Specifies different levels of log verbosity.
+
+Examples
+--------
+
+scas input.asm output.bin::
+	Assembles and links input.asm and produces output.bin as machine code.
+
+scas input1.asm input2.asm input3.asm output.bin::
+	Assembles and links three input files and produces output.bin as machine code.
+	The default behavior with several files is to arrange their output in order.
+
+scas -c screen.asm screen.o::
+	Assembles input1.asm and produces an unlinked object file.
+
+scas -o game.bin screen.o keyboard.o main.o::
+	Links three object files together and produces game.bin as machine code.
+
+Flags
+-----
+
+Flags are enabled with the *-f* option. You may _disable_ any of these flags by
+using *-fno-[flag]* (for example: -fno-remove-unused-funcs to disable the removal
+of unused functions).
+
+*-fauto-relocation*::
+	*Disabled* by default.
+	+
+	Enabling this flag will insert KnightOS relocation instructions before all
+	local references during linking, among other changes. This is generally not
+	reccommended because it fails to handle more complex scenarios.
+
+*-fexplicit-export*::
+	*Disabled* by default.
+	+
+	Instead of exporting all symbols implicitly, require that all symbols for
+	export are explicitly declared as such through the export directive.
+
+*-fexplicit-import*::
+	*Disabled* by default.
+	+
+	Instead of postponing all unresolved symbol errors to the linker, this flag
+	instructs scas to raise errors during assembly if any external symbols are
+	referenced without an import directive.
+
+*-fformat=<format>*::
+	*bin* by default.
+	+
+	Outputs machine code in the given format. Available formats:
+	+
+	* bin - Binary machine code
+	* 8xp - TI-OS 8xp file
+
+*-f8xp-archived*::
+	*Disabled* by default.
+	+
+	When using the 8xp format, this flag indicates that the program should be
+	archived when sent to the calculator.
+
+*-f8xp-name=<name>*::
+	*SCAS* by default.
+	+
+	When using the 8xp format, this sets the name of the variable. This can be up
+	to 8 characters, all uppercase.
+
+*-f8xp-protected*::
+	*Enabled* by default.
+	+
+	When using the 8xp format, this sets the protected flag so that the varaible
+	may not be edited directly on the calculator.
+
+*-fremove-unused-funcs*::
+	*Enabled* by default.
+	+
+	Enabling this flag instructs scas to remove all unused functions during
+	linking to reduce the size of the final executable. Functions can be declared
+	with the function directive. All code that does not belong to a function is
+	considered precious and will not be optimized out.
+
+*-forigin=<address>*::
+	*0* by default.
+	+
+	Sets the origin address to <value>. All symbols and references will be
+	adjusted as if the executable is loaded at address. Note that this does not
+	take special action in combination with the origin directive. When both are
+	used, the actual origin will be the value of both origins added together.
+
+Preprocessor Directives
+-----------------------
+
+To use a preprocessor directive, place it alone on a line preceeded by a . or #.
+For example, you might use #include <foo.asm>.
+
+If you use a directive that takes several inputs, such as *db*, you may seperate
+them with spaces. If your input would use a space, instead seperate inputs with
+commas. For example:
+
+	.db 0 1 2 3 4			; Spaces OK
+	.db 2 + 2, 4 + 4, 6 + 6	; Spaces not OK
+
+This feature is designed as such for compatability reasons. The reccommended style
+is with commas.
+
+*area* <name>::
+	Defines the following code as code included in the area _name_. By default,
+	all code is assembled into the _CODE_ area.
+
+*ascii* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output.
+
+*asciiz* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output, postfixed with a zero.
+
+*asciip* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output, prefixed with the string length as an 8-bit unsigned integer.
+
+*block* <size>::
+	Inserts _size_ number of zeros into the output.
+
+*db* <values>::
+	Inserts _values_ as bytes into the output, delimtited by commas. Each value
+	may be an expression that evaluates to an 8-bit value, or a string that will
+	evaluate to several 8-bit values based on the global string encoding.
+
+*dw* <values>::
+	Inserts _values_ as words into the output, delimtited by commas. Each value
+	may be an expression, which evaluates to an unsigned integer whose width is
+	architecture-specific.
+
+*define* <key> <value>::
+	Defines a new macro named _key_ (with optional parameters specified in
+	parenthesis) and with substitution _value_.
+
+*equ, equate* <key> <value>::
+	Creates a symbol named _key_ with value of _value_. The expression _value_ is
+	evaluated at the time this directive is parsed, rather than when the symbol is
+	used.
+
+*export* <symbol>::
+	Indicates that _symbol_ is to be exported from this module.
+
+*fill* <size> <value>::
+	Inserts _size_ number of bytes into the output, whose value is _value_. If
+	omitted, _value_ defaults to zero.
+
+*if, ifdef, ifndef, else, elif, endif*::
+	See _Conditionals_.
+
+*import* <symbol>::
+	Imports the external _symbol_ for use in this module.
+
+*include* "<path>"::
+	Inserts the specified file's contents into the assembly source directly.
+	_path_ is a file in the include path, which is specified from the command
+	line. See _--include_ for details. You may specify a file in quotes or
+	brackets, each will be treated the same way.
+
+*incbin* <path>::
+	Inserts the specified file's contents directly into the output.
+
+*list*::
+	Resumes listing. See also *nolist*.
+
+*macro* <definition>::
+	See _Macros_.
+
+*nolist*::
+	Pauses listing until the next *list* directive. All preprocessor directives
+	are processed but no assembly is performed and no text is written to listing
+	files.
+
+*org* <expression>::
+	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
+	this point will be relative to _expression_.
+
+*printf* <format>, <values>::
+	Writes text to stdout during assembly. <format> is a printf format string
+	and each value is an expression that is evaluated and used in the format
+	string.
+
+*!*::
+	! directives are ignored.
+
+Some preprocessor directives are supported to maintain compatability with other
+assemblers, but their use is discouraged and they are not documented here.
+
+Macros versus Equates
+---------------------
+
+The difference between the *define* directive and *equate* directive is that
+*define* creates a macro. Equates are evaluated and assigned when the directive is
+parsed; macros are evaluated when used. You are encouraged to use equates for most
+constants, except for string constants.
+
+Conditionals
+------------
+
+You may use conditionals as preprocessor directives to control what gets assembled
+and what doesn't. *if*, *ifdef*, *ifndef*, *else*, *elif*, and *endif* are
+available. In the case of *if* and *elif*, provide an expression that will be
+considered true if nonzero. In the case of *ifdef*, provide a symbol or macro
+name, which will be considered true if it exists. *ifndef* evaluates to the
+opposite of *ifdef*.
+
+*elseif* and *end* are synonomous with *elif* and *endif*, respectively.
+
+Literals
+--------
+
+Several kinds of literals are supported:
+
+*10*:
+	Decimal literals may be specified with no decorators.
+
+*0x1A*::
+	Hexadecimal literals are prefixed with "0x".
+
+*0o17*::
+	Octal literals are prefixed with "0o".
+
+*0b11011*::
+	Binary literals are prefixed with "0b".
+
+*\'z'*::
+	ASCII characters may be enclosed with single quotes.
+
+Expressions
+-----------
+
+Expressions are evaluated with respect to C precedence. The following operators
+are available:
+
+	+ - * / % << >> < <= > >= == != & ^ | && ||
+
+Boolean operators evaluate to zero when false, and nonzero when true.
+
+You may use a few special values in your expressions. $ refers to the address of
+the current line of code. "true" and "false" evaluate to one and zero,
+respectively. You may also use character constants between \'single-quotes'.
+
+Signed integers are converted to unsigned integers, two's compliment.
+
+Local Labels
+------------
+
+You may scope labels to the most recent global label by way of local labels.
+
+	global_label:
+		call .local_label
+	.local_label:
+		nop
+	another_global:
+		call .local_label ; undefined
+
+Local labels cannot be exported.
+
+Relative Labels
+---------------
+
+You may use the special label "_" as many times as you wish without getting
+duplicate symbol errors. Referring to these labels uses a special syntax,
+inherited from spasm.
+
+	_:		; A
+		jp _	; Refers to B
+		jp -_	; Refers to A
+		jp ++_	; Refers to C
+	_:		; B
+		nop
+	_:		; C
+
+Relative labels cannot be exported.
+
+Macros
+------
+
+Macros are defined through the *macro* directive and perform simple string
+replacement. To define a macro, use something like this:
+
+	.macro example
+		ld a, b
+	.endmacro
+
+This defines a parameterless macro called "example". You needn't indent the
+macro's contents, this is just an example. You can also define macros that take
+parameters:
+
+	.macro example(foo, bar)
+		ld a, foo
+		ld b, bar
+	.endmacro
+
+The contents of the macro will have the parameters substituted for the values
+provided wherever they appear. You can use these macros like so:
+
+	example(1, 2) ; Expands to ld a, 1 \ ld b, 2
+
+Architectures
+-------------
+
+Out of the box, scas only supports z80. You may specify an alternate instruction
+set by using the _--architecture_ option.
+
+String Escape Codes
+-------------------
+
+In string or character constants, you may use \ to indicate an escape code. C
+escape codes are supported.
+
+Compatability
+-------------
+
+scas is (mostly) compatible with:
+
+* Sass
+* Spasm
+* TASM
+* ASxxxx
+
+Authors
+-------
+
+Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
+source contributors. For more information about scas development, see
+<https://github.com/KnightOS/scas>.

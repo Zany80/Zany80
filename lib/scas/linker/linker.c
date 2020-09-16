@@ -36,7 +36,7 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	scas_log(L_DEBUG, "Resolving immediate values for area '%s' at %08X", area->name, area->final_address);
-	indent_log();
+	scas_log_indent();
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
@@ -94,7 +94,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			}
 		}
 	}
-	deindent_log();
+	scas_log_deindent();
 }
 
 /* z80 only (and possibly ez80) */
