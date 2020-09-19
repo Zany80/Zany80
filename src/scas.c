@@ -17,7 +17,7 @@ struct runtime scas_runtime;
 
 static jmp_buf env;
 static scas_log_importance_t v = 0;
-static int indent = 0;
+static unsigned indent = 0;
 static bool colored = true;
 
 const char *verbosity_colors[] = {
@@ -55,8 +55,7 @@ void scas_log(scas_log_importance_t verbosity, char* format, ...) {
 			serial_write_all(verbosity_colors[c], 8);
 		}
 		if (verbosity == L_DEBUG || verbosity == L_INFO) {
-			int i;
-			for (i = 0; i < indent * 2; ++i) {
+			for (size_t i = 0; i < indent * 2; ++i) {
 				serial_write(' ');
 			}
 		}
@@ -159,7 +158,8 @@ bool scas_assemble(FILE *infile, FILE *outfile) {
 		scas_log(L_DEBUG, "test");
 		scas_log_indent();
 		scas_log(L_INFO, "test");
-		indent -= 3;
+		scas_log_deindent();
+		scas_log_deindent();
 		init_scas_runtime();
 		list_add(scas_runtime.input_files, infile);
 		validate_scas_runtime();
