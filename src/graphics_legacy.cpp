@@ -32,7 +32,7 @@ static void render_widget(widget_t *widget) {
 				widget->_label.wrapped ? ImGui::TextWrapped("%s", widget->label) : ImGui::TextUnformatted(widget->label);
 				ImGui::PopStyleColor();
 			}
-			if (widget->_label.next) {
+			if (widget->_label.next && widget->_label.next->label) {
 				render_widget(widget->_label.next);
 			}
 			break;

@@ -268,6 +268,7 @@ void widget_set_label(widget_t *widget, const char *label) {
 	}
 	if (widget->_label.next) {
 		widget_destroy(widget->_label.next);
+		widget->_label.next = NULL;
 	}
 	widget->label = label ? strdup(label) : NULL;
 	if (!widget->label) {
