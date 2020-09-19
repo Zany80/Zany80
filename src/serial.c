@@ -44,23 +44,12 @@ void serial_clear_output() {
 }
 
 static void input_handler(widget_t *input) {
-	char *msg = input_get_text(input);
-	{
-		char *m = malloc(strlen(msg) + 2);
-		if (m == NULL) {
-			// TODO: determine OOM solution
-			puts("Failed to allocate memory");
-			exit(1);
-		}
-		strcat(strcpy(m, msg), "\n");
-		free(msg);
-		msg = m;
-	}
+	const char *msg = input_get_text(input);
 	for (size_t i = 0; i < strlen(msg); i++) {
 		ring_buffer_append(input_buf, msg + i, 1);
 		// TODO: add option to hook in
 	}
-	free(msg);
+	ring_buffer_append(input_buf, "\n", 1);
 	input_set_text(input, "");
 }
 
