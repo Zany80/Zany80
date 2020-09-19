@@ -6,6 +6,8 @@
 -Ilib/
 -Ilib/scas/include/
 -Wall
+-DSOKOL_GLCORE33
+-D_POSIX_C_SOURCE=200809L
 -Wextra
 -pedantic
 
