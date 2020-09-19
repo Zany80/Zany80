@@ -26,7 +26,7 @@ endif()
 add_executable(generate_tables ${PROJECT_SOURCE_DIR}/tables/generate.c)
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/z80.h
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/generated.h
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab generate_tables
     COMMAND generate_tables ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/generated.h)
 

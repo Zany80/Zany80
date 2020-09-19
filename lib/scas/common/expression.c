@@ -1,15 +1,17 @@
+#include "io.h"
 #include "expression.h"
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <stdio.h>
 #include "log.h"
 #include "readline.h"
 #include "stack.h"
 #include "stringop.h"
 #include "operators.h"
 #include "objects.h"
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <stdio.h>
 
 static operator_t operators[] = {
 	{ "+", OP_UNARY_PLUS, 1, 3, 1, operator_unary_plus },
@@ -82,7 +84,7 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 
 tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 	uint32_t len;
-	fread(&len, sizeof(uint32_t), 1, f);
+	scas_read(&len, sizeof(uint32_t), 1, f);
 	tokenized_expression_t *expression = malloc(sizeof(tokenized_expression_t));
 	expression->tokens = create_list();
 	expression->symbols = NULL;
@@ -94,7 +96,7 @@ tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 				token->symbol = read_line(f);
 				break;
 			case NUMBER:
-				fread(&token->number, sizeof(uint64_t), 1, f);
+				scas_read(&token->number, sizeof(uint64_t), 1, f);
 				break;
 			case OPERATOR:
 				token->operator = fgetc(f);

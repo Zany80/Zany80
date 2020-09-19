@@ -1,3 +1,4 @@
+#include "io.h"
 #include "objects.h"
 #include "log.h"
 #include "functions.h"
@@ -254,42 +255,42 @@ area_t *read_area(FILE *f) {
 	scas_log(L_DEBUG, "Reading area '%s' from file", name);
 	free(name);
 	uint32_t symbols, immediates;
-	fread(&symbols, sizeof(uint32_t), 1, f);
+	scas_read(&symbols, sizeof(uint32_t), 1, f);
 	uint32_t len;
 	for (uint32_t i = 0; i < symbols; ++i) {
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->exported = fgetc(f);
-		fread(&len, sizeof(uint32_t), 1, f);
+		scas_read(&len, sizeof(uint32_t), 1, f);
 		sym->name = calloc(len + 1, sizeof(char));
-		fread(sym->name, sizeof(char), len, f);
-		fread(&sym->value, sizeof(uint64_t), 1, f);
-		fread(&sym->defined_address, sizeof(uint64_t), 1, f);
+		scas_read(sym->name, sizeof(char), len, f);
+		scas_read(&sym->value, sizeof(uint64_t), 1, f);
+		scas_read(&sym->defined_address, sizeof(uint64_t), 1, f);
 		sym->type = SYMBOL_LABEL;
 		list_add(area->symbols, sym);
 		scas_log(L_DEBUG, "Read symbol '%s' with value 0x%08X%08X", sym->name, (uint32_t)(sym->value >> 32), (uint32_t)sym->value);
 	}
 	/* TODO: Imports */
-	fread(&immediates, sizeof(uint32_t), 1, f);
+	scas_read(&immediates, sizeof(uint32_t), 1, f);
 	for (uint32_t i = 0; i < immediates; ++i) {
 		late_immediate_t *imm = malloc(sizeof(late_immediate_t));
 		imm->type = fgetc(f);
 		imm->width = fgetc(f);
-		fread(&imm->instruction_address, sizeof(uint64_t), 1, f);
-		fread(&imm->base_address, sizeof(uint64_t), 1, f);
-		fread(&imm->address, sizeof(uint64_t), 1, f);
+		scas_read(&imm->instruction_address, sizeof(uint64_t), 1, f);
+		scas_read(&imm->base_address, sizeof(uint64_t), 1, f);
+		scas_read(&imm->address, sizeof(uint64_t), 1, f);
 		imm->expression = fread_tokenized_expression(f);
 		list_add(area->late_immediates, imm);
 		scas_log(L_DEBUG, "Read immediate value at 0x%08X (width: %d)", imm->address, imm->width);
 	}
-	fread(&area->data_length, sizeof(uint64_t), 1, f);
+	scas_read(&area->data_length, sizeof(uint64_t), 1, f);
 	area->data_capacity = area->data_length;
 	free(area->data);
 	area->data = malloc((int)area->data_length);
-	fread(area->data, sizeof(uint8_t), (int)area->data_length, f);
+	scas_read(area->data, sizeof(uint8_t), (int)area->data_length, f);
 	scas_log(L_DEBUG, "Read %d bytes of machine code", area->data_length);
 
 	uint64_t meta_length, meta_key;
-	fread(&meta_length, sizeof(uint64_t), 1, f);
+	scas_read(&meta_length, sizeof(uint64_t), 1, f);
 	meta_length = (int)meta_length;
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (uint64_t i = 0; i < meta_length; ++i) {
@@ -298,29 +299,29 @@ area_t *read_area(FILE *f) {
 		meta_key = fgetc(f);
 		meta->key = malloc(meta_key + 1);
 		meta->key[meta_key] = 0;
-		fread(meta->key, sizeof(char), meta_key, f);
-		fread(&meta->value_length, sizeof(uint64_t), 1, f);
+		scas_read(meta->key, sizeof(char), meta_key, f);
+		scas_read(&meta->value_length, sizeof(uint64_t), 1, f);
 		meta->value = malloc(meta->value_length + 1);
 		meta->value[meta->value_length] = 0;
-		fread(meta->value, sizeof(char), meta->value_length, f);
+		scas_read(meta->value, sizeof(char), meta->value_length, f);
 		list_add(area->metadata, meta);
 		scas_log(L_DEBUG, "Read metadata %s with value length %d", meta->key, meta->value_length);
 	}
 
 	uint64_t fileno, lineno;
-	fread(&fileno, sizeof(uint64_t), 1, f);
+	scas_read(&fileno, sizeof(uint64_t), 1, f);
 	fileno = (int)fileno;
 	for (uint64_t i = 0; i < fileno; ++i) {
 		source_map_t *map = malloc(sizeof(source_map_t));
 		map->file_name = read_line(f);
 		map->entries = create_list();
-		fread(&lineno, sizeof(uint64_t), 1, f);
+		scas_read(&lineno, sizeof(uint64_t), 1, f);
 		scas_log(L_DEBUG, "Reading source map for '%s', %d entries", map->file_name, lineno);
 		for (int j = 0; j < (int)lineno; ++j) {
 			source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
-			fread(&entry->line_number, sizeof(uint64_t), 1, f);
-			fread(&entry->address, sizeof(uint64_t), 1, f);
-			fread(&entry->length, sizeof(uint64_t), 1, f);
+			scas_read(&entry->line_number, sizeof(uint64_t), 1, f);
+			scas_read(&entry->address, sizeof(uint64_t), 1, f);
+			scas_read(&entry->length, sizeof(uint64_t), 1, f);
 			entry->source_code = read_line(f);
 			list_add(map->entries, entry);
 			scas_log(L_DEBUG, "Read entry at 0x%08X%08X (line %d): %s", (uint32_t)(entry->address >> 32), (uint32_t)entry->address, entry->line_number, entry->source_code);
@@ -342,7 +343,7 @@ object_t *freadobj(FILE *f, const char *name) {
 		scas_abort("'%s' was built with an incompatible version of scas.", name);
 	}
 	uint32_t area_count;
-	fread(&area_count, sizeof(uint32_t), 1, f);
+	scas_read(&area_count, sizeof(uint32_t), 1, f);
 	for (uint32_t i = 0; i < area_count; ++i) {
 		list_add(o->areas, read_area(f));
 	}
