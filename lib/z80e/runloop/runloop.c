@@ -146,7 +146,8 @@ void link_socket_update(asic_t *asic, int c) {
 			}
 			if (c != EOF) {
 				val = c;
-				write(client.fd, &c, 1);
+				// TODO: do we care if this fails?
+				if (write(client.fd, &c, 1) != 1) {}
 			}
 		}
 	}
