@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define MHz * 1000 * 1000
 const size_t speed = 500 MHz;
@@ -92,7 +93,9 @@ void z80_init() {
 
 void z80_deinit() {
 	if (asic) {
-		asic_free(asic);
+		ti_mmu_free(asic->mmu);
+		cpu_free(asic->cpu);
+		free(asic);
 		asic = NULL;
 	}
 }
