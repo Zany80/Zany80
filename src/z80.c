@@ -61,7 +61,25 @@ void z80_init() {
 	if (asic) {
 		// TODO
 	}
-	asic = asic_init(TI84p, NULL);
+	asic = calloc(1, sizeof(asic_t));
+	asic->log = NULL;
+	asic->cpu = cpu_init(NULL);
+	asic->mmu = ti_mmu_init(TI84p, NULL);
+	asic->cpu->memory = (void*)asic->mmu;
+	asic->cpu->read_byte = ti_read_byte;
+	asic->cpu->write_byte = ti_write_byte;
+	asic->battery = BATTERIES_GOOD;
+	asic->device = TI84p;
+
+	asic->timers = calloc(1, sizeof(z80_hardware_timers_t));
+	asic->timers->max_timers = 20;
+	asic->timers->timers = calloc(20, sizeof(z80_hardware_timer_t));
+
+	asic->stopped = 0;
+	asic->debugger = 0;
+	asic->runloop = runloop_init(asic);
+
+	asic->link = calloc(1, sizeof(z80_link_socket_t));
 	asic_set_clock_rate(asic, speed);
 	for (uint16_t i = 0; i < 0x100; i += 1) {
 		asic->cpu->devices[i].write_out = cpu_reset;
@@ -93,6 +111,8 @@ void z80_init() {
 
 void z80_deinit() {
 	if (asic) {
+		free(asic->timers->timers);
+		free(asic->timers);
 		ti_mmu_free(asic->mmu);
 		cpu_free(asic->cpu);
 		free(asic);

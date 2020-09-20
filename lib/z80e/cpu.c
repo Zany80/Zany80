@@ -243,7 +243,9 @@ uint8_t cpu_port_in(z80cpu_t *cpu, uint8_t port) {
 	uint8_t val = 0;
 	if (device.read_in != NULL) {
 		val = device.read_in(device.device);
-		val = hook_on_port_in(cpu->hook, port, val);
+		if (cpu->hook) {
+			val = hook_on_port_in(cpu->hook, port, val);
+		}
 	}
 	return val;
 }
@@ -251,7 +253,9 @@ uint8_t cpu_port_in(z80cpu_t *cpu, uint8_t port) {
 void cpu_port_out(z80cpu_t *cpu, uint8_t port, uint8_t val) {
 	z80iodevice_t device = cpu->devices[port];
 	if (device.write_out != NULL) {
-		val = hook_on_port_out(cpu->hook, port, val);
+		if (cpu->hook) {
+			val = hook_on_port_out(cpu->hook, port, val);
+		}
 		device.write_out(device.device, val);
 	}
 }

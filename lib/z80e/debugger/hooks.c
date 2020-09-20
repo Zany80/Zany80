@@ -137,6 +137,7 @@ hook_info_t *create_hook_set(asic_t *asic) {
 }
 
 uint8_t hook_on_memory_read(hook_info_t *info, uint16_t address, uint8_t value) {
+	if (!info) return value;
 	int i = 0;
 	for (i = 0; i < info->on_memory_read->capacity; i++) {
 		memory_hook_callback_t *cb = &info->on_memory_read->callbacks[i];
@@ -148,6 +149,7 @@ uint8_t hook_on_memory_read(hook_info_t *info, uint16_t address, uint8_t value) 
 }
 
 uint8_t hook_on_memory_write(hook_info_t *info, uint16_t address, uint8_t value) {
+	if (!info) return value;
 	int i = 0;
 	for (i = 0; i < info->on_memory_write->capacity; i++) {
 		memory_hook_callback_t *cb = &info->on_memory_write->callbacks[i];
