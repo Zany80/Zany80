@@ -13,8 +13,7 @@
 #endif
 
 area_t *get_area_by_name(object_t *object, char *name) {
-	int i;
-	for (i = 0; i < object->areas->length; ++i) {
+	for (unsigned int i = 0; i < object->areas->length; ++i) {
 		area_t *a = object->areas->items[i];
 		if (strcasecmp(a->name, name) == 0) {
 			return a;
@@ -24,10 +23,9 @@ area_t *get_area_by_name(object_t *object, char *name) {
 }
 
 void relocate_area(area_t *area, uint64_t address, bool immediates) {
-	int i;
 	scas_log(L_DEBUG, "Assigning final address %08X to area %s", address, area->name);
 	area->final_address = address;
-	for (i = 0; i < area->symbols->length; ++i) {
+	for (unsigned int i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];
 		if (sym->type != SYMBOL_LABEL) {
 			continue;
@@ -35,16 +33,15 @@ void relocate_area(area_t *area, uint64_t address, bool immediates) {
 		sym->defined_address += address;
 		sym->value += address;
 	}
-	for (i = 0; immediates && i < area->late_immediates->length; ++i) {
+	for (unsigned i = 0; immediates && i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		imm->address += address;
 		imm->instruction_address += address;
 		imm->base_address += address;
 	}
-	for (i = 0; immediates && i < area->source_map->length; ++i) {
+	for (unsigned i = 0; immediates && i < area->source_map->length; ++i) {
 		source_map_t *map = area->source_map->items[i];
-		int j;
-		for (j = 0; j < map->entries->length; ++j) {
+		for (unsigned int j = 0; j < map->entries->length; ++j) {
 			source_map_entry_t *entry = map->entries->items[j];
 			entry->address += address;
 		}
@@ -52,7 +49,7 @@ void relocate_area(area_t *area, uint64_t address, bool immediates) {
 }
 
 bool merge_areas(object_t *merged, object_t *source) {
-	for (int i = 0; i < source->areas->length; ++i) {
+	for (unsigned int i = 0; i < source->areas->length; ++i) {
 		area_t *source_area = source->areas->items[i];
 		area_t *merged_area = get_area_by_name(merged, source_area->name);
 		if (merged_area == NULL) {
@@ -87,7 +84,7 @@ bool merge_areas(object_t *merged, object_t *source) {
 			list_free(decoded);
 			uint64_t len;
 			char *merged_metadata = encode_function_metadata(merged, &len);
-			for (int i = 0; i < merged->length; i++) {
+			for (unsigned int i = 0; i < merged->length; i++) {
 				function_metadata_t *func = merged->items[i];
 				free(func->name);
 				free(func->start_symbol);
@@ -106,8 +103,7 @@ object_t *merge_objects(list_t *objects) {
 	scas_log(L_INFO, "Merging %d objects into one", objects->length);
 	object_t *merged = create_object();
 	merged->merged = true;
-	int i;
-	for (i = 0; i < objects->length; ++i) {
+	for (unsigned int i = 0; i < objects->length; ++i) {
 		object_t *o = objects->items[i];
 		scas_log(L_DEBUG, "Merging object %d", i);
 		if (!merge_areas(merged, o)) {

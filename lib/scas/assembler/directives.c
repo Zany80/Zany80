@@ -386,7 +386,6 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 	define->parameters = create_list();
 	define->macro_lines = create_list();
 	if (location) {
-		int i, _;
 		define->name = malloc (location - argv[0] + 1);
 		strncpy(define->name, argv[0], location - argv[0] );
 		define->name[location - argv[0]] = 0; /* End of String */
@@ -402,8 +401,9 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		params[end - location] = 0;
 		list_t *parameters = split_string(params, ",");
 
-		for (i = 0; i < parameters->length; i++) {
+		for (unsigned int i = 0; i < parameters->length; i++) {
 			char *parameter = parameters->items[i];
+			int _;
 			list_add(define->parameters, strip_whitespace(parameter, &_));
 		}
 		location = end + 1; /* After the parenthesis */
@@ -438,8 +438,7 @@ int handle_undef(struct assembler_state *state, char **argv, int argc) {
 
 	scas_log(L_DEBUG, "Looking for %s", argv[0]);
 
-	int i;
-	for (i = 0; i < state->macros->length; i++) {
+	for (unsigned int i = 0; i < state->macros->length; i++) {
 		macro_t *m = state->macros->items[i];
 		scas_log(L_DEBUG, "Found %s", m->name);
 		if (strcasecmp(m->name, argv[0]) == 0) {
@@ -458,8 +457,7 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 		/* This space intentionally left blank */
 	}
 	area_t *area = NULL;
-	int i;
-	for (i = 0; i < state->object->areas->length; ++i) {
+	for (unsigned int i = 0; i < state->object->areas->length; ++i) {
 		area_t *a = state->object->areas->items[i];
 		if (strcasecmp(a->name, argv[0]) == 0) {
 			area = a;
@@ -485,8 +483,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "ascii expects 1+ arguments");
 		return 1;
 	}
-	int i;
-	for (i = 0; i < argc; ++i) {
+	for (int i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
 		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
@@ -753,7 +750,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	} else {
 		transform_local_labels(expression, state->last_global_label);
 		int len = state->equates->length;
-		for (int i = 0; i < state->current_area->symbols->length; i += 1) {
+		for (unsigned int i = 0; i < state->current_area->symbols->length; i += 1) {
 			list_add(state->equates, state->current_area->symbols->items[i]);
 		}
 		symbol_t sym_pc = {
@@ -982,7 +979,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 	}
 	int *r = malloc(sizeof(int));
 	*r = 0;
-	int i;
+	unsigned int i;
 	for (i = 0; !*r && i < state->equates->length; ++i) {
 		symbol_t *sym = state->equates->items[i];
 		if (strcasecmp(sym->name, argv[0]) == 0) {
@@ -1023,7 +1020,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 	}
 	int *r = malloc(sizeof(int));
 	*r = 0;
-	int i;
+	unsigned int i;
 	for (i = 0; !*r && i < state->equates->length; ++i) {
 		symbol_t *sym = state->equates->items[i];
 		if (strcasecmp(sym->name, argv[0]) == 0) {
@@ -1109,7 +1106,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	strcpy(name, argv[0] + 1);
 	FILE *file = NULL;
 	int i;
-	for (i = -1; i < state->settings->include_path->length; ++i) {
+	for (i = -1; i == -1 || (unsigned int)i < state->settings->include_path->length; ++i) {
 		if (i == -1) {
 			file = fopen(name, "r");
 		} else {

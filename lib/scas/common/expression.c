@@ -39,8 +39,7 @@ static operator_t operators[] = {
 };
 
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression) {
-	int i;
-	for (i = 0; i < expression->tokens->length; ++i) {
+	for (unsigned int i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
@@ -63,8 +62,7 @@ void print_tokenized_expression(FILE *f, tokenized_expression_t *expression) {
 void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 	uint32_t len = expression->tokens->length;
 	fwrite(&len, sizeof(uint32_t), 1, f);
-	int i;
-	for (i = 0; i < expression->tokens->length; ++i) {
+	for (unsigned int i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		fputc(token->type, f);
 		switch (token->type) {
@@ -116,7 +114,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 	uint64_t res = 0;
 	*error = 0;
 
-	for (int i = 0; i < expression->tokens->length; ++i) {
+	for (unsigned int i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
@@ -125,7 +123,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 				resolved->number = 0;
 
 				bool found = false;
-				for (int j = 0; j < symbols->length; ++j) {
+				for (unsigned int j = 0; j < symbols->length; ++j) {
 					symbol_t *sym = symbols->items[j];
 					if (strcasecmp(sym->name, token->symbol) == 0) {
 						resolved->number = sym->value;
@@ -275,7 +273,7 @@ enum {
 };
 
 void free_expression(tokenized_expression_t *expression) {
-	for (int i = 0; i < expression->tokens->length; i += 1) {
+	for (unsigned int i = 0; i < expression->tokens->length; i += 1) {
 		free_expression_token((expression_token_t*)expression->tokens->items[i]);
 	}
 	list_free(expression->tokens);
@@ -425,7 +423,7 @@ void free_expression_token(expression_token_t *token) {
 }
 
 /* add a sequence of +s and -s to get an offset for a relative label. */
-int get_relative_label_offset(tokenized_expression_t *expression, int *start) {
+int get_relative_label_offset(tokenized_expression_t *expression, unsigned int *start) {
 	int offset = 0;
 
 	for(++*start; *start < expression->tokens->length; ++*start) {

@@ -1,6 +1,6 @@
 image: archlinux
 packages:
-  - make
+  - samurai
   - cmake
   - mkrom
   - patchrom
@@ -10,17 +10,22 @@ packages:
 sources:
   - https://github.com/knightos/scas
   - https://github.com/knightos/kernel
-environment:
-  project: scas
 tasks:
   - build: |
-      cd ${project}
+      cd scas
       mkdir build
       cd build
-      cmake -DCMAKE_BUILD_TYPE=Release ..
-      make
+      cmake -DCMAKE_BUILD_TYPE=Debug -GNinja ..
+      samu
       cd ../../kernel
       # Temporary: use scas PR
       git checkout scas
       mkdir bin/TI84pSE -p
       make AS="valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas"
+      cd ../scas
+      rm -rf build
+      mkdir build
+      cd build
+      cmake -DCMAKE_BUILD_TYPE=Release -GNinja ..
+      samu
+      # TODO: hash with release build, compare with debug?

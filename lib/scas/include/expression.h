@@ -54,6 +54,6 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 void fwrite_tokens(FILE *f, tokenized_expression_t *expression);
 tokenized_expression_t *fread_tokenized_expression(FILE *f);
 void free_expression_token(expression_token_t *token);
-int get_relative_label_offset(tokenized_expression_t *expression, int *start);
+int get_relative_label_offset(tokenized_expression_t *expression, unsigned int *start);
 
 #endif

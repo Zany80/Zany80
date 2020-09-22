@@ -96,7 +96,7 @@ list_t *split_string(const char *str, const char *delims) {
 }
 
 void free_flat_list(list_t *list) {
-	for (int i = 0; i < list->length; ++i) {
+	for (unsigned int i = 0; i < list->length; ++i) {
 		free(list->items[i]);
 	}
 	list_free(list);

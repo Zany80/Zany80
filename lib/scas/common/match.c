@@ -14,7 +14,7 @@
  * 		ld a, (0x100 + 2)
  * get_operand_string could be used to extract "a" and "0x100 + 2"
  */
-char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
+char *get_operand_string(instruction_t *inst, unsigned int *i, const char *code, int j) {
 	char delimiter = '\0';
 	char *res;
 	while (inst->match[*i]) {
@@ -58,7 +58,7 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 }
 
 void match_free(instruction_match_t *match) {
-	for (int i = 0; i < match->immediate_values->length; i += 1) {
+	for (unsigned int i = 0; i < match->immediate_values->length; i += 1) {
 		immediate_ref_t *ref = (immediate_ref_t*)match->immediate_values->items[i];
 		free(ref->value_provided);
 		free(ref);
@@ -74,7 +74,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 	result->immediate_values = create_list();
 	result->instruction = inst;
 
-	int i, j;
+	unsigned int i, j;
 	int whitespace_met = 0;
 	int match = 1;
 	for (i = 0, j = 0; inst->match[i] && str[j]; ++i, ++j) {
@@ -191,8 +191,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 }
 
 instruction_match_t *match_instruction(instruction_set_t *set, const char *str) {
-	int i;
-	for (i = 0; i < set->instructions->length; ++i) {
+	for (unsigned int i = 0; i < set->instructions->length; ++i) {
 		instruction_t *inst = set->instructions->items[i];
 		instruction_match_t *match = try_match(set, inst, str);
 		if (match) {

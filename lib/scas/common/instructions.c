@@ -28,8 +28,7 @@ uint64_t bitreverse(uint64_t n) {
 }
 
 operand_group_t *find_operand_group(instruction_set_t *set, const char *name) {
-	int i;
-	for (i = 0; i < set->operand_groups->length; ++i) {
+	for (unsigned int i = 0; i < set->operand_groups->length; ++i) {
 		operand_group_t *g = set->operand_groups->items[i];
 		if (strcmp(g->name, name) == 0) {
 			return g;
@@ -39,8 +38,7 @@ operand_group_t *find_operand_group(instruction_set_t *set, const char *name) {
 }
 
 operand_t *find_operand(operand_group_t *group, const char *match) {
-	int i;
-	for (i = 0; i < group->operands->length; ++i) {
+	for (unsigned int i = 0; i < group->operands->length; ++i) {
 		operand_t *o = group->operands->items[i];
 		if (strcasecmp(o->match, match) == 0) {
 			return o;
@@ -50,8 +48,7 @@ operand_t *find_operand(operand_group_t *group, const char *match) {
 }
 
 instruction_operand_t *find_instruction_operand(instruction_t *inst, char key) {
-	int i;
-	for (i = 0; i < inst->operands->length; ++i) {
+	for (unsigned int i = 0; i < inst->operands->length; ++i) {
 		instruction_operand_t *op = inst->operands->items[i];
 		if (op->key == key) {
 			return op;
@@ -61,8 +58,7 @@ instruction_operand_t *find_instruction_operand(instruction_t *inst, char key) {
 }
 
 immediate_t *find_instruction_immediate(instruction_t *inst, char key) {
-	int i;
-	for (i = 0; i < inst->immediate->length; ++i) {
+	for (unsigned int i = 0; i < inst->immediate->length; ++i) {
 		immediate_t *imm = inst->immediate->items[i];
 		if (imm->ref == key) {
 			return imm;
@@ -304,11 +300,10 @@ instruction_set_t *load_instruction_set_s(const char *set) {
 }
 
 void instruction_set_free(instruction_set_t *set) {
-	int i, n;
+	unsigned int i, n;
 	for (i = 0; i < set->instructions->length; ++i) {
 		instruction_t *inst = set->instructions->items[i];
-		/* TODO: This leaks a few other things */
-		for (int i = 0; i < inst->operands->length; i += 1) {
+		for (unsigned int i = 0; i < inst->operands->length; i += 1) {
 			instruction_operand_t *op = (instruction_operand_t*)inst->operands->items[i];
 			free(op->group);
 		}

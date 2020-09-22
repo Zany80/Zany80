@@ -35,8 +35,7 @@ int log10_u64(uint64_t i) {
 }
 
 void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label) {
-	int i;
-	for (i = 0; i < expression->tokens->length; ++i) {
+	for (unsigned int i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		if (token->type == SYMBOL) {
 			if (isdigit(token->symbol[0]) 
@@ -73,13 +72,13 @@ void transform_local_labels(tokenized_expression_t *expression, const char *last
 }
 
 void transform_relative_labels(tokenized_expression_t *expression, int last_relative_label, const char *const file_name) {
-	for(int i = 0; i < expression->tokens->length; i++) {
+	for(unsigned int i = 0; i < expression->tokens->length; i++) {
 		expression_token_t *token = expression->tokens->items[i];
 		if (token->type != SYMBOL || strcmp(token->symbol, "_")) {
 			continue;
 		}
 
-		int j = i;
+		unsigned int j = i;
 		int offset = get_relative_label_offset(expression, &j);
 		int relative_label = offset + last_relative_label;
 
@@ -184,8 +183,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 			return 0;
 		}
 	}
-	int i;
-	for (i = 0; i < state->macros->length; i++) {
+	for (unsigned int i = 0; i < state->macros->length; i++) {
 		macro_t *macro = state->macros->items[i];
 		if (macro == state->most_recent_macro) {
 			continue;
@@ -224,8 +222,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		}
 
 		list_t *newlines = create_list();
-		int j;
-		for (j = 0; j < macro->macro_lines->length; ++j) {
+		for (unsigned int j = 0; j < macro->macro_lines->length; ++j) {
 			char *mline = macro->macro_lines->items[j];
 			scas_log(L_DEBUG, "Inserting line '%s'", mline);
 			if (j == 0) {
@@ -246,9 +243,8 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 			}
 		}
 
-		for (j = 0; j < newlines->length; ++j) {
-			int k;
-			for (k = 0; k < macro->parameters->length; ++k) {
+		for (unsigned int j = 0; j < newlines->length; ++j) {
+			for (unsigned int k = 0; k < macro->parameters->length; ++k) {
 				char *p = macro->parameters->items[k];
 				if (!strcmp(p, "")) {
 					scas_log(L_ERROR, "Attempt to insert '%s' where no parameter is expected...", (char*)userparams->items[k]);
@@ -265,7 +261,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		*line = newlines->items[0];
 		list_del(newlines, 0);
 		/* ...and add additional lines to extra_lines */
-		for (j = 0; j < newlines->length; ++j) {
+		for (unsigned int j = 0; j < newlines->length; ++j) {
 			list_add(state->extra_lines, newlines->items[j]);
 		}
 		list_free(newlines);
@@ -420,13 +416,12 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		scas_log(L_DEBUG, "Matched string '%s' to instruction '%s'", line, match->instruction->match);
 		scas_log_indent();
 		uint64_t instruction = match->instruction->value;
-		int i;
-		for (i = 0; i < match->operands->length; ++i) {
+		for (unsigned int i = 0; i < match->operands->length; ++i) {
 			operand_ref_t *ref = match->operands->items[i];
 			scas_log(L_DEBUG, "Using operand '%s'", ref->op->match);
 			instruction |= ref->op->value << (match->instruction->width - ref->shift - ref->op->width);
 		}
-		for (i = 0; i < match->immediate_values->length; ++i) {
+		for (unsigned int i = 0; i < match->immediate_values->length; ++i) {
 			immediate_ref_t *ref = match->immediate_values->items[i];
 			immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
 
@@ -507,8 +502,8 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				}
 			}
 		}
-		int bytes_width = match->instruction->width / 8;
-		for (i = 0; i < bytes_width; ++i) {
+		unsigned int bytes_width = match->instruction->width / 8;
+		for (unsigned int i = 0; i < bytes_width; ++i) {
 			state->instruction_buffer[bytes_width - i - 1] = instruction & 0xFF;
 			instruction >>= 8;
 		}
@@ -689,11 +684,11 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				scas_log(L_INFO, "Returning to file '%s'",
 					(char *)stack_peek(state.file_name_stack));
 			} else {
-				for (int i = 0; i < state.object->unresolved->length; i++) {
+				for (unsigned int i = 0; i < state.object->unresolved->length; i++) {
 					unresolved_symbol_t *sym = (unresolved_symbol_t*)
 						state.object->unresolved->items[i];
 					bool imported = false;
-					for (int j = 0; j < state.object->imports->length; j++) {
+					for (unsigned int j = 0; j < state.object->imports->length; j++) {
 						if (strcmp(sym->name, state.object->imports->items[j]) == 0) {
 							imported = true;
 							break;
@@ -718,7 +713,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
 	list_free(state.extra_lines);
-	for (int i = 0; i < state.macros->length; i += 1) {
+	for (unsigned int i = 0; i < state.macros->length; i += 1) {
 		macro_t *macro = state.macros->items[i];
 		macro_free(macro);
 	}

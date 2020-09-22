@@ -22,7 +22,7 @@ object_t *create_object() {
 }
 
 void object_free(object_t *o) {
-	for (int i = 0; i < o->areas->length; i += 1) {
+	for (unsigned int i = 0; i < o->areas->length; i += 1) {
 		area_t *area = (area_t*)o->areas->items[i];
 		if (o->merged) {
 			merged_area_free(area);
@@ -32,7 +32,7 @@ void object_free(object_t *o) {
 		}
 	}
 	list_free(o->areas);
-	for (int i = 0; i < o->unresolved->length; i += 1) {
+	for (unsigned int i = 0; i < o->unresolved->length; i += 1) {
 		unresolved_symbol_t *u = (unresolved_symbol_t*)o->unresolved->items[i];
 		free(u->name);
 		free(u->line);
@@ -60,7 +60,7 @@ area_t *create_area(const char *name) {
 }
 
 void merged_area_free(area_t *area) {
-	for (int i = 0; i < area->metadata->length; ++i) {
+	for (unsigned int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		free(meta->key);
 		free(meta->value);
@@ -76,24 +76,24 @@ void merged_area_free(area_t *area) {
 }
 
 void area_free(area_t *area) {
-	for (int i = 0; i < area->metadata->length; ++i) {
+	for (unsigned int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		free(meta->key);
 		free(meta->value);
 		free(meta);
 	}
 	list_free(area->metadata);
-	for (int i = 0; i < area->source_map->length; i += 1) {
+	for (unsigned int i = 0; i < area->source_map->length; i += 1) {
 		source_map_free((source_map_t*)area->source_map->items[i]);
 	}
 	list_free(area->source_map);
-	for (int i = 0; i < area->symbols->length; i += 1) {
+	for (unsigned int i = 0; i < area->symbols->length; i += 1) {
 		symbol_t *sym = (symbol_t*)area->symbols->items[i];
 		free(sym->name);
 		free(sym);
 	}
 	list_free(area->symbols);
-	for (int i = 0; i < area->late_immediates->length; i += 1) {
+	for (unsigned int i = 0; i < area->late_immediates->length; i += 1) {
 		late_immediate_t *imm = (late_immediate_t *)area->late_immediates->items[i];
 		free_expression(imm->expression);
 		free(imm);
@@ -105,7 +105,7 @@ void area_free(area_t *area) {
 }
 
 metadata_t *get_area_metadata(area_t *area, const char *key) {
-	for (int i = 0; i < area->metadata->length; ++i) {
+	for (unsigned int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
 			return meta;
@@ -116,7 +116,7 @@ metadata_t *get_area_metadata(area_t *area, const char *key) {
 
 void set_area_metadata(area_t *area, const char *key, char *value, uint64_t value_length) {
 	bool dupe = true;
-	for (int i = 0; i < area->metadata->length; ++i) {
+	for (unsigned int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
 			free(meta->key);
@@ -177,7 +177,7 @@ void delete_from_area(area_t *area, size_t index, size_t length) {
 void write_area(FILE *f, area_t *a) {
 	uint32_t len;
 	uint64_t len64;
-	int i;
+	unsigned int i;
 	fprintf(f, "%s", a->name); fputc(0, f);
 	/* Symbols */
 	fwrite(&a->symbols->length, sizeof(uint32_t), 1, f);
@@ -222,8 +222,7 @@ void write_area(FILE *f, area_t *a) {
 		fputc(0, f);
 		len64 = map->entries->length;
 		fwrite(&len64, sizeof(uint64_t), 1, f);
-		int j;
-		for (j = 0; j < map->entries->length; ++j) {
+		for (unsigned int j = 0; j < map->entries->length; ++j) {
 			source_map_entry_t *entry = map->entries->items[j];
 			fwrite(&entry->line_number, sizeof(uint64_t), 1, f);
 			fwrite(&entry->address, sizeof(uint64_t), 1, f);
@@ -241,8 +240,7 @@ void fwriteobj(FILE *f, object_t *o) {
 	/* Areas */
 	uint32_t a_len = o->areas->length;
 	fwrite(&a_len, sizeof(uint32_t), 1, f);
-	int i;
-	for (i = 0; i < o->areas->length; ++i) {
+	for (unsigned int i = 0; i < o->areas->length; ++i) {
 		area_t *a = o->areas->items[i];
 		write_area(f, a);
 	}
@@ -317,7 +315,7 @@ area_t *read_area(FILE *f) {
 		map->entries = create_list();
 		scas_read(&lineno, sizeof(uint64_t), 1, f);
 		scas_log(L_DEBUG, "Reading source map for '%s', %d entries", map->file_name, lineno);
-		for (int j = 0; j < (int)lineno; ++j) {
+		for (uint64_t j = 0; j < lineno; ++j) {
 			source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
 			scas_read(&entry->line_number, sizeof(uint64_t), 1, f);
 			scas_read(&entry->address, sizeof(uint64_t), 1, f);
@@ -359,7 +357,7 @@ source_map_t *create_source_map(area_t *area, const char *file_name) {
 }
 
 void source_map_free(source_map_t *map) {
-	for (int i = 0; i < map->entries->length; i += 1) {
+	for (unsigned int i = 0; i < map->entries->length; i += 1) {
 		source_map_entry_t *entry = (source_map_entry_t*)map->entries->items[i];
 		free(entry->source_code);
 		free(entry);

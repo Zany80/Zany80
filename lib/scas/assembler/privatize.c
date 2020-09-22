@@ -11,11 +11,9 @@
 #include "runtime.h"
 
 void rename_symbol(area_t *a, const char *original, const char *new) {
-	int i;
-	for (i = 0; i < a->late_immediates->length; ++i) {
+	for (unsigned int i = 0; i < a->late_immediates->length; ++i) {
 		late_immediate_t *imm = a->late_immediates->items[i];
-		int j;
-		for (j = 0; j < imm->expression->tokens->length; ++j) {
+		for (unsigned int j = 0; j < imm->expression->tokens->length; ++j) {
 			expression_token_t *tok = imm->expression->tokens->items[j];
 			if (tok->type == SYMBOL) {
 				if (strcasecmp(tok->symbol, original) == 0) {
@@ -28,7 +26,7 @@ void rename_symbol(area_t *a, const char *original, const char *new) {
 	metadata_t *meta = get_area_metadata(a, "scas.functions");
 	if (meta != NULL) {
 		list_t *functions = decode_function_metadata(a, meta->value);
-		for (i = 0; i < functions->length; ++i) {
+		for (unsigned int i = 0; i < functions->length; ++i) {
 			function_metadata_t *func = functions->items[i];
 			if (strcasecmp(func->name, original) == 0) {
 				free(func->name);
@@ -50,8 +48,7 @@ void rename_symbol(area_t *a, const char *original, const char *new) {
 }
 
 int contains_string(list_t *l, const char *s) {
-	int i;
-	for (i = 0; i < l->length; ++i) {
+	for (unsigned int i = 0; i < l->length; ++i) {
 		if (strcasecmp(l->items[i], s) == 0) {
 			return 1;
 		}
@@ -68,7 +65,7 @@ void privatize_area(object_t *o, area_t *a, list_t *exports) {
 	MD5_Update(&ctx, a->data, a->data_length);
 	MD5_Final(raw_checksum, &ctx);
 
-	int i;
+	unsigned int i;
 	for (i = 0; i < 16; ++i) {
 		sprintf(checksum + (i * 2), "%02x", raw_checksum[i]);
 	}
@@ -90,7 +87,7 @@ void privatize_area(object_t *o, area_t *a, list_t *exports) {
 			marker = strcat(marker, "@");
 			marker = strcat(marker, checksum);
 			scas_log(L_DEBUG, "Renaming private symbol '%s' to '%s'", s->name, new_name);
-			for (int j = 0; j < o->areas->length; ++j) {
+			for (unsigned int j = 0; j < o->areas->length; ++j) {
 				area_t *_a = o->areas->items[j];
 				rename_symbol(_a, s->name, new_name);
 			}
@@ -106,12 +103,11 @@ void privatize_area(object_t *o, area_t *a, list_t *exports) {
  */
 void privatize_symbols(object_t *o) {
 	if (!scas_runtime.options.explicit_export) {
-		scas_log(L_DEBUG, "Skipping privitation due to explicit export being turned off.");
+		scas_log(L_DEBUG, "Skipping privitation due to -fno-explicit-export");
 		return;
 	}
 
-	int i;
-	for (i = 0; i < o->areas->length; ++i) {
+	for (unsigned int i = 0; i < o->areas->length; ++i) {
 		area_t *a = o->areas->items[i];
 		privatize_area(o, a, o->exports);
 	}

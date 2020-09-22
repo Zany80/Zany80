@@ -103,10 +103,9 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	source_map_t *map;
 	source_map_entry_t *entry;
 	bool found = false;
-	for (int i = 0; i < maps->length; ++i) {
+	for (unsigned int i = 0; i < maps->length; ++i) {
 		map = maps->items[i];
-		int j;
-		for (j = 0; j < map->entries->length; ++j) {
+		for (unsigned int j = 0; j < map->entries->length; ++j) {
 			entry = map->entries->items[j];
 			if (address >= entry->address && address < entry->address + entry->length) {
 				found = true;
@@ -140,9 +139,9 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 		error->line_number = entry->line_number;
 		error->file_name = strdup(map->file_name);
 		error->line = strdup(entry->source_code);
-		for (int i = 0; i < maps->length; ++i) {
+		for (unsigned int i = 0; i < maps->length; ++i) {
 			map = maps->items[i];
-			for (int j = 0; j < map->entries->length; ++j) {
+			for (unsigned int j = 0; j < map->entries->length; ++j) {
 				entry = map->entries->items[j];
 				if (address >= entry->address && address < entry->address + entry->length) {
 					scas_log(L_ERROR, "\t%s:%d:%d", map->file_name,

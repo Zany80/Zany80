@@ -24,8 +24,7 @@
  */
 
 symbol_t *find_symbol(list_t *symbols, char *name) {
-	int i;
-	for (i = 0; i < symbols->length; ++i) {
+	for (unsigned int i = 0; i < symbols->length; ++i) {
 		symbol_t *sym = symbols->items[i];
 		if (strcasecmp(sym->name, name) == 0) {
 			return sym;
@@ -37,8 +36,7 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	scas_log(L_DEBUG, "Resolving immediate values for area '%s' at %08X", area->name, area->final_address);
 	scas_log_indent();
-	int i;
-	for (i = 0; i < area->late_immediates->length; ++i) {
+	for (unsigned int i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		imm->instruction_address += area->final_address;
 		imm->base_address += area->final_address;
@@ -101,8 +99,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 void auto_relocate_area(area_t *area, area_t *runtime) {
 	scas_log(L_DEBUG, "Performing automatic relocation for %s", area->name);
 	uint8_t rst0x8 = 0xCF;
-	int i;
-	for (i = 0; i < area->late_immediates->length; ++i) {
+	for (unsigned int i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		if (imm->type != IMM_TYPE_RELATIVE) {
 			if (imm->base_address != imm->address) {
@@ -111,15 +108,13 @@ void auto_relocate_area(area_t *area, area_t *runtime) {
 				insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
 				++imm->address;
 				/* Move everything that comes after */
-				int k;
-				for (k = 0; k < area->symbols->length; ++k) {
+				for (unsigned k = 0; k < area->symbols->length; ++k) {
 					symbol_t *sym = area->symbols->items[k];
 					if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
 						++sym->value;
 					}
 				}
-				int j;
-				for (j = 0; j < area->late_immediates->length; ++j) {
+				for (unsigned int j = 0; j < area->late_immediates->length; ++j) {
 					late_immediate_t *_imm = area->late_immediates->items[j];
 					if (_imm->base_address > imm->base_address) {
 						++_imm->base_address;
@@ -137,8 +132,7 @@ void auto_relocate_area(area_t *area, area_t *runtime) {
 }
 
 void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) {
-	int i;
-	for (i = 0; i < area->symbols->length; ++i) {
+	for (unsigned int i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];
 		if (find_symbol(symbols, sym->name)) {
 			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
@@ -150,8 +144,7 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 }
 
 void move_origin(list_t *symbols) {
-	int i;
-	for (i = 0; i < symbols->length; ++i) {
+	for (unsigned int i = 0; i < symbols->length; ++i) {
 		symbol_t *sym = symbols->items[i];
 		sym->value += scas_runtime.options.origin;
 	}
@@ -192,7 +185,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		remove_unused_functions(merged);
 	}
 	uint64_t address = 0;
-	for (int i = 0; i < merged->areas->length; ++i) {
+	for (unsigned int i= 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		relocate_area(area, address, false);
 		if (settings->automatic_relocation) {
@@ -205,11 +198,11 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		}
 		address += area->data_length;
 	}
-	for (int i = 0; i < merged->areas->length; ++i) {
+	for (unsigned int i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		gather_symbols(symbols, area, settings);
 	}
-	for (int i = 0; i < merged->areas->length; ++i) {
+	for (unsigned int i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		scas_log(L_INFO, "Linking area %s", area->name);
 		if (scas_runtime.options.origin) {
@@ -225,7 +218,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	if (scas_runtime.symbol_file) {
 		scas_log(L_DEBUG, "Generating symbol file '%s'", scas_runtime.symbol_file);
 		FILE *symfile = fopen(scas_runtime.symbol_file, "w");
-		for (int i = 0; i < symbols->length; i++) {
+		for (unsigned int i = 0; i < symbols->length; i++) {
 			symbol_t *symbol = symbols->items[i];
 			if (symbol->type == SYMBOL_LABEL && symbol->exported && !strchr(symbol->name, '@')) {
 				fprintf(symfile, ".equ %s 0x%lX\n", symbol->name, symbol->value);

@@ -22,12 +22,14 @@
 #endif
 
 struct runtime scas_runtime;
+static char *out_name = NULL;
 
 void init_scas_runtime() {
 	scas_runtime.arch = "z80";
 	scas_runtime.jobs = LINK | ASSEMBLE;
 	scas_runtime.macros = create_list();
 	scas_runtime.output_type = EXECUTABLE;
+	scas_runtime.input_names = create_list();
 	scas_runtime.input_files = create_list();
 	scas_runtime.output_file = NULL;
 	scas_runtime.output_extension = "bin";
@@ -52,6 +54,33 @@ void init_scas_runtime() {
 	scas_runtime.options.origin = 0;
 }
 
+static void runtime_open_input(char *name) {
+	FILE *f = NULL;
+	if (strcasecmp(name, "-") == 0) {
+		f = stdin;
+	} else {
+		f = fopen(name, "r");
+	}
+	if (!f) {
+		scas_abort("Unable to open '%s' for assembly", name);
+	}
+	list_add(scas_runtime.input_names, name);
+	list_add(scas_runtime.input_files, f);
+}
+
+static void runtime_open(char *name) {
+	out_name = strdup(name);
+	scas_log(L_DEBUG, "Opening output file for writing: %s", name);
+	if (strcasecmp(name, "-") == 0) {
+		scas_runtime.output_file = stdout;
+	} else {
+		scas_runtime.output_file = fopen(name, "w+");
+		if (!scas_runtime.output_file) {
+			scas_abort("Unable to open '%s' for output", name);
+		}
+	}
+}
+
 void validate_scas_runtime() {
 	if (scas_runtime.input_files->length == 0) {
 		scas_abort("No input files given");
@@ -64,18 +93,19 @@ void validate_scas_runtime() {
 		} else {
 			ext = "o";
 		}
-		scas_runtime.output_file = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 2);
-		strcpy(scas_runtime.output_file, scas_runtime.input_files->items[0]);
-		int i = strlen(scas_runtime.output_file);
-		while (scas_runtime.output_file[--i] != '.' && i != 0);
+		char *out_name = malloc(strlen(scas_runtime.input_names->items[0]) + strlen(ext) + 2);
+		strcpy(out_name, scas_runtime.input_names->items[0]);
+		int i = strlen(out_name);
+		while (out_name[--i] != '.' && i != 0);
 		if (i == 0) {
-			i = strlen(scas_runtime.output_file);
+			i = strlen(out_name);
 		} else {
-			scas_runtime.output_file[i] = '\0';
+			out_name[i] = '\0';
 		}
-		strcat(scas_runtime.output_file, ".");
-		strcat(scas_runtime.output_file, ext);
-		scas_log(L_DEBUG, "Assigned output file name to %s", scas_runtime.output_file);
+		strcat(out_name, ".");
+		strcat(out_name, ext);
+		scas_log(L_DEBUG, "Assigned output file name to %s", out_name);
+		runtime_open(out_name);
 	}
 }
 
@@ -95,7 +125,7 @@ void parse_arguments(int argc, char **argv) {
 	for (i = 1; i < argc; ++i) {
 		if (argv[i][0] == '-' && argv[i][1] != '\0') {
 			if (strcmp("-o", argv[i]) == 0 || strcmp("--output", argv[i]) == 0) {
-				scas_runtime.output_file = argv[++i];
+				runtime_open(argv[++i]);
 			} else if (strcmp("-S", argv[i]) == 0 || strcmp("--symbols", argv[i]) == 0) {
 				validate_scas_optarg(i, argc, argv);
 				scas_runtime.symbol_file = argv[++i];
@@ -104,7 +134,7 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.listing_file = argv[++i];
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				validate_scas_optarg(i, argc, argv);
-				list_add(scas_runtime.input_files, argv[++i]);
+				runtime_open_input(argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
 				scas_runtime.jobs &= ~LINK;
 			} else if (strcmp("-a", argv[i]) == 0 || strcmp("--architecture", argv[i]) == 0) {
@@ -166,11 +196,11 @@ void parse_arguments(int argc, char **argv) {
 				scas_abort("Invalid option %s", argv[i]);
 			}
 		} else {
-			if (scas_runtime.output_file != NULL || i != argc - 1 || scas_runtime.input_files->length == 0) {
+			if (scas_runtime.output_file || i != argc - 1 || scas_runtime.input_files->length == 0) {
 				scas_log(L_INFO, "Added input file '%s'", argv[i]);
-				list_add(scas_runtime.input_files, argv[i]);
+				runtime_open_input(argv[i]);
 			} else if (scas_runtime.output_file == NULL && i == argc - 1) {
-				scas_runtime.output_file = argv[i];
+				runtime_open(argv[i]);
 			}
 		}
 	}
@@ -238,19 +268,10 @@ int main(int argc, char **argv) {
 	list_t *warnings = create_list();
 
 	list_t *objects = create_list();
-	int i;
-	for (i = 0; i < scas_runtime.input_files->length; ++i) {
-		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_files->items[i]);
+	for (unsigned int i = 0; i < scas_runtime.input_files->length; ++i) {
+		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_names->items[i]);
 		scas_log_indent();
-		FILE *f;
-		if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
-			f = stdin;
-		} else {
-			f = fopen(scas_runtime.input_files->items[i], "r");
-		}
-		if (!f) {
-			scas_abort("Unable to open '%s' for assembly.", scas_runtime.input_files->items[i]);
-		}
+		FILE *f = scas_runtime.input_files->items[i];
 		char magic[7];
 		bool is_object = false;
 		if (fread(magic, sizeof(char), 7, f) == 7) {
@@ -262,8 +283,8 @@ int main(int argc, char **argv) {
 
 		object_t *o;
 		if (is_object) {
-			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_files->items[i]);
-			o = freadobj(f, scas_runtime.input_files->items[i]);
+			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_names->items[i]);
+			o = freadobj(f, scas_runtime.input_names->items[i]);
 		} else {
 			assembler_settings_t settings = {
 				.include_path = include_path,
@@ -272,24 +293,13 @@ int main(int argc, char **argv) {
 				.warnings = warnings,
 				.macros = scas_runtime.macros,
 			};
-			o = assemble(f, scas_runtime.input_files->items[i], &settings);
+			o = assemble(f, scas_runtime.input_names->items[i], &settings);
 			fclose(f);
 			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
-					errors->length, warnings->length, scas_runtime.input_files->items[i]);
+					errors->length, warnings->length, scas_runtime.input_names->items[i]);
 		}
 		list_add(objects, o);
 		scas_log_deindent();
-	}
-
-	scas_log(L_DEBUG, "Opening output file for writing: %s", scas_runtime.output_file);
-	FILE *out;
-	if (strcasecmp(scas_runtime.output_file, "-") == 0) {
-		out = stdout;
-	} else {
-		out = fopen(scas_runtime.output_file, "w+");
-		if (!out) {
-			scas_abort("Unable to open '%s' for output.", scas_runtime.output_file);
-		}
 	}
 
 	if ((scas_runtime.jobs & LINK) == LINK) {
@@ -303,41 +313,40 @@ int main(int argc, char **argv) {
 		};
 		if (settings.merge_only) {
 			object_t *merged = merge_objects(objects);
-			fwriteobj(out, merged);
+			fwriteobj(scas_runtime.output_file, merged);
 		} else {
-			link_objects(out, objects, &settings);
+			link_objects(scas_runtime.output_file, objects, &settings);
 		}
 		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
 	} else {
 		scas_log(L_INFO, "Skipping linking - writing to object file");
 		object_t *merged = merge_objects(objects);
 		if (merged) {
-			fwriteobj(out, merged);
+			fwriteobj(scas_runtime.output_file, merged);
 			object_free(merged);
-			fflush(out);
+			fflush(scas_runtime.output_file);
 		}
 		else {
 			scas_log(L_ERROR, "Failed to merge");
-			if (out != stdout) {
-				remove(scas_runtime.output_file);
+			if (scas_runtime.output_file != stdout && out_name) {
+				remove(out_name);
+				out_name = NULL;
 			}
 		}
-		fclose(out);
+		fclose(scas_runtime.output_file);
 	}
 	
 	if (errors->length != 0) {
-		int i;
-		for (i = 0; i < errors->length; ++i) {
+		for (unsigned int i = 0; i < errors->length; ++i) {
 			error_t *error = errors->items[i];
-			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
-					(int)error->line_number, (int)error->column, error->code,
+			fprintf(stderr, "%s:%lu:%lu: error #%d: %s\n", error->file_name,
+					error->line_number, error->column, error->code,
 					error->message);
 			if (error->line) {
 				fprintf(stderr, "%s\n", error->line);
 			}
 			if (error->column != 0) {
-				int j;
-				for (j = error->column; j > 0; --j) {
+				for (unsigned int j = error->column; j > 0; --j) {
 					fprintf(stderr, ".");
 				}
 				fprintf(stderr, "^\n");
@@ -351,19 +360,20 @@ int main(int argc, char **argv) {
 			free(error->message);
 			free(error);
 		}
-		remove(scas_runtime.output_file);
+		if (out_name) {
+			remove(out_name);
+			out_name = NULL;
+		}
 	}
 	if (warnings->length != 0) {
-		int i;
-		for (i = 0; i < errors->length; ++i) {
+		for (unsigned int i = 0; i < errors->length; ++i) {
 			warning_t *warning = warnings->items[i];
-			fprintf(stderr, "%s:%d:%d: warning #%d: %s\n", warning->file_name,
-					(int)warning->line_number, (int)warning->column, warning->code,
+			fprintf(stderr, "%s:%lu:%lu: warning #%d: %s\n", warning->file_name,
+					warning->line_number, warning->column, warning->code,
 					get_warning_string(warning));
 			fprintf(stderr, "%s\n", warning->line);
 			if (warning->column != 0) {
-				int j;
-				for (j = warning->column; j > 0; --j) {
+				for (unsigned int j = warning->column; j > 0; --j) {
 					fprintf(stderr, ".");
 				}
 				fprintf(stderr, "^\n");
@@ -371,11 +381,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	int ret = errors->length;
+	unsigned int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(scas_runtime.input_files);
+	list_free(scas_runtime.input_names);
 	free_flat_list(include_path);
-	for (int i = 0; i < objects->length; i += 1) {
+	for (unsigned int i = 0; i < objects->length; i += 1) {
 		object_free((object_t*)objects->items[i]);
 	}
 	list_free(objects);
