@@ -235,12 +235,7 @@ void input_set_password(widget_t *w, bool pw) {
 }
 
 const char *input_get_text(widget_t *widget) {
-	if (widget->type == WIDGET_TYPE_EDITOR) {
-		return editor_get_text(widget, NULL);
-	}
-	else {
-		return widget->input.buf;
-	}
+	return widget->input.buf;
 }
 
 void input_set_text(widget_t *widget, const char *text) {

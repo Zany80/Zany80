@@ -6,6 +6,7 @@
 * Rewrite frontend in C99 or Zig
 * Replace Oryol with Sokol as primary frontend, remove C++ dependency entirely
 * Fix all memory leaks
+* Remove in-tree dependencies; require system builds
 
 ## Slightly less short-term
 

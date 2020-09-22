@@ -10,6 +10,7 @@
 #include "scas/include/runtime.h"
 #include "scas/include/bin.h"
 #include "scas/include/instructions.h"
+#include "scas/include/assembler.h"
 #include "z80_tab.h"
 #include "serial.h"
 
@@ -81,6 +82,7 @@ void init_scas_runtime() {
 	scas_runtime.macros = create_list();
 	scas_runtime.output_type = EXECUTABLE;
 	scas_runtime.input_files = create_list();
+	scas_runtime.input_names = create_list();
 	scas_runtime.output_file = NULL;
 	scas_runtime.output_extension = "bin";
 	scas_runtime.listing_file = NULL;
@@ -117,8 +119,8 @@ void validate_scas_runtime() {
 	if (scas_runtime.input_files->length == 0) {
 	        scas_abort("No input files given");
 	}
-	if (scas_runtime.output_file == NULL) {
-	        scas_abort("Output buffer-file is missing!");
+	if (!scas_runtime.output_file) {
+		scas_abort("No output file given");
 	}
 }
 
@@ -149,25 +151,59 @@ static instruction_set_t *find_inst() {
 	return set;
 }
 
+static list_t *split_include_path() {
+	list_t *list = create_list();
+	int i, j;
+	for (i = 0, j = 0; scas_runtime.include_path[i]; ++i) {
+		if (scas_runtime.include_path[i] == ':' || scas_runtime.include_path[i] == ';') {
+			char *s = malloc(i - j + 1);
+			strncpy(s, scas_runtime.include_path + j, i - j);
+			s[i - j] = '\0';
+			j = i + 1;
+			list_add(list, s);
+		}
+	}
+	char *s = malloc(i - j + 1);
+	strncpy(s, scas_runtime.include_path + j, i - j);
+	s[i - j] = '\0';
+	list_add(list, s);
+	return list;
+}
+
 bool scas_assemble(FILE *infile, FILE *outfile) {
 	if (setjmp(env) == 0) {
 		colored = false;
 		v = L_DEBUG;
-		scas_log_indent();
-		scas_log(L_ERROR, "test");
-		scas_log(L_DEBUG, "test");
-		scas_log_indent();
-		scas_log(L_INFO, "test");
-		scas_log_deindent();
-		scas_log_deindent();
 		init_scas_runtime();
 		list_add(scas_runtime.input_files, infile);
+		list_add(scas_runtime.input_names, "<src>");
+		scas_runtime.output_file = outfile;
 		validate_scas_runtime();
 		instruction_set_t *inst = find_inst();
 		if (!inst) {
 			scas_abort("Failed to load instruction set!");
 		}
-		return true;
+		scas_log(L_INFO, "Loaded instruction set: %s", inst->arch);
+		list_t *errors = create_list();
+		list_t *warnings = create_list();
+		list_t *include_path = split_include_path();
+		list_t *objects = create_list();
+		scas_log(L_INFO, "Assembling input file");
+		scas_log_indent();
+		assembler_settings_t settings = {
+			.include_path = include_path,
+			.set = inst,
+			.errors = errors,
+			.warnings = warnings,
+			.macros = scas_runtime.macros,
+		};
+		object_t *o = assemble(infile, "<src>",&settings);
+		fclose(infile);
+		scas_log(L_INFO, "Assembler returned %d errors, %d warnings.",
+				errors->length, warnings->length);
+		list_add(objects, o);
+		scas_log_deindent();
+		return errors->length == 0;
 	}
 	else {
 		return false;

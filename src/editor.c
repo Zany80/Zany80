@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static window_t *window;
 static widget_t *label, *editor;
@@ -13,9 +14,12 @@ static char *tmp_buf;
 
 static void editor_assemble() {
 	size_t len;
-	const char *source = editor_get_text(editor, &len);
-	FILE *infile = fmemopen((void*)source, len, "r");
-	FILE *outfile = fmemopen(tmp_buf, 16 * 1024 * 1024, "w");
+	char *source = strdup(editor_get_text(editor, &len));
+	FILE *infile = fmemopen((void*)source, len, "rb");
+	if (!infile) {
+		return;
+	}
+	FILE *outfile = fmemopen(tmp_buf, 16 * 1024 * 1024, "wb+");
 	widget_set_label(label, scas_assemble(infile, outfile) ? "[00FF00]Built successfully!" : "[FF0000]Failed to assemble!");
 }
 

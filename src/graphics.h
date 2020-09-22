@@ -65,7 +65,7 @@ void widget_set_visible(widget_t *widget, bool visible);
 void widget_destroy(widget_t *widget);
 widget_t* label_set_wrapped(widget_t *widget, bool wrapped);
 void input_set_text(widget_t *widget, const char *text);
-/// The returned string is owned by the widget.
+/// The returned string is owned by the widget. This mustn't be used on editors.
 const char *input_get_text(widget_t *widget);
 void input_set_password(widget_t *widget, bool pass);
 
@@ -93,9 +93,9 @@ void render_windows();
 widget_t *widget_new(const char *label);
 void editor_destroy(TextEditor *editor);
 void editor_set_text(widget_t *widget, const char *text);
-// Returns the entered text. The widget owns the returned string, not the caller!
-// If len is non-null, size is written to it.
-const char *editor_get_text(widget_t *widget, size_t *len);
+// Returns the entered text. The caller owns the returned string.
+// If len is non-null, size is written to the specified address.
+char *editor_get_text(widget_t *widget, size_t *len);
 void image_free(widget_t *widget);
 
 typedef struct {

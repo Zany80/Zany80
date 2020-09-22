@@ -246,11 +246,11 @@ void editor_set_text(widget_t *widget, const char *text) {
 	widget->editor.editor->SetText(text);
 }
 
-const char *editor_get_text(widget_t *widget, size_t *len) {
+char *editor_get_text(widget_t *widget, size_t *len) {
 	if (len) {
 		*len = widget->editor.editor->GetText().length();
 	}
-	return widget->editor.editor->GetText().c_str();
+	return strdup(widget->editor.editor->GetText().c_str());
 }
 
 void editor_destroy(TextEditor *editor) {
