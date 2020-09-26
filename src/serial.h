@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #ifndef SERIAL_BUF_SIZE
-#define SERIAL_BUF_SIZE 32 * 1024
+#define SERIAL_BUF_SIZE 320 * 1024
 #endif
 
 /// Reads a character from the input buffer. The upper 24 bits are zeroed.

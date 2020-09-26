@@ -129,7 +129,7 @@ sapp_desc sokol_main(int argc, char **argv) {
 		.event_cb = event,
 		.sample_count = 4,
 		.gl_force_gles2 = false,
-		.fullscreen = true,
+		.fullscreen = false,
 		.alpha = true,
 	};
 }
