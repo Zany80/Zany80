@@ -47,6 +47,7 @@ ti_mmu_t* ti_mmu_init(ti_device_type device_type, log_t *log) {
 	mmu->banks[1].page = 0; mmu->banks[1].flash = 1;
 	mmu->banks[2].page = 0; mmu->banks[2].flash = 1;
 	mmu->banks[3].page = 0; mmu->banks[3].flash = 0;
+	mmu->hook = NULL;
 	return mmu;
 }
 
@@ -105,7 +106,9 @@ uint8_t ti_read_byte(void *memory, uint16_t address) {
 	} else {
 		byte = mmu->ram[mapped_address];
 	}
-	byte = hook_on_memory_read(mmu->hook, address, byte);
+	if (mmu->hook) {
+		byte = hook_on_memory_read(mmu->hook, address, byte);
+	}
 	return byte;
 }
 
