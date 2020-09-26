@@ -190,19 +190,34 @@ bool scas_assemble(FILE *infile, FILE *outfile) {
 		list_t *objects = create_list();
 		scas_log(L_INFO, "Assembling input file");
 		scas_log_indent();
-		assembler_settings_t settings = {
-			.include_path = include_path,
-			.set = inst,
+		{
+			assembler_settings_t settings = {
+				.include_path = include_path,
+				.set = inst,
+				.errors = errors,
+				.warnings = warnings,
+				.macros = scas_runtime.macros,
+			};
+			object_t *o = assemble(infile, "<src>",&settings);
+			fclose(infile);
+			scas_log(L_INFO, "Assembler returned %d errors, %d warnings.",
+					errors->length, warnings->length);
+			list_add(objects, o);
+		}
+		scas_log_deindent();
+		scas_log(L_INFO, "Passing objects to linker");
+		linker_settings_t settings = {
+			.automatic_relocation = scas_runtime.options.auto_relocation,
+			.merge_only = (scas_runtime.jobs & MERGE) == MERGE,
 			.errors = errors,
 			.warnings = warnings,
-			.macros = scas_runtime.macros,
+			.write_output = scas_runtime.options.output_format
 		};
-		object_t *o = assemble(infile, "<src>",&settings);
-		fclose(infile);
-		scas_log(L_INFO, "Assembler returned %d errors, %d warnings.",
-				errors->length, warnings->length);
-		list_add(objects, o);
-		scas_log_deindent();
+		link_objects(scas_runtime.output_file, objects, &settings);
+		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
+		fflush(outfile);
+		fclose(outfile);
+
 		return errors->length == 0;
 	}
 	else {
