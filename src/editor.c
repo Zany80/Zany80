@@ -2,6 +2,7 @@
 #include "serial.h"
 #include "graphics.h"
 #include "scas.h"
+#include "z80.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,7 @@
 static window_t *window;
 static widget_t *label, *editor;
 static menu_t *menu;
-static char *tmp_buf;
+static unsigned char *tmp_buf = NULL;
 
 static void editor_assemble() {
 	size_t len;
@@ -21,10 +22,15 @@ static void editor_assemble() {
 	}
 	FILE *outfile = fmemopen(tmp_buf, 16 * 1024 * 1024, "wb+");
 	widget_set_label(label, scas_assemble(infile, outfile) ? "[00FF00]Built successfully!" : "[FF0000]Failed to assemble!");
+	z80_halt();
+	z80_load(tmp_buf, 32 * 1024);
+	z80_jump(0);
+	z80_unhalt();
 }
 
 static void editor_reset() {
 	widget_set_label(label, "[FF0FA0]No build attempted");
+	z80_halt();
 }
 
 void editor_init() {
