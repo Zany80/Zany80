@@ -173,7 +173,7 @@ static list_t *split_include_path() {
 bool scas_assemble(FILE *infile, FILE *outfile) {
 	if (setjmp(env) == 0) {
 		colored = false;
-		v = L_DEBUG;
+		v = L_ERROR;
 		init_scas_runtime();
 		list_add(scas_runtime.input_files, infile);
 		list_add(scas_runtime.input_names, "<src>");
